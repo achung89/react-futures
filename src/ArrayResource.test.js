@@ -99,6 +99,7 @@ describe("In only render context", () => {
 describe('Array operations', () => {
 
   it('receives mutator methods', () => {
+    // fill, push, reverse, unshift, sort, splice, copyWithin
     test("fill", () => {
     
     })
@@ -123,6 +124,7 @@ describe('Array operations', () => {
   });
   
   it('receives the immutable methods. Apply methods to resolved values lazily when needed', () => {
+    //concat, filter, slice, entries, keys, map, reduce, reduceRight, values, flat, flatMap
     test("concat", () => {
     
     })
@@ -158,6 +160,7 @@ describe('Array operations', () => {
     })
   })
   it('suspends on...', () => {
+    //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
     test("indexOf", () => {
     
     })
@@ -212,7 +215,7 @@ describe('Array operations', () => {
     test("length", () => {
         
     })
-    test("and unscopables", () => {
+    test("unscopables", () => {
         
     })
   });
@@ -224,4 +227,7 @@ describe('Array operations', () => {
   it('has immutable static @@species', () => {
 
   });
+  it('has debug and suspend method', () => {
+
+  })
 });
