@@ -31,11 +31,10 @@ let resources;
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
-  resources = new ArrayResource([createPromise(2), 
-                                3, 
+  resources = new ArrayResource([2, 
+                                createPromise(3), 
                                 createPromise(4),
-                                5,
-                                createPromise(5)]);
+                                5]);
 
 });
 afterEach(() => {
@@ -97,137 +96,108 @@ describe("In only render context", () => {
 });
 
 describe('Array operations', () => {
+    [
+      'fill',
+      'push',
+      'reverse',
+      'unshift',
+      'sort',
+      'splice',
+      'copyWithin'
+    ].forEach(method => {
+      test(`mutator method ${method} shouldn't throw`, () => {
+        expect(() => resources[method]()).not.toThrow();
 
-  it('receives mutator methods', () => {
-    // fill, push, reverse, unshift, sort, splice, copyWithin
-    test("fill", () => {
-    
-    })
-    test("push", () => {
-      
-    })
-    test("reverse", () => {
-      
-    })
-    test("unshift", () => {
-      
-    })
-    test("sort", () => {
-      
-    })
-    test("splice", () => {
-      
-    })
-    test("copyWithin", () => {
-      
+      })
     })
   });
   
-  it('receives the immutable methods. Apply methods to resolved values lazily when needed', () => {
-    //concat, filter, slice, entries, keys, map, reduce, reduceRight, values, flat, flatMap
-    test("concat", () => {
-    
-    })
-    test("filter", () => {
-        
-    })
-    test("slice", () => {
-        
-    })
-    test("entries", () => {
-        
-    })
-    test("keys", () => {
-        
-    })
-    test("map", () => {
-        
-    })
-    test("reduce", () => {
-        
-    })
-    test("reduceRight", () => {
-        
-    })
-    test("values", () => {
-        
-    })
-    test("flat", () => {
-        
-    })
-    test("flatMap", () => {
-        
+  test.each`   method                                                    |        expected
+            ${arr => arr.concat([6,7])}                                  |    ${[2,3,4,5,6,7]}
+            ${arr => arr.filter( num => num % 2)}                        |    ${[3,5]}      
+            ${arr => arr.slice(0,1)}                                     |    ${[2,3]}    
+            ${arr => arr.entries()}                                      |    ${[2,3,4,5].entries()}    
+            ${arr => arr.keys()}                                         |    ${[2,3,4,5].keys()}     
+            ${arr => arr.map(i => i + 3)}                                |    ${[5,6,7,8]}   
+            ${arr => arr.reduce((coll, i) => [...coll, i + 3], [])}      |    ${[5,6,7,8]}
+            ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])} |    ${[5,6,7,8]}
+            ${arr => arr.values()}                                       |    ${[2,3,4,5]}   
+            ${() => new ArrayResource([1,2,createPromise([3,4]),5])}     |    ${[1,2,3,4,5]}  
+            ${() => new ArrayResource([1,2,createPromise([3,4]),5])
+                          .flatMap(i => i + 3)}                          |    ${[4,5,6,7,8]}      
+  `(({method, expected}) => {
+    test(`Applies method ${method} lazily`, () => {
+      try {
+        method(resources);
+      } catch (promise) {
+        return promise
+          .then(result => {
+            expect(result).toStrictEqual(exptected)
+          })
+      }
     })
   })
-  it('suspends on...', () => {
+    
     //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
-    test("indexOf", () => {
-    
-    })
-    test("includes", () => {
-        
-    })
-    test("join", () => {
-        
-    })
-    test("lastIndexOf", () => {
-        
-    })
-    test("toString", () => {
-        
-    })
-    test("toSource", () => {
-        
-    })
-    test("toLocaleString", () => {
-        
-    })
-    test("pop", () => {
-        
-    })
-    test("shift", () => {
-        
-    })
-    test("every", () => {
-        
-    })
-    test("find", () => {
-        
-    })
-    test("findIndex", () => {
-        
-    })
-    test("forEach", () => {
-        
-    })
-    test("some", () => {
-        
-    })
-    test("Symbol.iterator", () => {
-        
-    })
-  });
+    [
+      'indexOf',
+      'includes',
+      'join',
+      'lastIndexOf',
+      'toString',
+      'toSource',
+      'toLocaleString',
+      'pop',
+      'shift',
+      'every',
+      'find',
+      'findIndex',
+      'forEach',
+      'some',
+      Symbol.iterator
+    ].forEach(method =>{
+      it(`suspends on ${method}`, () => {
 
-  it('allows access and mutation of following methods without suspending and persist changes to resolved ArrayResource', () => {
-    test("constructor", () => {
-    
+        expect(() => resources[method]()).toThrow();
+
+        try {
+          resources[method]()
+        } catch(thrownValue) {
+
+          expect(thrownValue).toBeInstanceOf(Promise);
+          return thrownValue
+                  .then( result => {
+                    expect(result).toStrictEqual([2,3,4,5])
+                  });
+        }
+      });
     })
-    test("length", () => {
-        
-    })
-    test("unscopables", () => {
-        
-    })
-  });
+
 
   it('subclasses Array', () => {
     //suspends on Array.from, Array.isArray, have Array.of static method
+    expect(resources).toBeInstanceOf(Array);
+    expect(Array.isArray(resources)).toEqual(true);
+    expect(Array.from(resources)).toThrow();
+
+    try {
+      Array.from(resources);
+    } catch(promise) {
+      expect(promise).toBeInstanceOf(Promise);
+      promise
+        .then(results => {
+          expect(results).toStrictEqual([2,3,4,5]);
+        })
+    }
+    expect(ArrayResource.of([2,3,4])).toBeInstanceOf(ArrayResource);
 
   });
   it('has immutable static @@species', () => {
-
+    let clss = ArrayResource[Symbol.species];
+    ArrayResource[Symbol.species] = class {};
+    expect(Object.is(clss, ArrayResource[Symbol.species])).toEqual(true);
   });
   it('has debug and suspend method', () => {
-
+    // TODO
   })
 });
