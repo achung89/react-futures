@@ -110,7 +110,7 @@ describe('Array operations', () => {
 
       })
     })
-  });
+
   
   test.each`   method                                                    |        expected
             ${arr => arr.concat([6,7])}                                  |    ${[2,3,4,5,6,7]}
@@ -198,6 +198,7 @@ describe('Array operations', () => {
     expect(Object.is(clss, ArrayResource[Symbol.species])).toEqual(true);
   });
   it('has debug and suspend method', () => {
-    // TODO
+    test.skip("should have debug method", () => {})
+    test.skip('should have suspend method', () => {})
   })
 });

@@ -6,6 +6,7 @@
   "author": "Andrew Chung <chung.andrew7@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@babel/plugin-proposal-private-methods": "^7.8.3",
     "@babel/preset-env": "^7.8.0",
     "@babel/preset-react": "^7.8.0",
     "@types/jest": "^24.0.25",
@@ -14,7 +15,7 @@
     "react-test-renderer": "^16.12.0",
     "react-testing-library": "^8.0.1",
     "rollup": "^1.29.0",
-    "typescript": "^3.7.4"
+    "typescript": "^3.8.0-beta"
   },
   "dependencies": {
     "react": "^0.0.0-experimental-f42431abe",
