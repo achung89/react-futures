@@ -20,9 +20,8 @@ class ArrayResource extends Array {
         return Reflect.get(target, key, ...rest);
       }
     });
-
-    
-  }
+  };
+  
 }
 
 
