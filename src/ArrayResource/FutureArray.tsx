@@ -145,12 +145,20 @@ export default class FutureArray extends Array {
 
 
 
-  #suspenseIterator = () => ({
-    next: function() {
-      throw this.#promise;
-    },
-    [Symbol.iterator]: function() { return this }
-  })
+  #suspenseIterator = () => {
+    const valueIterator = this.#value[Symbol.iterator]();
+    return {
+      next: function() {
+        if(this.loadingState === 'pending') {
+          throw this.#promise;
+        }
+        if(this.loadingState === 'complete') {
+          return valueIterator.next();
+        }
+      },
+      [Symbol.iterator]: function() { return this }
+    }
+  }
   #handleSuspense = cb => {
       if(isRendering() && this.#loadingStatus === 'pending') {
         throw this.#promise;
@@ -185,7 +193,7 @@ export default class FutureArray extends Array {
       return this;
     }
     if(this.#loadingStatus === 'complete') {
-      cb()
+      cb();
       return this;
     }
   }
