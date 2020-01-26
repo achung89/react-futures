@@ -1,22 +1,24 @@
 import { act } from 'react-dom/test-utils';
 import React, { Suspense } from 'react';
 import ReactNoop from 'react-noop-renderer';
-import { isJSDocUnknownType } from '../node_modules/typescript/lib/typescript';
+
+
+// TODO: setter should not suspend
+// TODO: lazy before suspense, eager after suspense
+// TODO: should entries, values, and keys throw, or return an iterator of FutureArrays?
+// TODO: should push and unshift suspend since they require knowledge of length?
+// TODO: all subsequently created arrays should all share the same promise
 let Scheduler
-const act = ReactNoop.act;
-let createPromise = val => new Promise((res, rej) => {
+let fetchArray = () => new Promise((res, rej) => {
   setTimeout(() => {
-    res(val)
+    res([2,3,4,5])
   }, 1000)
 })
 
 let container;
 let resources;
 beforeEach(() => {
-  resources = new ArrayResource([2,
-    createPromise(3),
-    createPromise(4),
-    5]);
+  resources = new ArrayResource(fetchArray());
   Scheduler = require('scheduler')
 });
 afterEach(() => {
@@ -39,15 +41,12 @@ const LogSuspense = ({ action }) => {
 describe("In only render context", () => {
 
   it.skip("should render properly", () => {
-    let thrownValue;
     let App = () => <div>
-      {resources}
     </div>;
 
     ReactNoop.render(<App />)
 
     expect(ReactNoopRenderer.getChildren()).toEqual({ type: 'div', hidden: 'false', children: [] })
-    // TODO: test render after resolve
   });
 
   it.skip("should suspend when rendering", () => {
@@ -55,47 +54,55 @@ describe("In only render context", () => {
     let App = () => <div>
       {resources}
     </div>;
+    ReactNoop.render(<App />)
 
     // TODO: test render after resolve
   });
 
-  it("should suspend on promise access", () => {
-    let resolveValue;
-    let AppSuspense = () => {
-      return <LogSuspense action={() => resolvedValue = resources[1]}>
+  ['1', 2, '3', 4].forEach((index) => {
+    it(`should suspend on ${JSON.stringify(index)} index access`, () => {
+
+      let AppSuspense = () => {
+        return <LogSuspense action={() => resolvedValue = resources[index]}>
+          <div>
+            foo
+        </div>
+        </LogSuspense>
+      };
+
+      ReactNoop.render(<AppSuspense />);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Suspend!'
+      ]);
+      jest.advanceTimersByTime(5000);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'No Suspense'
+      ])
+      expect(resolvedValue).toEqual(3);
+    });
+  })
+
+});
+
+['bar', Symbol('foo'), {}, 'baz'].forEach(key => {
+  it(`should not suspend on non-indexed ${key} access  access access`, () => {
+
+    let App = () => {
+      return <LogSuspense action={() => resources[0]}>
         <div>
           foo
       </div>
       </LogSuspense>
     };
+  })
 
-    ReactNoop.render(<AppSuspense />);
-    expect(Scheduler).toFlushAndYieldThrough([
-      'Suspend!'
-    ]);
-    jest.advanceTimersByTime(5000);
-    expect(Scheduler).toFlushAndYieldThrough([
-      'No Suspense'
-    ])
-    expect(resolvedValue).toEqual(3);
-  });
-});
-
-it("should not suspend on value access", () => {
-  let App = () => {
-    return <LogSuspense action={() => resources[0]}>
-      <div>
-        foo
-    </div>
-    </LogSuspense>
-  };
 
   ReactNoop.render(<App />);
   expect(Scheduler).toFlushAndYieldThrough([
     'No Suspense'
   ]);
 });
-// MAKE TEST FOR ERRORS WHEN ACCESSING PROPERTIES OUTSIDE RENDER
+//TODO: these should suspend
 describe('Array operations', () => {
   [
     'fill',
@@ -110,6 +117,7 @@ describe('Array operations', () => {
       expect(() => resources[method]()).not.toThrow();
       ReactNoop.render(<LogSuspense action={() => resources[method]()}></LogSuspense>)
       expect(Scheduler).toFlushAndYieldThrough(['No Suspense'])
+      // TODO: test lazy results
     })
   })
 
@@ -126,45 +134,47 @@ describe('Array operations', () => {
           ${'values'}      | ${arr => arr.values()}
           ${'flat'}        | ${() => new ArrayResource([1, 2, createPromise([3, 4]), 5]).flat()}
           ${'flatMap'}     | ${() => new ArrayResource([1, 2, createPromise([3, 4]), 5])
-                                  .flatMap(i => i + 3)}
-  `(({name, method}) => {
-    test(`Applies method ${name} lazily`, async () => {
-      let created;
-      expect(() => method(resources)).not.toThrow();
-      ReactNoop.render(<LogSuspense action={() => {
-        created = method(resources);
-      }}></LogSuspense>)
-      expect(Scheduler).toFlushAndYieldThrough(['No Suspense']);
+      .flatMap(i => i + 3)}
+  `(({ name, method }) => {
+        test(`Applies method ${name} lazily`, async () => {
+          let created;
+          expect(() => method(resources)).not.toThrow();
+          ReactNoop.render(<LogSuspense action={() => {
+            created = method(resources);
+          }}></LogSuspense>)
+          expect(Scheduler).toFlushAndYieldThrough(['No Suspense']);
 
-      expect(created).toBeInstanceOf(ArrayResource);
+          expect(created).toBeInstanceOf(ArrayResource);
 
 
-      let resourceResult = await Promise.all(resources);
-      let createdResult = await Promise.all(created);
+          let resourceResult = await Promise.all(resources);
+          let createdResult = await Promise.all(created);
 
-      expect(resourceResult).toStrictEqual([2, 3, 4, 5]);
-      expect(createdResult).toStrictEqual(method([2, 3, 4, 5]));
-    })
-  })
+          expect(resourceResult).toStrictEqual([2, 3, 4, 5]);
+          expect(createdResult).toStrictEqual(method([2, 3, 4, 5]));
+        })
+      })
 
   //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
-  test.each`   name             |  method
-    ${'indexOf'}         |  ${arr => arr.indexOf(2)}
-    ${'includes'}        |  ${arr => arr.includes(3)}
-    ${'join'}            |  ${arr => arr.join(' ')}
-    ${'lastIndexOf'}     |  ${arr => arr.lastIndexOf(4)}
-    ${'toString'}        |  ${arr => arr.toString()}
-    ${'toSource'}        |  ${arr => arr.toSource()}
-    ${'toLocaleString'}  |  ${arr => arr.toLocaleString()}
-    ${'pop'}             |  ${arr => arr.pop()}
-    ${'shift'}           |  ${arr => arr.shift()}
-    ${'every'}           |  ${arr => arr.every(a => a % 2 === 0)}
-    ${'find'}            |  ${arr => arr.find(a => a === 5)}
-    ${'findIndex'}       |  ${arr => arr.findIndex(a => a === 5)}
-    ${'forEach'}         |  ${arr => arr.forEach(a => a)}
-    ${'some'}            |  ${arr => arr.some()}
-    ${Symbol.iterator} |  ${arr => arr[Symbol.iterator]()}
-  `(({name, method}) => {
+
+  // TODO: Expected values
+  test.each`   name             |  method                             |        expected
+    ${'indexOf'}         |  ${arr => arr.indexOf(2)}                  |     ${0}
+    ${'includes'}        |  ${arr => arr.includes(3)}                 |     ${true}
+    ${'join'}            |  ${arr => arr.join(' ')}                   |     ${'2 3 4 5'}
+    ${'lastIndexOf'}     |  ${arr => arr.lastIndexOf(4)}              |     ${2}
+    ${'toString'}        |  ${arr => arr.toString()}                  |     ${'2,3,4,5'}
+    ${'toSource'}        |  ${arr => arr.toSource()}                  |     ${''}
+    ${'toLocaleString'}  |  ${arr => arr.toLocaleString()}            |     ${''}
+    ${'pop'}             |  ${arr => arr.pop()}                       |     ${5}
+    ${'shift'}           |  ${arr => arr.shift()}                     |     ${2}
+    ${'every'}           |  ${arr => arr.every(a => a % 2 === 0)}     |     ${false}
+    ${'find'}            |  ${arr => arr.find(a => a === 5)}          |     ${5}
+    ${'findIndex'}       |  ${arr => arr.findIndex(a => a === 5)}     |     ${3}
+    ${'forEach'}         |  ${arr => arr.forEach(a => a)}             |     ${undefined}
+    ${'some'}            |  ${arr => arr.some(a => a % 2 === 0)}      |     ${true}
+    ${Symbol.iterator} |  ${arr => [...arr, ...arr]}                  |     ${[2,3,4,5,2,3,4,5]}
+  `(({ name, method, expected }) => {
     it(`suspends on ${name}`, () => {
       let created;
       expect(() => method(resource)).toThrow(); //TODO: specify error
@@ -176,6 +186,7 @@ describe('Array operations', () => {
       expect(Scheduler).toFlushAndYieldThrough([
         'No Suspense'
       ])
+      expect(created).toEqual(expected)
       //TODO: test created
     });
   })
@@ -185,7 +196,8 @@ describe('Array operations', () => {
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(resources).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);
-    expect(Array.from(resources)).toThrow();
+    expect(() => Array.from(resources)).toThrow();
+    
 
     try {
       Array.from(resources);
@@ -205,7 +217,7 @@ describe('Array operations', () => {
     ])
     expect(created).toBeInstanceOf(Array);
     expect(created).not.toBeInstanceOf(ArrayResource);
-    expect(created).toEqual([2,3,4,5])
+    expect(created).toEqual([2, 3, 4, 5])
 
     expect(ArrayResource.of([2, 3, 4])).toBeInstanceOf(ArrayResource);
 
