@@ -1,5 +1,2 @@
-# suspense-data-structures
-Use suspense to declarative construct data structures from asynchronous data
-
-
-
+# suspense-data
+Transparent wrappers for suspense data fetching
