@@ -1,5 +1,6 @@
 import React from 'react';
-import { pipe, tap, promiseCache, first } from '../utils';
+import { pipe, tap, first } from '../utils';
+import { promiseCache } from "../shared-properties/promiseCache";
 
 
 

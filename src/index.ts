@@ -1,5 +1,9 @@
 import FutureArray from './ArrayResource/FutureArray';
-import { promiseCache, memoCache } from './utils';
+import { memoCache } from './utils';
+import { promiseCache } from "./shared-properties/promiseCache";
+
+
+
 
 
 export const createFutureArray = promiseThunk => {
