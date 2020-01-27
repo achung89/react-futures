@@ -8,6 +8,7 @@ import ReactNoop from 'react-noop-renderer';
 // TODO: should entries, values, and keys throw, or return an iterator of FutureArrays?
 // TODO: should push and unshift suspend since they require knowledge of length?
 // TODO: all subsequently created arrays should all share the same promise
+// TODO: test freeze, seal, delete
 let Scheduler
 let fetchArray = () => new Promise((res, rej) => {
   setTimeout(() => {

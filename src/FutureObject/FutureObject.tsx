@@ -2,6 +2,7 @@
 
 
 export default class FutureObject {
+  
   constructor(promise) {
 
     
