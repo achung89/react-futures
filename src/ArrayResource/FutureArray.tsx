@@ -45,98 +45,15 @@ export default class FutureArray extends Array {
     // TODO: apply for only for ie11 down
     Object.setPrototypeOf(this, FutureArray.prototype);
 
-    return new Proxy(this, {
-      get: (target, key, receiver) => {
-
-        if (keyIsIndex(key) && this.#loadingStatus === 'pending') {
-          throw this.#promise;
-        }
-
-        return Reflect.get(target, key, receiver);
-      },
-      set: (_target, key, value) => {
-        if(!isRendering()) {
-          // TODO: more descriptive message
-          throw new Error("sideeffects in render is not allowed")
-        }
-        switch(this.#loadingStatus) {
-          case 'pending':
-            this.#deferredOperations = pipe(this.#deferredOperations, (tap(target => Reflect.set(target,key,value))));
-            break;
-          case 'complete':
-            //TODO: think through this logic
-            return Reflect.get(_target, key, value);
-
-        }
-      },
-      // TODO: add mutating handlers to deferredOperations
-    });
+    return 
   };
-  // immutable methods
-  // TODO: pass memoized methods on each subsequent iter
-  concat(...args){return this.#copyWithOperation(target => target.concat(...args))}
-  filter(...args) {return this.#copyWithOperation(target => target.filter(...args))}
-  slice(...args) {return this.#copyWithOperation(target => target.slice(...args))}
-  map(...args) {return this.#copyWithOperation(target => target.map(...args))}
-  reduce(...args) {return this.#copyWithOperation(target => target.reduce(...args))}
-  reduceRight(...args) {return this.#copyWithOperation(target => target.reduceRight(...args))}
-  flat(...args) {return this.#copyWithOperation(target => target.flat(...args))}
-  flatMap(...args) {return this.#copyWithOperation(target => target.flatMap(...args))}
-  immReverse(...args) {return this.#copyWithOperation(target => target.immReverse(...args))}
-  immSplice(...args) {return this.#copyWithOperation(target => target.slice().splice(...args))}
-  immUnshift(...args) {return this.#copyWithOperation(target => target.slice().unshift(...args))}
-  immCopywithin(...args) {return this.#copyWithOperation(target => target.slice().copyWithin(...args))}
 
-  //suspend methods
-  indexOf(...args) { return this.#handleSuspense(() => this.#value.indexOf(...args))}
-  includes(...args) { return this.#handleSuspense(() => this.#value.includes(...args))}
-  join(...args) { return this.#handleSuspense(() => this.#value.join(...args))}
-  lastIndexOf(...args) { return this.#handleSuspense(() => this.#value.lastIndexOf(...args))}
-  toString(...args) { return this.#handleSuspense(() => this.#value.toString(...args))}
-  toLocaleString(...args) { return this.#handleSuspense(() => this.#value.toLocaleString(...args))}
 
-  // mutableMethods  
-  splice(...args) {return this.#operateSelf(() => this.#value.splice(...args))}
-  copyWithin(...args) {return this.#operateSelf(() => this.#value.copyWithin(...args))}
-  sort(...args) {return this.#operateSelf(() => this.#value.sort(...args))}
-  unshift(...args) {return this.#operateSelf(() => this.#value.unshift(...args))}
-  reverse(...args) {return this.#operateSelf(() => this.#value.reverse(...args))}
-  fill(...args) {return this.#operateSelf(() => this.#value.fill(...args))}
-  
-  // iterator returning methods
-  [Symbol.iterator]() {
-    switch(this.#loadingStatus) {
-      case 'pending':
-        return this.#suspenseIterator();
-      case 'complete':
-        return this.#value[Symbol.iterator]();
-    }
-  }
-  values() {
-    switch(this.#loadingStatus) {
-      case 'pending':
-        return this.#suspenseIterator();
-      case 'complete':
-        return this.#value.values();
-    }
 
-  }
-  keys() {
-    switch(this.#loadingStatus) {
-      case 'pending':
-        return this.#suspenseIterator();
-      case 'complete':
-        return this.#value.keys();
-    }
-  }
-  entries() {
-    switch(this.#loadingStatus) {
-      case 'pending':
-        return this.#suspenseIterator();
-      case 'complete':
-        return this.#value.entries();
-    }
-  }
+
+
+
+
   
   // invalid methods
   // TODO: more descriptive error messages
@@ -144,59 +61,109 @@ export default class FutureArray extends Array {
   pop() { throw new Error('Invalid method')}
   shift() { throw new Error('Invalid method')}
 
+}
+}
 
+// IO
+class FutureDefer extends FutureArray {
+  #deferredFn = id => id;
+  suspend: () => void;
+  #loadingStatus;
+  #promise;
+  constructor(deferredFn, promise) {
+    super();
+    this.#deferredFn = deferredFn;
+    this.#promise = promise;
+    this.#loadingStatus = promiseCache.get(promise).status;
+    new Proxy(this, {
+      get: (target, key, receiver) => {
 
-  #suspenseIterator = () => {
-    const valueIterator = this.#value[Symbol.iterator]();
-    return {
-      next: function() {
-        if(this.loadingState === 'pending') {
-          throw this.#promise;
+        if (keyIsIndex(key) && this.#loadingStatus === 'pending') {
+          this.suspend();
         }
-        if(this.loadingState === 'complete') {
-          return valueIterator.next();
-        }
+
+        return Reflect.get(target, key, receiver);
       },
-      [Symbol.iterator]: function() { return this }
+      set: (_target, key, value) => {
+        if(isRendering()) {
+          // TODO: more descriptive message
+          throw new Error("sideeffects in render is not allowed")
+        }
+        this.#tap(target => Reflect.set(target,key,value), 'set');
+        return true;
+      },
+      // TODO: add mutating handlers to deferredOperations
+    });
+  }
+    // immutable methods
+  // TODO: pass memoized methods on each subsequent iter
+  concat(...args){return this.#map(target => target.concat(...args))}
+  filter(...args) {return this.#map(target => target.filter(...args))}
+  slice(...args) {return this.#map(target => target.slice(...args))}
+  map(...args) {return this.#map(target => target.map(...args))}
+  reduce(...args) {return this.#map(target => target.reduce(...args))}
+  reduceRight(...args) {return this.#map(target => target.reduceRight(...args))}
+  flat(...args) {return this.#map(target => target.flat(...args))}
+  flatMap(...args) {return this.#map(target => target.flatMap(...args))}
+  immReverse(...args) {return this.#map(target => target.immReverse(...args))}
+  immSplice(...args) {return this.#map(target => target.slice().splice(...args))}
+  immUnshift(...args) {return this.#map(target => target.slice().unshift(...args))}
+  immCopywithin(...args) {return this.#map(target => target.slice().copyWithin(...args))}
+
+  // mutableMethods  
+  splice(...args) {return this.#tap(target => target.splice(...args), 'splice')}
+  copyWithin(...args) {return this.#tap(target => target.copyWithin(...args), 'copyWithin')}
+  sort(...args) {return this.#tap( target => target.sort(...args), 'sort')}
+  unshift(...args) {return this.#tap( target => target.unshift(...args), 'unshift')}
+  reverse(...args) {return this.#tap(target => target.reverse(...args), 'reverse')}
+  fill(...args) {return this.#tap(target => target.fill(...args), 'fill')}
+  
+
+  //suspend methods
+  indexOf(...args) { return this.#suspend(target => target.indexOf(...args))}
+  includes(...args) { return this.#suspend( target => target.includes(...args))}
+  join(...args) { return this.#suspend(target => target.join(...args))}
+  lastIndexOf(...args) { return this.#suspend(target => target.lastIndexOf(...args))}
+  toString(...args) { return this.#suspend(target => target.toString(...args))}
+  toLocaleString(...args) { return this.#suspend(target => target.toLocaleString(...args))}
+  #suspend = cb => {
+    if(!isRendering()) {
+      // TODO: add custom error message per method
+      throw new Error("cannot suspend outside render")
     }
-  }
-  #handleSuspense = cb => {
-      if(isRendering() && this.#loadingStatus === 'pending') {
-        throw this.#promise;
-      };
-      if(isRendering() && this.#loadingStatus === 'complete') {
-        return cb();
-      }  else if(!isRendering()) {
-        // TODO: add custom error message per method
-        throw new Error("cannot suspend outside render")
-      }
-  }
-  #copyWithOperation = (cb): FutureArray => {
-    switch(this.#loadingStatus) {
-      case 'pending':
-        const newArr = new FutureArray(this.#promise);
-        newArr.#deferredOperations = first(pipe(this.#deferredOperations, cb));
-        return newArr;
-      case 'complete':
-        return FutureArray.of(...cb())
-      default:
-        // TODO: more descript message
-        throw new Error('Unknown Error')
-    }
-  }
-  #operateSelf = (cb) => {
-    if(isRendering()) {
-      // TODO: implement custom error message per method
-      throw new Error('Cannot invoke mutable method ' + method + ' in render. Consider using the immutable variant')
-    } 
-    if(this.#loadingStatus === 'pending') {
-      this.#deferredOperations = first(pipe(this.#deferredOperations, tap(cb)))
-      return this;
+    if (this.#loadingStatus === 'pending') {
+      throw this.#promise;
     }
     if(this.#loadingStatus === 'complete') {
-      cb();
-      return this;
+      return new DoneFuture.of(pipe(this.#deferredFn, cb)())
     }
   }
+  #map = nextFn =>  new PendingFuture( pipe(this.#deferredFn, nextFn), this.#promise);
+
+
+  #tap = (fn, name) => {
+    if(isRendering()) {
+      // TODO: implement custom error message per method
+      throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using the immutable variant')
+    } 
+    this.#deferredFn = pipe(this.#deferredFn, tap(fn));
+    return this;
+  }
+
+  static of(x) {
+    return new FutureDefer(() => x);
+  }
+  #suspenseIterator = () => ({
+    next: function() {
+        throw this.#promise;
+    },
+    [Symbol.iterator]: function() { return this }
+  });
+
+  [Symbol.iterator]() { return this.#suspenseIterator(); }
+  values() { return this.#suspenseIterator(); }
+  keys() { return this.#suspenseIterator(); }
+  entries() { return this.#suspenseIterator(); }
 }
+
 
