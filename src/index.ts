@@ -8,12 +8,32 @@ import { promiseCache } from "./shared-properties/promiseCache";
 
 export const createFutureArray = promiseThunk => {
   const cachedPromise = memoCache(promiseThunk);
-  return class extends FutureArray {
+  return class extends LazyFutureArray {
     static invalidateCache: () => void;
 
     constructor() {
       let promise = cachedPromise();
-      super(promise);
+      super(() => {
+        const { status, value } = promiseCache.get(promise)
+        if(status === 'pending') {
+          if(!isRendering()) {
+            // TODO: add custom error message per method
+            throw new Error("cannot suspend outside render")
+          }
+          throw promise;
+        }
+        if(status === 'completed') {
+          if(!Array.isArray(value)) {
+            throw new Error("TypeError: FutureArray received non-array value from promise")
+          }
+          return value;
+        }
+        if(status === 'error') {
+          //TODO: more descript error message
+          //TODO: should I put error here?
+          throw new Error('Unhandled promise exception')
+        }
+      });
 
       FutureArray.invalidateCache = promise.invalidate;
       if(!promiseCache.has(promise)) {
