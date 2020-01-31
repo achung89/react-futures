@@ -13,7 +13,7 @@ export default class LazyFuture {
     return futr.#map(fn)
   }
   #deferredFn;
-  constructor(deferredFn) {
+  constructor(deferredFn, childProxy) {
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);
 
@@ -29,17 +29,37 @@ export default class LazyFuture {
       deleteProperty: () => {
         throw new Error("deletion on lazy future not permitted")
       },
-      get: (target, key, receiver) => {
+      get: (_target, key, receiver) => {
         return Reflect.get(this.#deferredFn(), key, receiver);
       },
-      getOwnPropertyDescriptor
-      getPrototypeOf
-      has
-      isExtensible
-      ownKeys
-      preventExtensions
-      set
-      setPrototypeOf
+      getOwnPropertyDescriptor: (_target, prop) => {
+        return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
+      },
+      getPrototypeOf: (_target) => {
+        return Reflect.getPrototypeOf(this.#deferredFn());
+      },
+      has: (_target, key) => {
+        return Reflect.has(this.#deferredFn(), key);
+      },
+      isExtensible: (_target) => {
+        return Reflect.isExtensible(this.#deferredFn());
+      },
+      ownKeys: () => {
+        return FutureObject.getOwnPropertyNames(this)
+      },
+      preventExtensions: () => {
+        return Reflect.preventExtensions(this.#deferredFn())
+      },
+      set: (_target, key, value) => {
+        // should i defer this?
+        this.#tap(target => (target[key] = value) , 'set');
+        return true;
+      },
+      setPrototypeOf(_target, proto) {
+        this.#tap(target => Object.setPrototypeOf(target, proto))
+        return true;
+      },
+      ...childProxy
     })
   }
   #map = nextFn =>  new this.constructor[Symbol.species]( pipe(this.#deferredFn, nextFn));
