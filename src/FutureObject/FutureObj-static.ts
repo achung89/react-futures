@@ -1,10 +1,10 @@
 //FutureObject
 let a = `       staticMethod         |   inRender           |  outRender                                                                                                                                                                               
     ${'assign'}                      |    throw             |   defermutate                                                 
-    ${'getOwnPropertyDescriptor'}    |    defer             |   throw                                                             
-    ${'getOwnPropertyDescriptors'}   |    defer             |   throw                                                                
-    ${'getOwnPropertyNames'}         |    defer             |   throw                                                       
-    ${'getOwnPropertySymbols'}       |    defer             |   throw                                                           
+    ${'getOwnPropertyDescriptor'}    |    defer             |   defer                                                             
+    ${'getOwnPropertyDescriptors'}   |    defer             |   defer                                                                
+    ${'getOwnPropertyNames'}         |    defer             |   defer                                                       
+    ${'getOwnPropertySymbols'}       |    defer             |   defer                                                           
     ${'is'}                          |    suspend           |   throw                                        
     ${'preventExtensions'}           |    throw             |   defermutate                                                          
     ${'seal'}                        |    throw             |   defermutate                                         

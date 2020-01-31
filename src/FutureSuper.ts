@@ -12,7 +12,10 @@ export default class LazyFuture {
   static map(fn, futr) {
     return futr.#map(fn)
   }
-  #deferredFn;
+  static run(fn, futr) {
+    return futr.#run(fn); 
+  }
+  #deferredFn: () => FutureArray;
   constructor(deferredFn, childProxy) {
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);
@@ -29,8 +32,11 @@ export default class LazyFuture {
       deleteProperty: () => {
         throw new Error("deletion on lazy future not permitted")
       },
-      get: (_target, key, receiver) => {
-        return Reflect.get(this.#deferredFn(), key, receiver);
+      get(target, key, receiver) {
+        if(typeof this[key] === 'function') {
+          return Reflect.get(target, key, receiver);
+        }
+        return Reflect.get(this.#deferredFn(), key, receiver)
       },
       getOwnPropertyDescriptor: (_target, prop) => {
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
@@ -50,17 +56,12 @@ export default class LazyFuture {
       preventExtensions: () => {
         return Reflect.preventExtensions(this.#deferredFn())
       },
-      set: (_target, key, value) => {
-        // should i defer this?
-        this.#tap(target => (target[key] = value) , 'set');
-        return true;
-      },
       setPrototypeOf(_target, proto) {
         this.#tap(target => Object.setPrototypeOf(target, proto))
         return true;
       },
       ...childProxy
-    })
+    });
   }
   #map = nextFn =>  new this.constructor[Symbol.species]( pipe(this.#deferredFn, nextFn));
 
@@ -72,8 +73,11 @@ export default class LazyFuture {
     this.#deferredFn = pipe(this.#deferredFn, tap(fn));
     return this;
   }
+  #run = fn => {
+    return pipe(this.#deferredFn, fn)();
+  }
 }
 
-let {map, tap, of} = LazyFuture;
+let {map, tap, of, run} = LazyFuture;
 
-export {map, tap,of}
+export {map, tap,of, run}

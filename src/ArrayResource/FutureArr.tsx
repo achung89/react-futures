@@ -52,7 +52,7 @@ export default class FutureArray extends Array {
 class LazyFuture extends FutureArray {
 
   constructor(deferredFn) {
-    super(deferredFn);
+    super(deferredFn)
   }
     // immutable methods
   // TODO: pass memoized methods on each subsequent iter
