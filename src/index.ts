@@ -35,7 +35,7 @@ export const createFutureArray = promiseThunk => {
         }
       });
 
-      FutureArray.invalidateCache = promise.invalidate;
+      LazyFutureArray.invalidateCache = promise.invalidate;
       if(!promiseCache.has(promise)) {
         promise
           .then(res => {
