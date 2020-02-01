@@ -1,4 +1,4 @@
-import LazyFuture, {map, of, tap} from "../FutureSuper";
+import LazyFuture from "../FutureSuper";
 import FutureArray from "../ArrayResource/FutureArr";
 
 
@@ -66,13 +66,34 @@ export default class FutureObj extends LazyFuture {
            ? this.run(Object.getPrototypeOf, obj)
            : Object.getPrototypeOf(obj);
   }
-  //TODO: fill out rest of static methods
-  constructor(promise) {
-    return new Proxy(this, {
-      get: (target, key, receiver) {
-
-      }
-    })
+  static setPrototypeOf(obj, proto) {
+    return  obj instanceof LazyFuture
+            ? this.tap(() => Object.setPrototypeOf(obj, proto), obj, 'Object.setPrototypeOf')
+            : Object.setPrototypeOf(obj, proto);
+  }
+  static isExtensible(obj) {
+    return obj instanceof LazyFuture
+           ? this.run(Object.isExtensible, obj)
+           : Object.isExtensible(obj)
+  }
+  static isFrozen(obj) {
+    return obj instanceof LazyFuture
+           ? this.run(Object.isFrozen, obj)
+           : Object.isFrozen(obj)    
+  }
+  static isSealed(obj) {
+    return obj instanceof LazyFuture
+           ? this.run(Object.isSealed, obj)
+           : Object.isSealed(obj)    
+  }
+  static keys(obj) {
+    return new FutureArray(() => Object.keys(obj))[Symbol.iterator]();
+  }
+  static entries() {
+    return new FutureArray(() => Object.entries(obj))[Symbol.iterator]();
+  }
+  static values() {
+    return new FutureArray(() => Object.values(obj))[Symbol.iterator]();
   }
 }
 

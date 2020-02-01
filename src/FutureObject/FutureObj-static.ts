@@ -13,10 +13,10 @@ let a = `       staticMethod         |   inRender           |  outRender
     ${'defineProperty'}              |    throw             |   defermutate                                                 
     ${'freeze'}                      |    throw             |   defermutate                                          
     ${'getPrototypeOf'}              |    suspend           |   throw                                                     
-    ${'setPrototypeOf'}              |    throw?            |   throw?                                                    
-    ${'isExtensible'}                |    throw             |   throw                                             
-    ${'isFrozen'}                    |    throw             |   throw                                         
-    ${'isSealed'}                    |    throw             |   throw                                              
+    ${'setPrototypeOf'}              |    throw             |   defer                                                    
+    ${'isExtensible'}                |    suspend           |   throw                                             
+    ${'isFrozen'}                    |    suspend           |   throw                                         
+    ${'isSealed'}                    |    suspend           |   throw                                              
     ${'keys'}                        |    defer             |   defer                                       
     ${'entries'}                     |    defer             |   defer                                                
     ${'values'}                      |    defer             |   defer                                      
