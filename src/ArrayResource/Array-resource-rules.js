@@ -1,4 +1,5 @@
 `   method                 |   inside render                     |        outside render
+    ${'getter'}               |   ${'suspend'}                      |         ${'throw'}
     ${'indexOf'}           |   ${'suspend'}                      |         ${'throw'}
     ${'includes'}          |   ${'suspend'}                      |         ${'throw'}
     ${'join'}              |   ${'suspend'}                      |         ${'throw'}
@@ -25,6 +26,7 @@
     ${'flatMap'}           |   ${'defer'}                        |         ${'defer'}
     ${'fill'}              |   ${'throw'}                        |         ${'defer mutable'}
     ${'push'}              |   ${'throw'}                        |         ${'throw'}
+    ${'setter'}            |   ${'throw'}                        |         ${'defer mutable'}
     ${'reverse'}           |   ${'throw'}                        |         ${'defer mutable'}
     ${'unshift'}           |   ${'throw'}                        |         ${'defer mutable'}
     ${'sort'}              |   ${'throw'}                        |         ${'defer mutable'}

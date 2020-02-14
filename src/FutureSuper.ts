@@ -1,11 +1,12 @@
 import {  pipe, first } from "./utils";
 
-
-export default class LazyFuture {
+// implements IO
+export default class Future {
   static of() {
     //TODO: implement
     return 
   }
+  //TODO: write explainer for wrapping private method in static method
   static tap(fn, name, futr) {
     return futr.#tap(fn, name);
   }
@@ -15,7 +16,7 @@ export default class LazyFuture {
   static run(fn, futr) {
     return futr.#run(fn); 
   }
-  #deferredFn: () => FutureArray;
+  #deferredFn: () => Future;
   constructor(deferredFn, childProxy) {
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);

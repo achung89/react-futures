@@ -1,55 +1,7 @@
-import React from 'react';
-import { pipe, tap, first } from '../utils';
-import { promiseCache } from "../shared-properties/promiseCache";
-import { map, tap } from '../FutureSuper';
-
-const extends = (...classes) => {
-   const linked = class {};
-   for(let Class of classes.slice().reverse()) {
-    linked = 
-   }
-}
-// TODO: error handler? (refer scala docs)
-
-const isRendering = () => {
-  var dispatcher = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current
-  return (dispatcher !== null)
-};
-const keyIsIndex =  key => {
-  const isSymbol = (x): x is symbol => typeof x === 'symbol',
-        isNaN = (x) => !Number.isNaN(parseInt(x, 10));
-
-  return !isSymbol(key) && !isNaN(key) && key >= 0;
-}
-
-// TODO: figure out naming for added (immutable) methods
-export default class FutureArray extends Array {
-  constructor(deferredFn) {
-    super(deferredFn);
-
-    // TODO: apply for only for ie11 down
-    //Object.setPrototypeOf(this, FutureArray.prototype);
- 
-  };
+import Future, { map, tap, run } from '../FutureSuper';
 
 
-
-
-
-
-
-  
-  // invalid methods
-  // TODO: more descriptive error messages
-  push() { throw new Error('Invalid method')}
-  pop() { throw new Error('Invalid method')}
-  shift() { throw new Error('Invalid method')}
-
-
-}
-
-// IO
-class LazyFuture extends FutureArray {
+class FutureArray extends Array  {
 
   constructor(deferredFn) {
     super(deferredFn)
@@ -79,30 +31,46 @@ class LazyFuture extends FutureArray {
   
 
   //suspend methods
-  indexOf(...args) { return this.#suspend(target => target.indexOf(...args))}
-  includes(...args) { return this.#suspend( target => target.includes(...args))}
-  join(...args) { return this.#suspend(target => target.join(...args))}
-  lastIndexOf(...args) { return this.#suspend(target => target.lastIndexOf(...args))}
-  toString(...args) { return this.#suspend(target => target.toString(...args))}
-  toLocaleString(...args) { return this.#suspend(target => target.toLocaleString(...args))}
+  indexOf(...args) { return run(target => target.indexOf(...args), this)}
+  includes(...args) { return run( target => target.includes(...args), this)}
+  join(...args) { return run(target => target.join(...args), this)}
+  lastIndexOf(...args) { return run(target => target.lastIndexOf(...args), this)}
+  toString(...args) { return run(target => target.toString(...args), this)}
+  toLocaleString(...args) { return run(target => target.toLocaleString(...args), this)}
 
-
+  // Invalid methods
+  // TODO: more descriptive error messages
+  push() { throw new Error('Invalid method')}
+  pop() { throw new Error('Invalid method')}
+  shift() { throw new Error('Invalid method')}
 
   static of(x) {
     return new LazyFuture(() => x);
   }
+  // implement return and throw
   #suspenseIterator = () => ({
-    next: function() {
-        //TODO: remove need for promise here
-        throw this.#promise;
+    next: () => {
+      return run(target => target.next(), this)
     },
     [Symbol.iterator]: function() { return this }
   });
 
   [Symbol.iterator]() { return this.#suspenseIterator(); }
-  values() { return this.#suspenseIterator(); }
+  values() { 
+    let arr = super.values();
+  }
   keys() { return this.#suspenseIterator(); }
   entries() { return this.#suspenseIterator(); }
 }
 
+interface FutureArray<T> extends Array<T>, Future {};
+;
+
+function applyMixins(baseCtors: any[]) {
+  return baseCtors.reduce(klass => {
+    return class extends klass {
+      
+    }
+  })
+}
 

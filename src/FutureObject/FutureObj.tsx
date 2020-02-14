@@ -2,10 +2,10 @@ import LazyFuture from "../FutureSuper";
 import FutureArray from "../ArrayResource/FutureArr";
 
 
-
+// TODO test non future params
 export default class FutureObj extends LazyFuture {
   static assign(target, ...rest) {
-    if(isRendering() && target instanceof FUTURE) {
+    if(isRendering() && target instanceof Future) {
       // TODO: more descriptive message
       throw new Error('no sideaffect')
     }
@@ -89,10 +89,10 @@ export default class FutureObj extends LazyFuture {
   static keys(obj) {
     return new FutureArray(() => Object.keys(obj))[Symbol.iterator]();
   }
-  static entries() {
+  static entries(obj) {
     return new FutureArray(() => Object.entries(obj))[Symbol.iterator]();
   }
-  static values() {
+  static values(obj) {
     return new FutureArray(() => Object.values(obj))[Symbol.iterator]();
   }
 }
