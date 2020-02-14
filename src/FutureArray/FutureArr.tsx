@@ -1,7 +1,7 @@
 import Future, { map, tap, run } from '../FutureSuper';
 
 
-class FutureArray extends Array  {
+class FutureArray<T> extends Future(Array)<Array<T>> {
 
   constructor(deferredFn) {
     super(deferredFn)
@@ -63,14 +63,6 @@ class FutureArray extends Array  {
   entries() { return this.#suspenseIterator(); }
 }
 
-interface FutureArray<T> extends Array<T>, Future {};
-;
+interface FutureArray<T> extends Array<T>, Future<Array<T>> {};;
 
-function applyMixins(baseCtors: any[]) {
-  return baseCtors.reduce(klass => {
-    return class extends klass {
-      
-    }
-  })
-}
-
+export default FutureArray;

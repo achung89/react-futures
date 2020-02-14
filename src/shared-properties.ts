@@ -1,5 +1,5 @@
-import FutureArray from "./ArrayResource/FutureArray";
-import FutureObject from "./FutureObject/FutureObject";
+import FutureArray from "./ArrayResource/FutureArr";
+import FutureObject from "./FutureObject/FutureObj";
 
 type Status = "pending" | "complete" | "error";
 
