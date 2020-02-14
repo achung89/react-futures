@@ -1,9 +1,10 @@
 import LazyFuture from "../FutureSuper";
-import FutureArray from "../ArrayResource/FutureArr";
+import FutureArray from "../FutureArray/FutureArr";
+import Future from "../FutureSuper";
 
-
+type Object = object | any[];
 // TODO test non future params
-export default class FutureObj extends LazyFuture {
+export default class FutureObj<T extends object> extends Future(Object)<T> {
   static assign(target, ...rest) {
     if(isRendering() && target instanceof Future) {
       // TODO: more descriptive message
@@ -32,12 +33,12 @@ export default class FutureObj extends LazyFuture {
     obj2 = obj2 instanceof LazyFuture ? suspend(obj2) : obj2;
     return Object.is(obj1, obj2);
   }
-  static preventExtensions(target) {
+  static preventExtensions(target:) {
     return target instanceof LazyFuture 
             ? this.tap(Object.preventExtensions, target, 'Object.preventExtensions') 
             : Object.preventExtensions(target);
   }
-  static seal(target) {
+  static seal(target: Object) {
     return  target instanceof LazyFuture 
             ? this.tap(Object.seal, target, 'Object.seal') 
             : Object.seal(target);
@@ -46,7 +47,7 @@ export default class FutureObj extends LazyFuture {
     // TODO: think through why this shouldn't be allowed
     throw Error('Future object does not support Object.create')
   }
-  static defineProperties(obj, descs) {
+  static defineProperties(obj:Object, descs) {
     return  obj instanceof LazyFuture 
             ? this.tap(target => Object.defineProperties(target, descs), obj, 'Object.defineProperties') 
             : Object.defineProperties(obj, descs);

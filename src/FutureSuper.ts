@@ -1,11 +1,8 @@
 import {  pipe, first } from "./utils";
 
 // implements IO
-export default class Future {
-  static of() {
-    //TODO: implement
-    return 
-  }
+export default Type => class Future<T> extends Type {
+  static of: <T>(type: T) => Future<T>; // TODO: check typedef
   //TODO: write explainer for wrapping private method in static method
   static tap(fn, name, futr) {
     return futr.#tap(fn, name);
@@ -16,8 +13,9 @@ export default class Future {
   static run(fn, futr) {
     return futr.#run(fn); 
   }
-  #deferredFn: () => Future;
-  constructor(deferredFn, childProxy) {
+  #deferredFn: () => Future<T>;
+  constructor(deferredFn, childProxy = {}) {
+    super();
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);
 

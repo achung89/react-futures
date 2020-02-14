@@ -1,2 +1,2 @@
-import FutureObject from "./FutureObject/FutureObject"
-import FutureArray from "./ArrayResource/FutureArray"
+import FutureObject from "./FutureObject/FutureObj"
+import FutureArray from "./ArrayResource/FutureArr"
