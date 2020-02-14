@@ -1,4 +1,4 @@
-import FutureArray from './ArrayResource/FutureArray';
+import FutureArray from './ArrayResource/FutureArr';
 import { memoCache } from './utils';
 import { promiseCache } from "./shared-properties/promiseCache";
 
@@ -8,7 +8,7 @@ import { promiseCache } from "./shared-properties/promiseCache";
 
 export const createFutureArray = promiseThunk => {
   const cachedPromise = memoCache(promiseThunk);
-  return class extends LazyFutureArray {
+  return class extends FutureArray {
     static invalidateCache: () => void;
 
     constructor() {

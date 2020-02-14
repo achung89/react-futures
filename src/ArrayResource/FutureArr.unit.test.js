@@ -1,14 +1,16 @@
-import { act } from 'react-dom/test-utils';
-import React, { Suspense } from 'react';
+
+import React from 'react';
 import ReactNoop from 'react-noop-renderer';
+import { createFutureArray } from '../index';
 
 
 // TODO: setter should not suspend
-// TODO: lazy before suspense, eager after suspense
+// TODO: lazy before suspense, eager after suspense <=== does this still apply???????
 // TODO: should entries, values, and keys throw, or return an iterator of FutureArrays?
 // TODO: should push and unshift suspend since they require knowledge of length?
 // TODO: all subsequently created arrays should all share the same promise
 // TODO: test freeze, seal, delete
+// TODO: test creating FutureArr instance in render
 let Scheduler
 let fetchArray = () => new Promise((res, rej) => {
   setTimeout(() => {
@@ -17,13 +19,13 @@ let fetchArray = () => new Promise((res, rej) => {
 })
 
 let container;
-let resources;
+let FutureArr;
 beforeEach(() => {
-  resources = new ArrayResource(fetchArray());
+  FutureArr =  createFutureArray(fetchArray);
   Scheduler = require('scheduler')
 });
 afterEach(() => {
-  resources = null;
+  FutureArr = null;
 });
 const LogSuspense = ({ action }) => {
   try {
@@ -53,7 +55,7 @@ describe("In only render context", () => {
   it.skip("should suspend when rendering", () => {
     let thrownValue;
     let App = () => <div>
-      {resources}
+      {new FutureArr}
     </div>;
     ReactNoop.render(<App />)
 
@@ -62,7 +64,7 @@ describe("In only render context", () => {
 
   ['1', 2, '3', 4].forEach((index) => {
     it(`should suspend on ${JSON.stringify(index)} index access`, () => {
-
+      const resources = new FutureArr;
       let AppSuspense = () => {
         return <LogSuspense action={() => resolvedValue = resources[index]}>
           <div>
@@ -87,7 +89,7 @@ describe("In only render context", () => {
 
 ['bar', Symbol('foo'), {}, 'baz'].forEach(key => {
   it(`should not suspend on non-indexed ${key} access  access access`, () => {
-
+    const resources = new FutureArr;
     let App = () => {
       return <LogSuspense action={() => resources[0]}>
         <div>
@@ -114,7 +116,8 @@ describe('Array operations', () => {
     'splice',
     'copyWithin'
   ].forEach(method => {
-    test.skip(`mutator method ${method} shouldn't throw in n' out of render`, () => {
+    const resources = new FutureArr;
+    test.skip(`mutator method ${method} should defer outside render and throw in render`, () => {
       expect(() => resources[method]()).not.toThrow();
       ReactNoop.render(<LogSuspense action={() => resources[method]()}></LogSuspense>)
       expect(Scheduler).toFlushAndYieldThrough(['No Suspense'])
@@ -139,6 +142,7 @@ describe('Array operations', () => {
   `(({ name, method }) => {
         test(`Applies method ${name} lazily`, async () => {
           let created;
+          const resources = new FutureArr;
           expect(() => method(resources)).not.toThrow();
           ReactNoop.render(<LogSuspense action={() => {
             created = method(resources);
@@ -174,7 +178,7 @@ describe('Array operations', () => {
     ${'findIndex'}       |  ${arr => arr.findIndex(a => a === 5)}     |     ${3}
     ${'forEach'}         |  ${arr => arr.forEach(a => a)}             |     ${undefined}
     ${'some'}            |  ${arr => arr.some(a => a % 2 === 0)}      |     ${true}
-    ${Symbol.iterator} |  ${arr => [...arr, ...arr]}                  |     ${[2,3,4,5,2,3,4,5]}
+    ${Symbol.iterator}   |  ${arr => [...arr, ...arr]}                  |     ${[2,3,4,5,2,3,4,5]}
   `(({ name, method, expected }) => {
     it(`suspends on ${name}`, () => {
       let created;
@@ -194,6 +198,7 @@ describe('Array operations', () => {
 
 
   it('subclasses Array', () => {
+    const resources = new FutureArr;
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(resources).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);
