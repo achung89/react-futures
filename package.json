@@ -7,12 +7,13 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.8.4",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-private-methods": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-react": "^7.8.0",
     "@babel/preset-typescript": "^7.8.3",
-    "@types/jest": "^24.0.25",
-    "babel-jest": "^24.9.0",
+    "@types/jest": "^25.1.2",
+    "babel-jest": "^25.1.0",
     "jest": "^24.9.0",
     "react-noop-renderer": "^0.0.0",
     "react-test-renderer": "^16.12.0",
@@ -20,10 +21,21 @@
     "rollup": "^1.31.0",
     "rollup-plugin-babel": "^4.3.3",
     "scheduler": "^0.18.0",
+    "ts-jest": "^25.2.0",
     "typescript": "^3.8.0-beta"
   },
   "dependencies": {
-    "react": "^0.0.0-experimental-f42431abe",
-    "react-dom": "^0.0.0-experimental-f42431abe"
+    "@babel/plugin-transform-runtime": "^7.8.3",
+    "@types/react": "^16.9.19",
+    "@types/react-dom": "^16.9.5",
+    "core-js": "^3.6.4",
+    "delay": "^4.3.0",
+    "react": "0.0.0-experimental-f42431abe",
+    "react-dom": "0.0.0-experimental-f42431abe",
+    "regenerator-runtime": "^0.13.3"
+  },
+  "scripts": {
+    "test": "jest sample-test.test.tsx",
+    "typescript": "tsc ts-test.tsx"
   }
 }

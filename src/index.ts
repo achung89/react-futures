@@ -1,9 +1,6 @@
 import FutureArray from './ArrayResource/FutureArr';
-import { memoCache } from './utils';
+import { memoCache, isRendering } from './utils';
 import { promiseCache } from "./shared-properties/promiseCache";
-
-
-
 
 
 export const createFutureArray = promiseThunk => {
@@ -46,7 +43,3 @@ export const createFutureArray = promiseThunk => {
     }
   }
 };
-
-
-
-const a = createFutureArray(() => new Promise((res, rej) => {res(1)}))

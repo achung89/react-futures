@@ -1,4 +1,4 @@
-import {  pipe, first } from "./utils";
+import {  pipe, first, isRendering } from "./utils";
 
 // implements IO
 export default Type => class Future<T> extends Type {
