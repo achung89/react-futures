@@ -1,6 +1,7 @@
 import LazyFuture from "../FutureSuper";
 import FutureArray from "../FutureArray/FutureArr";
 import Future from "../FutureSuper";
+import { isRendering } from "../utils";
 
 type Object = object | any[];
 // TODO test non future params

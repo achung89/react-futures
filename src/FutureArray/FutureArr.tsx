@@ -1,7 +1,7 @@
 import Future, { map, tap, run } from '../FutureSuper';
 
 
-class FutureArray<T> extends Future(Array)<Array<T>> {
+class FutureArray<T> extends Future(Array)<Array<T>> implements Array<T> {
 
   constructor(deferredFn) {
     super(deferredFn)
