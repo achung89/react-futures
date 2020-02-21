@@ -1,7 +1,8 @@
 
 import React from 'react';
-import ReactNoop from 'react-noop-renderer';
+import ReactDOM from 'react-dom';
 import { createFutureArray } from '../index';
+import { act } from 'react-dom/test-utils';
 
 
 // TODO: setter should not suspend
@@ -23,9 +24,13 @@ let FutureArr;
 beforeEach(() => {
   FutureArr =  createFutureArray(fetchArray);
   Scheduler = require('scheduler')
+  container = document.createElement('div');
+  document.body.appendChild(container);
 });
 afterEach(() => {
   FutureArr = null;
+  document.body.removeChild(container);
+  container = null;
 });
 const LogSuspense = ({ action }) => {
   try {
@@ -46,10 +51,11 @@ describe("In only render context", () => {
   it.skip("should render properly", () => {
     let App = () => <div>
     </div>;
+    act(() => {
+      ReactDOM.createRoot(container).render(<App />)
+    })
 
-    ReactNoop.render(<App />)
-
-    expect(ReactNoopRenderer.getChildren()).toEqual({ type: 'div', hidden: 'false', children: [] })
+    expect(container.innerHTML).toEqual(`<div><div></div></div>`)
   });
 
   it.skip("should suspend when rendering", () => {
@@ -57,15 +63,16 @@ describe("In only render context", () => {
     let App = () => <div>
       {new FutureArr}
     </div>;
-    ReactNoop.render(<App />)
 
+    act(() => {
+      ReactDOM.createRoot(container).render(<App />)
+    })
     // TODO: test render after resolve
   });
 
-  ['1', 2, '3', 4].forEach((index) => {
-    it(`should suspend on ${JSON.stringify(index)} index access`, () => {
+  test.each(['1', 2, '3', 4])(`should suspend on %i index access`, (index) => {
       const resources = new FutureArr;
-      let AppSuspense = () => {
+      let App = () => {
         return <LogSuspense action={() => resolvedValue = resources[index]}>
           <div>
             foo
@@ -73,7 +80,9 @@ describe("In only render context", () => {
         </LogSuspense>
       };
 
-      ReactNoop.render(<AppSuspense />);
+      act(() => {
+        ReactDOM.createRoot(container).render(<App />)
+      });
       expect(Scheduler).toFlushAndYieldThrough([
         'Suspend!'
       ]);
@@ -82,13 +91,9 @@ describe("In only render context", () => {
         'No Suspense'
       ])
       expect(resolvedValue).toEqual(3);
-    });
   })
 
-});
-
-['bar', Symbol('foo'), {}, 'baz'].forEach(key => {
-  it(`should not suspend on non-indexed ${key} access  access access`, () => {
+test.each(['bar', Symbol('foo'), {}, 'baz'])(`should not suspend on non-indexed %s access  access access`, key => {
     const resources = new FutureArr;
     let App = () => {
       return <LogSuspense action={() => resources[0]}>
@@ -97,13 +102,15 @@ describe("In only render context", () => {
       </div>
       </LogSuspense>
     };
-  })
 
-
-  ReactNoop.render(<App />);
+  console.log(container);
+  act(() => {
+    ReactDOM.createRoot(container).render(<App />)
+  });
   expect(Scheduler).toFlushAndYieldThrough([
     'No Suspense'
   ]);
+});
 });
 //TODO: these should suspend
 describe('Array operations', () => {
@@ -119,7 +126,9 @@ describe('Array operations', () => {
     const resources = new FutureArr;
     test.skip(`mutator method ${method} should defer outside render and throw in render`, () => {
       expect(() => resources[method]()).not.toThrow();
-      ReactNoop.render(<LogSuspense action={() => resources[method]()}></LogSuspense>)
+      act(() => {
+        ReactDOM.createRoot(container).render(<LogSuspense action={() => resources[method]()}></LogSuspense>)
+      });
       expect(Scheduler).toFlushAndYieldThrough(['No Suspense'])
       // TODO: test lazy results
     })
@@ -144,9 +153,12 @@ describe('Array operations', () => {
           let created;
           const resources = new FutureArr;
           expect(() => method(resources)).not.toThrow();
-          ReactNoop.render(<LogSuspense action={() => {
-            created = method(resources);
-          }}></LogSuspense>)
+          
+          act(() => {
+            ReactDOM.createRoot(container).render(<LogSuspense action={() => {
+              created = method(resources);
+            }}></LogSuspense>)
+          })
           expect(Scheduler).toFlushAndYieldThrough(['No Suspense']);
 
           expect(created).toBeInstanceOf(ArrayResource);
@@ -183,9 +195,11 @@ describe('Array operations', () => {
     it(`suspends on ${name}`, () => {
       let created;
       expect(() => method(resource)).toThrow(); //TODO: specify error
-      ReactNoop.render(<LogSuspense action={() => {
-        created = method(resource);
-      }}></LogSuspense>)
+      act(() => {
+        ReactDOM.createRoot(container).render(<LogSuspense action={() => {
+          created = method(resource);
+        }}></LogSuspense>)
+      })
       expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
       jest.advanceTimersByTime(5000);
       expect(Scheduler).toFlushAndYieldThrough([
@@ -213,9 +227,11 @@ describe('Array operations', () => {
 
     let created;
     expect(() => Array.from(resources)).toThrow(); //TODO: specify error
-    ReactNoop.render(<LogSuspense action={() => {
-      created = Array.from(resource);
-    }}></LogSuspense>)
+    act(() => {
+      ReactDOM.createRoot(container).render(<LogSuspense action={() => {
+        created = Array.from(resource);
+      }}></LogSuspense>)
+    })
     expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
     jest.advanceTimersByTime(5000);
     expect(Scheduler).toFlushAndYieldThrough([

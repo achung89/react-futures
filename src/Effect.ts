@@ -1,8 +1,8 @@
 import {  pipe, first, isRendering } from "./utils";
 
 // implements IO
-export default Type => class Future<T> extends Type {
-  static of: <T>(type: T) => Future<T>; // TODO: check typedef
+export default Type => class Effect<T> extends Type {
+  static of: <T>(type: T) => Effect<T>; // TODO: check typedef
   //TODO: write explainer for wrapping private method in static method
   static tap(fn, name, futr) {
     return futr.#tap(fn, name);
@@ -13,7 +13,7 @@ export default Type => class Future<T> extends Type {
   static run(fn, futr) {
     return futr.#run(fn); 
   }
-  #deferredFn: () => Future<T>;
+  #deferredFn: () => Effect<T>;
   constructor(deferredFn, childProxy = {}) {
     super();
     //TODO: will there be problem in doing first?
@@ -76,7 +76,3 @@ export default Type => class Future<T> extends Type {
     return pipe(this.#deferredFn, fn)();
   }
 }
-
-let {map, tap, of, run} = LazyFuture;
-
-export {map, tap,of, run}

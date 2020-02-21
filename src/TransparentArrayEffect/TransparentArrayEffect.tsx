@@ -1,12 +1,14 @@
-import Future, { map, tap, run } from '../FutureSuper';
+import Effect from '../Effect';
 
+const ArrayEffect = Effect(Array);
+const { map, run, tap } = ArrayEffect;
 
-class FutureArray<T> extends Future(Array)<Array<T>> implements Array<T> {
+class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
 
   constructor(deferredFn) {
     super(deferredFn)
   }
-    // immutable methods
+  // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args){ return map(target => target.concat(...args), this)}
   filter(...args) {return map(target => target.filter(...args), this)}
