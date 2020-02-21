@@ -1,6 +1,6 @@
 import Effect from '../Effect';
 
-const ArrayEffect = Effect(Array);
+export const ArrayEffect = Effect(Array);
 const { map, run, tap } = ArrayEffect;
 
 class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
@@ -42,12 +42,12 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
 
   // Invalid methods
   // TODO: more descriptive error messages
-  push() { throw new Error('Invalid method')}
-  pop() { throw new Error('Invalid method')}
-  shift() { throw new Error('Invalid method')}
+  push(): never { throw new Error('Invalid method')}
+  pop(): never { throw new Error('Invalid method')}
+  shift(): never{ throw new Error('Invalid method')}
 
   static of(x) {
-    return new LazyFuture(() => x);
+    return new TransparentArrayEffect(() => x);
   }
   // implement return and throw
   #suspenseIterator = () => ({
@@ -58,13 +58,9 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
   });
 
   [Symbol.iterator]() { return this.#suspenseIterator(); }
-  values() { 
-    let arr = super.values();
-  }
+  values() { return this.#suspenseIterator(); }
   keys() { return this.#suspenseIterator(); }
   entries() { return this.#suspenseIterator(); }
 }
 
-interface FutureArray<T> extends Array<T>, Future<Array<T>> {};;
-
-export default FutureArray;
+export default TransparentArrayEffect;

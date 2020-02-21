@@ -1,4 +1,4 @@
-import FutureArray from "./FutureArr";
+import FutureArray from "./TransparentArrayEffect";
 
 
 // test resetting value array prop with future array 
