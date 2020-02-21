@@ -1,4 +1,5 @@
 import {  pipe, first, isRendering } from "./utils";
+import FutureObj from "./FutureObject/TransparentObjectEffect";
 
 // implements IO
 export default Type => class Effect<T> extends Type {
@@ -50,7 +51,7 @@ export default Type => class Effect<T> extends Type {
         return Reflect.isExtensible(this.#deferredFn());
       },
       ownKeys: () => {
-        return FutureObject.getOwnPropertyNames(this)
+        return FutureObj.getOwnPropertyNames(this)
       },
       preventExtensions: () => {
         return Reflect.preventExtensions(this.#deferredFn())

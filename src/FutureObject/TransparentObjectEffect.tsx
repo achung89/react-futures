@@ -1,46 +1,52 @@
-import LazyFuture from "../FutureSuper";
-import FutureArray from "../FutureArray/FutureArr";
-import Future from "../FutureSuper";
 import { isRendering } from "../utils";
+import Effect from "../Effect";
+import TransparentArrayEffect, {ArrayEffect} from "../FutureArray/TransparentArrayEffect";
 
 type Object = object | any[];
+export const ObjectEffect = Effect(Object)
+const {run, map, tap} = ObjectEffect;
+
+const isObjectEffect = inst => inst instanceof ObjectEffect || inst instanceof ArrayEffect;
+
+
 // TODO test non future params
-export default class FutureObj<T extends object> extends Future(Object)<T> {
+export default class TransparentObjectEffect<T extends object> extends ObjectEffect<T> {
   static assign(target, ...rest) {
-    if(isRendering() && target instanceof Future) {
+    if(isRendering() && isObjectEffect(target)) {
       // TODO: more descriptive message
       throw new Error('no sideaffect')
     }
-    return new FutureObj(() => Object.assign(target, ...rest))
+    return new TransparentObjectEffect(() => Object.assign(target, ...rest))
   }
   static getOwnPropertyDescriptor(target, property) {
-    return new FutureObj(() => Object.getOwnPropertyDescriptor(target, property))
+    return new TransparentObjectEffect(() => Object.getOwnPropertyDescriptor(target, property))
   }
   static getOwnPropertyDescriptors(target) {
-    return new FutureObj(() => Object.getOwnPropertyDescriptors(target))
+    return new TransparentObjectEffect(() => Object.getOwnPropertyDescriptors(target))
   }
   static getOwnPropertyNames(target) {
-    return new FutureArray(() => Object.getOwnPropertyNames(target))
+    return new TransparentArrayEffect(() => Object.getOwnPropertyNames(target))
   }
   static getOwnPropertySymbols(target) {
-    return new FutureArray(() => Object.getOwnPropertySymbols(target))
+    return new TransparentArrayEffect(() => Object.getOwnPropertySymbols(target))
   }
   static is(obj1, obj2) {
     if(!isRendering()) {
       //TODO: more descriptive error messages
       throw new Error('hello')
     }
-    obj1 = obj1 instanceof LazyFuture ? suspend(obj1) : obj1;
-    obj2 = obj2 instanceof LazyFuture ? suspend(obj2) : obj2;
+    const suspend = futureObj => run(obj => obj, futureObj);
+    obj1 = obj1 instanceof Effect ? suspend(obj1) : obj1;
+    obj2 = obj2 instanceof Effect ? suspend(obj2) : obj2;
     return Object.is(obj1, obj2);
   }
-  static preventExtensions(target:) {
-    return target instanceof LazyFuture 
+  static preventExtensions(target) {
+    return target instanceof ObjectEffect 
             ? this.tap(Object.preventExtensions, target, 'Object.preventExtensions') 
             : Object.preventExtensions(target);
   }
   static seal(target: Object) {
-    return  target instanceof LazyFuture 
+    return  isObjectEffect(target) 
             ? this.tap(Object.seal, target, 'Object.seal') 
             : Object.seal(target);
   }
@@ -49,53 +55,53 @@ export default class FutureObj<T extends object> extends Future(Object)<T> {
     throw Error('Future object does not support Object.create')
   }
   static defineProperties(obj:Object, descs) {
-    return  obj instanceof LazyFuture 
+    return  isObjectEffect(obj) 
             ? this.tap(target => Object.defineProperties(target, descs), obj, 'Object.defineProperties') 
             : Object.defineProperties(obj, descs);
   }
   static defineProperty(obj, prop, desc) {
-    return  obj instanceof LazyFuture 
+    return  isObjectEffect(obj) 
       ? this.tap(target => Object.defineProperty(target, prop, desc), obj, 'Object.defineProperty') 
       : Object.defineProperty(obj, prop, desc); 
   }
   static freeze(obj) {
-    return  obj instanceof LazyFuture 
+    return  isObjectEffect(obj)
             ? this.tap(Object.freeze, obj, 'Object.freeze') 
             : Object.freeze(obj);
   }
   static getPrototypeOf(obj) {
-    return obj instanceof LazyFuture
+    return isObjectEffect(obj)
            ? this.run(Object.getPrototypeOf, obj)
            : Object.getPrototypeOf(obj);
   }
   static setPrototypeOf(obj, proto) {
-    return  obj instanceof LazyFuture
+    return  isObjectEffect(obj)
             ? this.tap(() => Object.setPrototypeOf(obj, proto), obj, 'Object.setPrototypeOf')
             : Object.setPrototypeOf(obj, proto);
   }
   static isExtensible(obj) {
-    return obj instanceof LazyFuture
+    return isObjectEffect(obj)
            ? this.run(Object.isExtensible, obj)
            : Object.isExtensible(obj)
   }
   static isFrozen(obj) {
-    return obj instanceof LazyFuture
+    return isObjectEffect(obj)
            ? this.run(Object.isFrozen, obj)
            : Object.isFrozen(obj)    
   }
   static isSealed(obj) {
-    return obj instanceof LazyFuture
+    return isObjectEffect(obj)
            ? this.run(Object.isSealed, obj)
            : Object.isSealed(obj)    
   }
   static keys(obj) {
-    return new FutureArray(() => Object.keys(obj))[Symbol.iterator]();
+    return new TransparentArrayEffect(() => Object.keys(obj));
   }
   static entries(obj) {
-    return new FutureArray(() => Object.entries(obj))[Symbol.iterator]();
+    return new TransparentArrayEffect(() => Object.entries(obj));
   }
   static values(obj) {
-    return new FutureArray(() => Object.values(obj))[Symbol.iterator]();
+    return new TransparentArrayEffect(() => Object.values(obj));
   }
 }
 
