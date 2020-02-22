@@ -3,9 +3,11 @@
   "compilerOptions": {
       "module": "system",
       "target":"ESNext",
+      "strictNullChecks": true,
       "removeComments": true,
       "preserveConstEnums": true,
       "sourceMap": true,
+      // "noImplicitAny": true,
       "esModuleInterop": true,
       "jsx": "react",
       "lib":["esnext", "dom"],

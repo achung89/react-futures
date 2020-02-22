@@ -1,12 +1,18 @@
-import { promiseStatusCache } from "../shared-properties";
+import { promiseStatusStore } from "../shared-properties";
 import TransparentArrayEffect from "./TransparentArrayEffect";
 import { isRendering } from "../utils";
 
 export default class FutureArray<T> extends TransparentArrayEffect<T> {
 
   constructor(promise) {
+    
     super(() => {
-      const { status, value } = promiseStatusCache.get(promise)
+      let meta = promiseStatusStore.get(promise)
+      if (typeof meta !== "undefined") {
+        var { status, value } = meta;
+      } else {
+        throw new Error("No status or value found for promise");
+      }
       if(status === 'complete') {
         if(!Array.isArray(value)) {
           throw new Error("TypeError: FutureArray received non-array value from promise")

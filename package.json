@@ -22,7 +22,7 @@
     "rollup-plugin-babel": "^4.3.3",
     "scheduler": "^0.18.0",
     "ts-jest": "^25.2.0",
-    "typescript": "^3.8.0-beta"
+    "typescript": "^3.8.2"
   },
   "dependencies": {
     "@babel/plugin-transform-runtime": "^7.8.3",
