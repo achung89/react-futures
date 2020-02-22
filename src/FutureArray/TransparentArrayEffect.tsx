@@ -1,4 +1,4 @@
-import Effect from '../Effect';
+import Effect from '../Effect/Effect';
 
 export const ArrayEffect = Effect(Array);
 const { map, run, tap } = ArrayEffect;

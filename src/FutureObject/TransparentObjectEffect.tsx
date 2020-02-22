@@ -1,10 +1,10 @@
 import { isRendering } from "../utils";
-import Effect from "../Effect";
+import Effect from "../Effect/Effect";
 import TransparentArrayEffect, {ArrayEffect} from "../FutureArray/TransparentArrayEffect";
 
 type Object = object | any[];
 export const ObjectEffect = Effect(Object)
-const {run, map, tap} = ObjectEffect;
+const {run} = ObjectEffect;
 
 const isObjectEffect = inst => inst instanceof ObjectEffect || inst instanceof ArrayEffect;
 

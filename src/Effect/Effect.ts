@@ -1,5 +1,5 @@
-import {  pipe, first, isRendering } from "./utils";
-import FutureObj from "./FutureObject/TransparentObjectEffect";
+import {  pipe, first, isRendering } from "../utils";
+import FutureObj from "../FutureObject/TransparentObjectEffect";
 
 // implements IO
 export default Type => class Effect<T> extends Type {
