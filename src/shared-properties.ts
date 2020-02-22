@@ -1,11 +1,11 @@
 
 
 type Status = "pending" | "complete" | "error";
-
-export const promiseStatusCache = new WeakMap<Promise<any>, {
+type StatusCacheValue = {
   value: any[] | null;
   status: Status;
-}>();
+}
+export const promiseStatusStore = new WeakMap<Promise<any>, StatusCacheValue>();
 
 
-export const keyPromiseCache = new WeakMap<any, Promise<any>>();
+export const keyPromiseStore = new WeakMap<any, Promise<any>>();

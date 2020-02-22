@@ -1,12 +1,12 @@
-import { promiseStatusCache } from "../shared-properties";
+import { promiseStatusStore } from "../shared-properties";
 import TransparentObjectEffect from "./TransparentObjectEffect";
 import { isRendering } from "../utils";
 
-export default class FutureObject<T> extends TransparentObjectEffect<T> {
+export default class FutureObject<T extends object> extends TransparentObjectEffect<T> {
 
   constructor(promise) {
     super(() => {
-      const { status, value } = promiseStatusCache.get(promise)
+      const { status, value } = promiseStatusStore.get(promise)
       if(status === 'complete') {
         if(typeof value !== 'object' || typeof value === null) {
           throw new Error("TypeError: FutureObject received non-object value from promise")
