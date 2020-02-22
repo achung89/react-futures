@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
-export const pipe = (...fns) => val => fns.reduce( (val, fn) => fn(val), val );
-export const tap = fn => val => { fn(val); return val };
+export const pipe = (...fns: Function[]) => (val: any = undefined) => fns.reduce( (val, fn) => fn(val), val );
+export const tap = (fn: Function) => (val: any) => { fn(val); return val };
 
 export const isRendering = () => {
   var dispatcher = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current;
@@ -15,7 +15,7 @@ export const isRendering = () => {
 }
 
 // returns result of first call on every subsequent call
-export const first = fn => {
+export const first = (fn: Function) => {
   let ran = false;
   let memo = null;
   return (...args) => {
@@ -26,10 +26,10 @@ export const first = fn => {
     return memo = fn(...args);
   }
 };
-
-export const memoCache = cb => {
-  let cache = null;
-  function cbWrapper(...args) {
+type PromiseCb  = (...args: any[]) => Promise<any>
+export const memoCache = (cb:PromiseCb) => {
+  let cache: Promise<any> | null = null;
+  function cbWrapper(...args: any[]) {
     cache = cache || cb(...args);
     return cache;
   }

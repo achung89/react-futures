@@ -1,21 +1,23 @@
-import {  pipe, first, isRendering } from "../utils";
+import {  pipe, tap, first, isRendering } from "../utils";
 import FutureObj from "../FutureObject/TransparentObjectEffect";
 
+
 // implements IO
-export default Type => class Effect<T> extends Type {
-  static of: <T>(type: T) => Effect<T>; // TODO: check typedef
+ 
+export default Type => class Effect<T extends object = object> extends Type  {
+  static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
   //TODO: write explainer for wrapping private method in static method
-  static tap(fn, name, futr) {
+  static tap(fn: Function, name: string, futr: Effect) {
     return futr.#tap(fn, name);
   }
-  static map(fn, futr) {
+  static map(fn: Function, futr: Effect) {
     return futr.#map(fn)
   }
-  static run(fn, futr) {
+  static run(fn: Function, futr: Effect) {
     return futr.#run(fn); 
   }
-  #deferredFn: () => Effect<T>;
-  constructor(deferredFn, childProxy = {}) {
+  #deferredFn: Function;
+  constructor(deferredFn: Function, childProxy: ProxyHandler<typeof Type> = {}) {
     super();
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);
@@ -63,9 +65,9 @@ export default Type => class Effect<T> extends Type {
       ...childProxy
     });
   }
-  #map = nextFn =>  new this.constructor[Symbol.species]( pipe(this.#deferredFn, nextFn));
+  #map = (nextFn: Function) =>  new this.constructor[Symbol.species]( pipe(this.#deferredFn, nextFn));
 
-  #tap = (fn, name) => {
+  #tap = (fn: Function, name: string) => {
     if(isRendering()) {
       // TODO: implement custom error message per method
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
@@ -73,7 +75,7 @@ export default Type => class Effect<T> extends Type {
     this.#deferredFn = pipe(this.#deferredFn, tap(fn));
     return this;
   }
-  #run = fn => {
+  #run = (fn: Function) => {
     return pipe(this.#deferredFn, fn)();
   }
 }

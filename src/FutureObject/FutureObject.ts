@@ -6,7 +6,12 @@ export default class FutureObject<T extends object> extends TransparentObjectEff
 
   constructor(promise) {
     super(() => {
-      const { status, value } = promiseStatusStore.get(promise)
+      let meta = promiseStatusStore.get(promise)
+      if (typeof meta !== "undefined") {
+        var { status, value } = meta;
+      } else {
+        throw new Error("No status or value found for promise");
+      }      
       if(status === 'complete') {
         if(typeof value !== 'object' || typeof value === null) {
           throw new Error("TypeError: FutureObject received non-object value from promise")

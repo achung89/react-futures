@@ -15,7 +15,7 @@ const fetchArray = () => new Promise((res, rej) => {
 let container;
 let FutureArr;
 beforeEach(() => {
-  FutureArr =  createFutureArray(fetchArray);
+  FutureArr = createFutureArray(fetchArray);
   Scheduler = require('scheduler')
   container = document.createElement('div');
   document.body.appendChild(container);
