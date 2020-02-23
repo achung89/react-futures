@@ -1,7 +1,9 @@
+import FutureObject from "./FutureObject"
+
 //FutureObject
 // TODO: add expected value
 export const futureObjectStatic = `       staticMethod         |   inRender                |  outRender                                                                                                                                                                               
-                              ${'assign'}                      |    ${'throw'}             |   ${'defermutate'}                                                 
+                              ${obj => FutureObject.assign({},obj)}  |    ${'throw'}             |   ${'defermutate'}                                                 
                               ${'getOwnPropertyDescriptor'}    |    ${'defer'}             |   ${'defer'}                                                             
                               ${'getOwnPropertyDescriptors'}   |    ${'defer'}             |   ${'defer'}                                                                
                               ${'getOwnPropertyNames'}         |    ${'defer'}             |   ${'defer'}                                                       

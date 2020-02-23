@@ -12,3 +12,6 @@ const waitForSuspense = async waitTime => {
   jest.runAllTimers()
   jest.runAllTicks()
 }
+
+
+export default waitForSuspense;

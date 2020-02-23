@@ -3,9 +3,11 @@ import TransparentArrayEffect from "./TransparentArrayEffect";
 import { isRendering } from "../utils";
 
 export default class FutureArray<T> extends TransparentArrayEffect<T> {
-
+  #promise: Promise<any>
+  static toPromise(inst: FutureArray<any>) {
+    return inst.#promise;
+  }
   constructor(promise) {
-    
     super(() => {
       let meta = promiseStatusStore.get(promise)
       if (typeof meta !== "undefined") {
@@ -32,7 +34,6 @@ export default class FutureArray<T> extends TransparentArrayEffect<T> {
         throw new Error('Unhandled promise exception')
       }
     });
-
-
+    this.#promise = promise;
   }
 }
