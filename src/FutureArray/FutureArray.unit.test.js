@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { createFutureArray } from '../index';
 import { act } from 'react-dom/test-utils';
+import FutureArray from './FutureArray';
 
 
 // TODO: setter should not suspend
@@ -13,9 +14,9 @@ import { act } from 'react-dom/test-utils';
 // TODO: test freeze, seal, delete
 // TODO: test creating FutureArr instance in render
 let Scheduler
-let fetchArray = () => new Promise((res, rej) => {
+let fetchArray = val => new Promise((res, rej) => {
   setTimeout(() => {
-    res([2,3,4,5])
+    res([2,3,4,val])
   }, 1000)
 })
 
@@ -61,7 +62,7 @@ describe("In only render context", () => {
   it.skip("should suspend when rendering", () => {
     let thrownValue;
     let App = () => <div>
-      {new FutureArr}
+      {new FutureArr(5)}
     </div>;
 
     act(() => {
@@ -71,7 +72,7 @@ describe("In only render context", () => {
   });
 
   test.each(['1', 2, '3', 4])(`should suspend on %i index access`, (index) => {
-      const resources = new FutureArr;
+      const resources = new FutureArr(5);
       let App = () => {
         return <LogSuspense action={() => resolvedValue = resources[index]}>
           <div>
@@ -93,25 +94,26 @@ describe("In only render context", () => {
       expect(resolvedValue).toEqual(3);
   })
 
-test.each(['bar', Symbol('foo'), {}, 'baz'])(`should not suspend on non-indexed %s access  access access`, key => {
-    const resources = new FutureArr;
-    let App = () => {
-      return <LogSuspense action={() => resources[0]}>
-        <div>
-          foo
-      </div>
-      </LogSuspense>
-    };
+  test.each(['bar', Symbol('foo'), {}, 'baz'])(`should not suspend on non-indexed %s access  access access`, key => {
+      const resources = new FutureArr(5);
+      let App = () => {
+        return <LogSuspense action={() => resources[0]}>
+          <div>
+            foo
+        </div>
+        </LogSuspense>
+      };
 
-  console.log(container);
-  act(() => {
-    ReactDOM.createRoot(container).render(<App />)
+    console.log(container);
+    act(() => {
+      ReactDOM.createRoot(container).render(<App />)
+    });
+    expect(Scheduler).toFlushAndYieldThrough([
+      'No Suspense'
+    ]);
   });
-  expect(Scheduler).toFlushAndYieldThrough([
-    'No Suspense'
-  ]);
 });
-});
+
 //TODO: these should suspend
 describe('Array operations', () => {
   [
@@ -123,7 +125,7 @@ describe('Array operations', () => {
     'splice',
     'copyWithin'
   ].forEach(method => {
-    const resources = new FutureArr;
+    const resources = new FutureArr(5);
     test.skip(`mutator method ${method} should defer outside render and throw in render`, () => {
       expect(() => resources[method]()).not.toThrow();
       act(() => {
@@ -151,7 +153,7 @@ describe('Array operations', () => {
   `(({ name, method }) => {
         test(`Applies method ${name} lazily`, async () => {
           let created;
-          const resources = new FutureArr;
+          const resources = new FutureArr(5);
           expect(() => method(resources)).not.toThrow();
           
           act(() => {
@@ -161,11 +163,11 @@ describe('Array operations', () => {
           })
           expect(Scheduler).toFlushAndYieldThrough(['No Suspense']);
 
-          expect(created).toBeInstanceOf(ArrayResource);
+          expect(created).toBeInstanceOf(FutureArray);
 
 
-          let resourceResult = await Promise.all(resources);
-          let createdResult = await Promise.all(created);
+          let resourceResult = await FutureArray.toPromise(resources);
+          let createdResult = await FutureArray.toPromise(created);
 
           expect(resourceResult).toStrictEqual([2, 3, 4, 5]);
           expect(createdResult).toStrictEqual(method([2, 3, 4, 5]));
@@ -212,7 +214,7 @@ describe('Array operations', () => {
 
 
   it('subclasses Array', () => {
-    const resources = new FutureArr;
+    const resources = new FutureArr(5);
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(resources).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);

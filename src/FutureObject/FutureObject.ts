@@ -3,7 +3,10 @@ import TransparentObjectEffect from "./TransparentObjectEffect";
 import { isRendering } from "../utils";
 
 export default class FutureObject<T extends object> extends TransparentObjectEffect<T> {
-
+  #promise: Promise<any>
+  static toPromise(inst: FutureObject<any>) {
+    return inst.#promise;
+  }
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise)
@@ -31,5 +34,6 @@ export default class FutureObject<T extends object> extends TransparentObjectEff
         throw new Error('Unhandled promise exception')
       }
     });
+    this.#promise = promise;
   }
 }
