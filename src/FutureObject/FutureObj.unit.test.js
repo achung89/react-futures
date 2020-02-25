@@ -8,6 +8,8 @@ import waitForSuspense from '../test-utils/waitForSuspense';
 import FutureObject from './FutureObject';
 import Effect from '../Effect/Effect';
 
+// TODO: test error handling
+
 let Scheduler;
 const expectedJSON = (val) => ({
   foo: "futon",

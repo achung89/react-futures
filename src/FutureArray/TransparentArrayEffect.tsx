@@ -1,13 +1,15 @@
-import Effect from '../Effect/Effect';
+import {ArrayEffect} from '../Effect/Effect';
 
-export const ArrayEffect = Effect(Array);
 const { map, run, tap } = ArrayEffect;
 
 class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
+  static get [Symbol.species]() { return TransparentArrayEffect }
 
   constructor(deferredFn) {
     super(deferredFn)
+    console.log("TRANSPARENT EFFECT", this.map.toString(), TransparentArrayEffect.toString())
   }
+
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args){ return map(target => target.concat(...args), this)}
@@ -18,7 +20,7 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
   reduceRight(...args) { return map(target => target.reduceRight(...args), this)}
   flat(...args) {return map(target => target.flat(...args), this)}
   flatMap(...args) {return map(target => target.flatMap(...args), this)}
-  immReverse(...args) {return map(target => target.immReverse(...args), this)}
+  immReverse(...args) {return map(target => target.slice().reverse(...args), this)}
   immSplice(...args) {return map(target => target.slice().splice(...args), this)}
   immUnshift(...args) {return map(target => target.slice().unshift(...args), this)}
   immCopywithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
@@ -31,7 +33,6 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
   reverse(...args) {return tap(target => target.reverse(...args), 'reverse', this)}
   fill(...args) {return tap(target => target.fill(...args), 'fill', this)}
   
-
   //suspend methods
   indexOf(...args) { return run(target => target.indexOf(...args), this)}
   includes(...args) { return run( target => target.includes(...args), this)}
@@ -49,6 +50,7 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
   static of(x) {
     return new TransparentArrayEffect(() => x);
   }
+
   // implement return and throw
   #suspenseIterator = () => ({
     next: () => {

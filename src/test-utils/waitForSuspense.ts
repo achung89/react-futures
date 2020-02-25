@@ -1,4 +1,6 @@
-const waitForSuspense = async waitTime => {
+import {act} from 'react-dom/test-utils'
+
+const waitForSuspense = async (waitTime) => {
   act(() => {
     jest.advanceTimersByTime(waitTime)
     jest.runAllTimers()

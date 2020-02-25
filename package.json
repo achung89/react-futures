@@ -5,15 +5,17 @@
   "repository": "git@github.com:achung89/suspense-data-structures.git",
   "author": "Andrew Chung <chung.andrew7@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "devDependencies": {
     "@babel/core": "^7.8.4",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-private-methods": "^7.8.3",
+    "@babel/plugin-transform-classes": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-react": "^7.8.0",
     "@babel/preset-typescript": "^7.8.3",
     "@types/jest": "^25.1.2",
-    "babel-jest": "^25.1.0",
+    "babel-plugin-transform-default-import": "^1.0.0",
     "jest": "^24.9.0",
     "react-noop-renderer": "^0.0.0",
     "react-test-renderer": "^16.12.0",
@@ -21,20 +23,25 @@
     "rollup": "^1.31.0",
     "rollup-plugin-babel": "^4.3.3",
     "scheduler": "^0.18.0",
-    "ts-jest": "^25.2.0",
+    "ts-jest": "^25.2.1",
     "typescript": "^3.8.2"
   },
   "dependencies": {
     "@babel/plugin-transform-runtime": "^7.8.3",
+    "@babel/runtime": "^7.8.4",
+    "@types/node": "^13.7.4",
     "@types/react": "^16.9.19",
     "@types/react-dom": "^16.9.5",
+    "babel-jest": "^25.1.0",
     "core-js": "3",
     "delay": "^4.3.0",
+    "lru-cache": "^5.1.1",
     "react": "0.0.0-experimental-f42431abe",
     "react-dom": "0.0.0-experimental-f42431abe",
     "regenerator-runtime": "^0.13.3"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "tsc": "tsc"
   }
 }

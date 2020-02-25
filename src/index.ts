@@ -1,29 +1,33 @@
-import { memoCache, isRendering } from './utils';
-import { promiseStatusStore, keyPromiseStore } from "./shared-properties";
+import { isRendering } from './utils';
+import { promiseStatusStore } from "./shared-properties";
 import FutureObject from './FutureObject/TransparentObjectEffect';
 import FutureArray from './FutureArray/FutureArray';
+import LRU from 'lru-cache';
 
-export const createFutureObject = <T extends object>(promiseThunk) => {
-  const cachedPromise = memoCache(promiseThunk);
+
+export const createFutureObject = <T extends object>(promiseCb) => {
+  const cache = new LRU(500);
+
   if(isRendering()) {
     // TODO: add custom error message per method
     throw new Error("cannot create future outside render")
   }
+
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
     static invalidate(key) {
-      keyPromiseStore.delete(key);
+      cache.delete(key);
     }
     constructor(key) {
       let promise;
-      if(keyPromiseStore.has(key)) {
-        promise = keyPromiseStore.get(key);
+      if(cache.has(key)) {
+        promise = cache.get(key);
       } else {
-        keyPromiseStore.set(key, cachedPromise(key));
-        promise = keyPromiseStore.get(key);
+        cache.set(key, promiseCb(key));
+        promise = cache.get(key);
         promise
-        .then(res => {
-          promiseStatusStore.set(promise, { value: res, status: 'complete' })
-        })
+          .then(res => {
+            promiseStatusStore.set(promise, { value: res, status: 'complete' })
+          })
         promiseStatusStore.set(promise,  { value: null, status: 'pending'});
       }
       super(promise);
@@ -31,22 +35,22 @@ export const createFutureObject = <T extends object>(promiseThunk) => {
   }
 }
 
-export const createFutureArray = <T>(promiseThunk) => {
-  const cachedPromise = memoCache(promiseThunk);
+export const createFutureArray = <T>(promiseCb) => {
+  const cache = new LRU(500);
+
   if(isRendering()) {
     // TODO: add custom error message per method
-    throw new Error("cannot create future outside render")
+    throw new Error("cannot create cache in render")
   }
    return class FutureArrayCache<A = T> extends FutureArray<A> {
-    static invalidate(key) { keyPromiseStore.delete(key) }
+    static invalidate(key) { cache.delete(key) }
     constructor(key) {
       let promise;
-      if( keyPromiseStore.has(key) ) {
-        promise = keyPromiseStore.get(key);
+      if( cache.has(key) ) {
+        promise = cache.get(key);
       } else {
-        keyPromiseStore.set(key, cachedPromise(key));
-        promise = keyPromiseStore.get(key);
-
+        cache.set(key, promiseCb(key));
+        promise = cache.get(key);
         promise
           .then(res => {
             promiseStatusStore.set(promise, { value: res, status: 'complete' })
