@@ -1,13 +1,11 @@
 import { isRendering } from "../utils";
-import Effect from "../Effect/Effect";
-import TransparentArrayEffect, {ArrayEffect} from "../FutureArray/TransparentArrayEffect";
+import {ObjectEffect, ArrayEffect} from "../Effect/Effect";
+import TransparentArrayEffect from "../FutureArray/TransparentArrayEffect";
 
 type Object = object | any[];
-export const ObjectEffect = Effect(Object)
 const {run} = ObjectEffect;
 
 const isObjectEffect = inst => inst instanceof ObjectEffect || inst instanceof ArrayEffect;
-
 
 // TODO test non future params
 export default class TransparentObjectEffect<T extends object> extends ObjectEffect<T> {
@@ -47,7 +45,7 @@ export default class TransparentObjectEffect<T extends object> extends ObjectEff
   }
   static seal(target: Object) {
     return  isObjectEffect(target) 
-            ? this.tap(Object.seal, target, 'Object.seal') 
+            ? tap(Object.seal, target, 'Object.seal') 
             : Object.seal(target);
   }
   static create() {

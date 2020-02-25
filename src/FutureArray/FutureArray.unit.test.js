@@ -13,6 +13,7 @@ import FutureArray from './FutureArray';
 // TODO: all subsequently created arrays should all share the same promise
 // TODO: test freeze, seal, delete
 // TODO: test creating FutureArr instance in render
+// TODO: test error handling
 let Scheduler
 let fetchArray = val => new Promise((res, rej) => {
   setTimeout(() => {
@@ -104,7 +105,6 @@ describe("In only render context", () => {
         </LogSuspense>
       };
 
-    console.log(container);
     act(() => {
       ReactDOM.createRoot(container).render(<App />)
     });
