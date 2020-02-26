@@ -32,7 +32,6 @@ export default class FutureArray<T> extends TransparentArrayEffect<T> {
         throw new Error('Unhandled promise exception')
       }
     });
-    console.log("FUTUREA ARRA", this.constructor)
 
     this.#promise = promise;
   }

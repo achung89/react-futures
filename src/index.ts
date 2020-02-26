@@ -1,8 +1,8 @@
 import { isRendering } from './utils';
 import { promiseStatusStore } from "./shared-properties";
-import FutureObject from './FutureObject/TransparentObjectEffect';
+import FutureObject from './FutureObject/FutureObject';
 import FutureArray from './FutureArray/FutureArray';
-import LRU from 'lru-cache';
+import  LRU from 'lru-cache';
 
 
 export const createFutureObject = <T extends object>(promiseCb) => {

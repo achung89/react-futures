@@ -1,28 +1,39 @@
 import {  pipe, tap, first, isRendering } from "../utils";
-import FutureObj from "../FutureObject/TransparentObjectEffect";
+import TransparentObjectEffect from "../FutureObject/TransparentObjectEffect";
 
-
+const thisMap = new WeakMap;
 // implements IO
 const createEffect = Type => class Effect<T extends object = object> extends Type {
   static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
-  //TODO: write explainer for wrapping private method in static method
+  //TODO: write explainer for wrapping privates method in static method
   static tap(fn: Function, name: string, futr: Effect) {
-    return futr.#tap(fn, name);
+    if(!thisMap.has(futr)) {
+      // TODO: change
+      throw new Error("NOT INSTANCE")
+    }
+    return thisMap.get(futr).#tap(fn, name);
   }
   static map(fn: Function, futr: Effect) {
-    console.log(futr, futr.constructor, futr instanceof Effect);
-    return futr.#map(fn)
+    if(!thisMap.has(futr)) {
+      // TODO: change
+      throw new Error("NOT INSTANCE")
+    }    
+    console.log(thisMap.get(futr))
+    return thisMap.get(futr).#map(fn)
   }
   static run(fn: Function, futr: Effect) {
-    return futr.#run(fn); 
+    if(!thisMap.has(futr)) {
+      // TODO: change
+      throw new Error("NOT INSTANCE")
+    }
+    return thisMap.get(futr).#run(fn); 
   }
   #deferredFn: Function;
   constructor(deferredFn: Function, childProxy: ProxyHandler<typeof Type> = {}) {
     super();
-    console.log("WHAAAA EFFECT", this.constructor, Effect.toString())
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);
-    return new Proxy(this, {
+    const proxy = new Proxy(this, {
       defineProperty: (_target, key, descriptor) => {
         this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'defineProperty');
         return true;
@@ -53,7 +64,8 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.isExtensible(this.#deferredFn());
       },
       ownKeys: () => { // TODO: is this right?
-        return FutureObj.getOwnPropertyNames(this)
+        console.log(TransparentObjectEffect.toString());
+        return TransparentObjectEffect.getOwnPropertyNames(this)
       },
       preventExtensions: () => {
         return Reflect.preventExtensions(this.#deferredFn())
@@ -64,13 +76,14 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       },
       ...childProxy
     });
+    thisMap.set(proxy, this);
+    return proxy;
   }
-  #map = (nextFn: Function) => { 
-    console.log('hihih',this.constructor[Symbol.species]);
+  #map = function map(nextFn: Function) { 
     return new this.constructor[Symbol.species]( pipe(this.#deferredFn, nextFn));
   }
 
-  #tap = (fn: Function, name: string) => {
+  #tap = function tape(fn: Function, name: string) {
     if(isRendering()) {
       // TODO: implement custom error message per method
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
@@ -78,7 +91,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     this.#deferredFn = pipe(this.#deferredFn, tap(fn));
     return this;
   }
-  #run = (fn: Function) => {
+  #run = function run (fn: Function){
     return pipe(this.#deferredFn, fn)();
   }
 }
