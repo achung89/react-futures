@@ -11,6 +11,7 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-private-methods": "^7.8.3",
     "@babel/plugin-transform-classes": "^7.8.3",
+    "@babel/plugin-transform-proto-to-assign": "^7.8.3",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-react": "^7.8.0",
     "@babel/preset-typescript": "^7.8.3",
@@ -22,8 +23,10 @@
     "react-testing-library": "^8.0.1",
     "rollup": "^1.31.0",
     "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-typescript": "^1.0.1",
     "scheduler": "^0.18.0",
     "ts-jest": "^25.2.1",
+    "tslib": "^1.11.0",
     "typescript": "^3.8.2"
   },
   "dependencies": {

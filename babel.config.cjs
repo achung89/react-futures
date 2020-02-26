@@ -1,22 +1,10 @@
-module.exports = api => {
-  const isTest = api.env('test');
-  return isTest ? {
+module.exports = {
     presets: [["@babel/preset-env", {
-      "useBuiltIns": "entry",
+      "useBuiltIns": "usage",
+      corejs: "3",
       "modules": "umd"
     }],
     "@babel/preset-typescript",
     '@babel/preset-react'],
-    plugins: ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime", "@babel/plugin-transform-classes"]
-
-  } : {
-      "presets": [
-        ["@babel/preset-env", {
-          "useBuiltIns": "entry",
-          "modules": false
-        }],
-        "@babel/preset-typescript"
-      ],
-      "plugins": ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
-    }
-}
+    plugins: ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
+  }

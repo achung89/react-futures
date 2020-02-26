@@ -7,7 +7,6 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
 
   constructor(deferredFn) {
     super(deferredFn)
-    console.log("TRANSPARENT EFFECT", this.map.toString(), TransparentArrayEffect.toString())
   }
 
   // immutable methods

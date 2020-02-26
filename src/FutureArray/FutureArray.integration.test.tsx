@@ -36,10 +36,7 @@ describe("integration scenarios", () => {
                        .concat([6,7,8]) // [2,3,4,5,6,7,8]
                        .filter( val => val % 2 === 0) // [3,5,7]
                        .immReverse() // [7,5,3]
-      console.log("WHAT?", FutureArr, numbers.map.toString())
-      console.log("WHAT?", FutureArr, numbers.concat.toString())
 
-      console.log("huh?", numbers.constructor)
       return <div>
         {numbers}
       </div>
