@@ -3,6 +3,7 @@ import { createFutureArray } from '../index';
 import waitForSuspense from "../test-utils/waitForSuspense";
 import ReactDOM from 'react-dom';
 import {act} from 'react-dom/test-utils'
+import waitForLoading from '../test-utils/waitForLoading';
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers()
 
@@ -14,51 +15,52 @@ jest.useFakeTimers()
 
 
 let container;
+let StubFutureArray
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
+  StubFutureArray = createFutureArray(val => new Promise((res,rej) => {
+    setTimeout(() => {
+      res([1,2,3,val]);
+    }, 1000)
+  }));
 });
 afterEach(() => {
+  StubFutureArray = null;
   document.body.removeChild(container);
   container = null;
 });
 
 describe("integration scenarios", () => {
   test("should render ", async () => {
-    const FutureArr = createFutureArray(val => new Promise((res,rej) => {
-      setTimeout(() => {
-        res([1,2,3,val]);
-      }, 1000)
-    }));
+
     let App = () => {
-      const numbers = new FutureArr(4)
+      const numbers = new StubFutureArray(4)
                        .map(val => val + 1) // [2,3,4,5]
                        .concat([6,7,8]) // [2,3,4,5,6,7,8]
-                       .filter( val => val % 2 === 0) // [3,5,7]
-                       .immReverse() // [7,5,3]
+                       .filter( val => val % 2 === 0) // [2,4,6,8]
+                       .immReverse() // [8,6,4,2]
 
       return <div>
         {numbers}
       </div>
     }
-    await act(async () => {
+    act( () => {
       ReactDOM.createRoot(container).render(
         <Suspense fallback={<div>Loading...</div>}>
           <App />
         </Suspense>
       )
-      await Promise.resolve()
     })
-    jest.runOnlyPendingTimers();
-    await Promise.resolve();
-    await Promise.resolve();
+    
+    waitForLoading();
 
     act(() => {
       expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
     })
     
     await waitForSuspense(2000);
-    expect(container.innerHTML).toEqual(`<div>753</div>`)
-  })
+    expect(container.innerHTML).toEqual(`<div>8642</div>`)
+  });
 
 });
