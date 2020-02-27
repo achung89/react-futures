@@ -3,7 +3,6 @@ import {ArrayEffect} from '../Effect/Effect';
 const { map, run, tap } = ArrayEffect;
 
 class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
-  static get [Symbol.species]() { return TransparentArrayEffect }
 
   constructor(deferredFn) {
     super(deferredFn)
