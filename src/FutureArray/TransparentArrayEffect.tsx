@@ -38,7 +38,18 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
   lastIndexOf(...args) { return run(target => target.lastIndexOf(...args), this)}
   toString(...args) { return run(target => target.toString(...args), this)}
   toLocaleString(...args) { return run(target => target.toLocaleString(...args), this)}
-
+  forEach(...args) { return run(target => target.forEach(...args), this) }
+  find(...args) { return run(target => target.find(...args), this)}
+  every(...args) { return run(target => target.every(...args), this)}
+  some(...args) { return run(target => target.some(...args), this)}
+  findIndex(...args) { return run(target => target.findIndex(...args), this) }
+  get length() {
+    return run(target => target.length, this);
+  }
+  get [Symbol.unscopables]() {
+    return run(target => target[Symbol.unscopables], this)
+  }
+  
   // Invalid methods
   // TODO: more descriptive error messages
   push(): never { throw new Error('Invalid method')}
