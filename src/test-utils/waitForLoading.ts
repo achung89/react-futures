@@ -1,1 +1,6 @@
-export default () => jest.runOnlyPendingTimers();
+import waitForSuspense from "./waitForSuspense"
+
+export default  () => {
+  jest.runOnlyPendingTimers()
+
+}
