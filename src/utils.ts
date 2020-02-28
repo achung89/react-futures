@@ -5,8 +5,7 @@ export const tap = (fn: Function) => (val: any) => { fn(val); return val };
 
 export const isRendering = () => {
   var dispatcher = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current;
-
-  return dispatcher !== null;
+  return dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError';
 }
 
 // returns result of first call on every subsequent call
@@ -17,8 +16,13 @@ export const first = (fn: Function) => {
     if(ran) {
       return memo;
     }
-    ran = true;
-    return memo = fn(...args);
+    try {
+      return memo = fn(...args);
+    } finally {
+      if(memo) {
+        ran = true;
+      }
+    }
   }
 };
 
