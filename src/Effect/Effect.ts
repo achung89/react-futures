@@ -46,10 +46,13 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         throw new Error("deletion on lazy future not permitted")
       },
       get: (target, key, receiver) => {
+        console.log(key);
         if(typeof this[key] === 'function') { // TODO: what is this?
           return Reflect.get(target, key, receiver);
         }
-        return Reflect.get(this.#deferredFn(), key, receiver)
+        let def = this.#deferredFn();
+        console.log("DDEF", def);
+        return Reflect.get(def, key, receiver)
       },
       getOwnPropertyDescriptor: (_target, prop) => {
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
@@ -80,19 +83,31 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     return proxy;
   }
   #map = function map(nextFn: Function) { 
-    return new this.constructor[Symbol.species]( pipe(this.#deferredFn, nextFn));
+    const newNextFn = (...args) => {
+      console.log("#map LLOOOOOOOOL", ...args);
+      return nextFn(...args);
+    }
+    return new this.constructor[Symbol.species]( pipe(this.#deferredFn, newNextFn));
   }
 
-  #tap = function tape(fn: Function, name: string) {
+  #tap = function tapper(fn: Function, name: string) {
     if(isRendering()) {
       // TODO: implement custom error message per method
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
     } 
-    this.#deferredFn = pipe(this.#deferredFn, tap(fn));
+    const newNextFn = (...args) => {
+      console.log("#tap LLOOOOOOOOL", ...args);
+      return fn(...args);
+    }
+    this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
     return this;
   }
   #run = function run (fn: Function){
-    return pipe(this.#deferredFn, fn)();
+    const newNextFn = (...args) => {
+      console.log("#run LLOOOOOOOOL", ...args);
+      return fn(...args);
+    }
+    return pipe(this.#deferredFn, newNextFn)();
   }
 }
 

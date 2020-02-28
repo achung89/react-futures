@@ -1,11 +1,11 @@
-import React, {Suspense} from 'react';
+jest.mock('scheduler', () => require('scheduler/unstable_mock'));
+
 import { createFutureArray } from '../index';
 import waitForSuspense from "../test-utils/waitForSuspense";
-import ReactDOM from 'react-dom';
-import {act} from 'react-dom/test-utils'
 import waitForLoading from '../test-utils/waitForLoading';
+import renderer, { act} from 'react-test-renderer'
+import React, {Suspense} from 'react';
 
-jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers()
 
 // test resetting value array prop with future array 
@@ -15,30 +15,28 @@ jest.useFakeTimers()
 // testing iterating in parent and in child and accessing in child or subchild
 
 
-let container;
 let StubFutureArray;
-let root;
+let comp;
 beforeEach(() => {
-  console.log('befoerEach')
-  container = document.createElement('div');
-  console.log(1)
-  document.body.appendChild(container);
-  root = ReactDOM.createRoot(container);
   StubFutureArray = createFutureArray(val => new Promise((res,rej) => {
+
     setTimeout(() => {
-      res([1,2,3,val]);
+      try {
+        res([1,2,3,val]);
+
+      } catch(err) {
+        console.error(err);
+        rej(err)
+      }
     }, 1000)
   }));
-  console.log("beforeeach stub", StubFutureArray)
+
 });
 afterEach(() => {
-  console.log('afterEach')
+  comp.update()
+  comp.unmount();
+  comp = null;
   StubFutureArray = null;
-  root.unmount();
-  root = null;
-  container.remove();  
-  container = null;
-
 });
 
 describe("integration scenarios", () => {
@@ -56,8 +54,8 @@ describe("integration scenarios", () => {
         {numbers}
       </div>
     }
-    act( () => {
-      root.render(
+    await act( async () => {
+      comp = renderer.create(
         <Suspense fallback={<div>Loading...</div>}>
           <App />
         </Suspense>
@@ -66,16 +64,18 @@ describe("integration scenarios", () => {
     
     waitForLoading();
 
-    act(() => {
-      expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
-    })
+    // act(() => {
+    //   expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
+    // })
+    console.log(comp.toJSON())
     await act(async () => {
       await waitForSuspense(2000);
     })
-    act(() => {
-      expect(container.innerHTML).toEqual(`<div>8642</div>`)
-    })
-
+    // act(() => {
+    //   expect(container.innerHTML).toEqual(`<div>8642</div>`)
+    // })
+    // console.log(comp.toJSON())
+    
   });
   test("should render deeply", async () => {
     let Deep = ({ numbers }) => <div>{numbers}</div>
@@ -88,25 +88,26 @@ describe("integration scenarios", () => {
                        .immReverse() // [8,6,4,2]
 
       return <div>
-        <Deep numbers={numbers} />
+        {<Deep numbers={numbers} />}
       </div>
     }
-    act( () => {
-      root.render(
+    await act( async () => {
+      comp = renderer.create(
         <Suspense fallback={<div>Loading...</div>}>
           <App />
         </Suspense>
-      )
-    })
+    )
+  })
     
     waitForLoading();
 
-    act(() => {
-      expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
-    })
-    
+      // act(() => {
+      //   expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
+      // })
+    console.log(comp.toJSON());
     await waitForSuspense(2000);
-    expect(container.innerHTML).toEqual(`<div><div>8642</div></div>`)
+    // expect(container.innerHTML).toEqual(`<div><div>8642</div></div>`)
+    console.log(comp.toJSON())
   });
 
 });
