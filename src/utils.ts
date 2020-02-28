@@ -16,13 +16,10 @@ export const first = (fn: Function) => {
     if(ran) {
       return memo;
     }
-    try {
-      return memo = fn(...args);
-    } finally {
-      if(memo) {
-        ran = true;
-      }
-    }
+    // TODO: put debug here for function name/toString
+    memo = fn(...args);
+    ran = true;
+    return memo
   }
 };
 

@@ -18,7 +18,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       // TODO: change
       throw new Error("NOT INSTANCE")
     }    
-    console.log(thisMap.get(futr))
     return thisMap.get(futr).#map(fn)
   }
   static run(fn: Function, futr: Effect) {
@@ -46,13 +45,10 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         throw new Error("deletion on lazy future not permitted")
       },
       get: (target, key, receiver) => {
-        console.log(key);
         if(typeof this[key] === 'function') { // TODO: what is this?
           return Reflect.get(target, key, receiver);
         }
-        let def = this.#deferredFn();
-        console.log("DDEF", def);
-        return Reflect.get(def, key, receiver)
+        return Reflect.get(this.#deferredFn(), key, receiver)
       },
       getOwnPropertyDescriptor: (_target, prop) => {
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
@@ -67,7 +63,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.isExtensible(this.#deferredFn());
       },
       ownKeys: () => { // TODO: is this right?
-        console.log(TransparentObjectEffect.toString());
         return TransparentObjectEffect.getOwnPropertyNames(this)
       },
       preventExtensions: () => {
@@ -84,7 +79,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   }
   #map = function map(nextFn: Function) { 
     const newNextFn = (...args) => {
-      console.log("#map LLOOOOOOOOL", ...args);
       return nextFn(...args);
     }
     return new this.constructor[Symbol.species]( pipe(this.#deferredFn, newNextFn));
@@ -96,7 +90,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
     } 
     const newNextFn = (...args) => {
-      console.log("#tap LLOOOOOOOOL", ...args);
       return fn(...args);
     }
     this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
@@ -104,7 +97,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   }
   #run = function run (fn: Function){
     const newNextFn = (...args) => {
-      console.log("#run LLOOOOOOOOL", ...args);
       return fn(...args);
     }
     return pipe(this.#deferredFn, newNextFn)();
