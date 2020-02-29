@@ -90,6 +90,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
     } 
     const newNextFn = (...args) => {
+
       return fn(...args);
     }
     this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
@@ -97,6 +98,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   }
   #run = function run (fn: Function){
     const newNextFn = (...args) => {
+
       return fn(...args);
     }
     return pipe(this.#deferredFn, newNextFn)();
