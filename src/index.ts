@@ -16,7 +16,7 @@ export const createFutureObject = <T extends object>(promiseCb) => {
 
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
     static invalidate(key) {
-      cache.delete(key);
+      cache.del(key);
     }
     constructor(key) {
       let promise;
@@ -46,7 +46,7 @@ export const createFutureArray = <T>(promiseCb) => {
    return class FutureArrayCache<A = T> extends FutureArray<A> {
     static get [Symbol.species]() { return TransparentArrayEffect }
 
-    static invalidate(key) { cache.delete(key) }
+    static invalidate(key) { cache.del(key) }
     constructor(key) {
       let promise;
       if( cache.has(key) ) {
