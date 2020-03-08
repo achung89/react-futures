@@ -45,7 +45,9 @@ export const createFutureArray = <T>(promiseCb) => {
   }
    return class FutureArrayCache<A = T> extends FutureArray<A> {
     static get [Symbol.species]() { return TransparentArrayEffect }
-
+    static reset() {
+      cache.reset();
+    }
     static invalidate(key) { cache.del(key) }
     constructor(key) {
       let promise;
