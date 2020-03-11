@@ -79,6 +79,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   }
   #map = function map(nextFn: Function) { 
     const newNextFn = (...args) => {
+
       return nextFn(...args);
     }
     return new this.constructor[Symbol.species]( pipe(this.#deferredFn, newNextFn));

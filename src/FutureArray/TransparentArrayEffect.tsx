@@ -1,6 +1,6 @@
 import {ArrayEffect} from '../Effect/Effect';
 
-const { map, run, tap } = ArrayEffect;
+export const { map, run, tap } = ArrayEffect;
 
 class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
 
