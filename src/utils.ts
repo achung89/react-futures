@@ -12,6 +12,7 @@ export const isRendering = () => {
 export const first = (fn: Function) => {
   let ran = false;
   let memo = null;
+
   return (...args) => {
     if(ran) {
       return memo;
