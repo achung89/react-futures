@@ -6,7 +6,6 @@ import waitForLoading from "../../../test-utils/waitForLoading";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
 import { act } from "react-dom/test-utils";
-import flushMicroTasks from "./flush-microtask";
 
 jest.useFakeTimers();
 
@@ -69,10 +68,9 @@ describe("Instantiate in render, deep render scenarios", () => {
         .filter(val => val % 2 === 0) // [2,4,6,8]
         .immReverse(); // [8,6,4,2]
 
-        if (nestedFuture) {
-          numbers = createNestedFuture(numbers) // [9,9]
-        }
-      return <div>{numbers}</div>;
+      const nums  = nestedFuture ? createNestedFuture(numbers) : numbers // [9,9]
+
+      return <div>{nums}</div>;
     };
 
     await testSuspense(<App />, `<div>8642</div>`);
@@ -84,17 +82,16 @@ describe("Instantiate in render, deep render scenarios", () => {
 
   test("should render deeply", async () => {
     let App = ({ nestedFuture = false }) => {
-      let numbers = new StubFutureArray(4)
+      const numbers = new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
         .immReverse(); // [8,6,4,2]
-        if (nestedFuture) {
-          numbers = createNestedFuture(numbers) // [9,9]
-        }
+      const nums = nestedFuture ? createNestedFuture(numbers) /**[9,9]*/ : numbers
+
       return (
         <div>
-          <Deep numbers={numbers} />
+          <Deep numbers={nums} />
         </div>
       );
     };
@@ -106,18 +103,18 @@ describe("Instantiate in render, deep render scenarios", () => {
 
   test("should render very deeply", async () => {
     let AppVeryDeep = ({ nestedFuture = false, level }) => {
-      let numbers = new StubFutureArray(4)
+      const numbers = new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
         .immReverse(); // [8,6,4,2]
-        if (nestedFuture) {
-          numbers = createNestedFuture(numbers)
-        }
+
+      const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
+        
       return (
         <div>
           <DeepPassThrough level={level}>
-            <Deep numbers={numbers} />
+            <Deep numbers={nums} />
           </DeepPassThrough>
         </div>
       );
@@ -156,10 +153,9 @@ describe("Instantiate in render, deep render scenarios", () => {
         .filter(val => val % 2 === 0) // [2,4,6,8]
         .immReverse(); // [8,6,4,2]
 
-        if (nestedFuture) {
-          numbers = createNestedFuture(numbers) // [9,9]
-        }
-      return <PropDrill prop={numbers} level={level} />;
+      const nums = nestedFuture ? createNestedFuture(numbers) /** [9,9] */ : numbers;
+
+      return <PropDrill prop={nums} level={level} />;
     };
 
     await testSuspense(<App level={10} />, "<div>8642</div>");
@@ -179,13 +175,12 @@ describe("Instantiate in render, deep render scenarios", () => {
   });
   test("should render intermediate transformations", async () => {
     const Nested = ({level, nestedFuture, numbers}) => {
-      if (nestedFuture) {
-        numbers = createNestedFuture(numbers) // [9,9]
-      }
-      return <PropDrill prop={numbers} level={level}/>
+      const nums = nestedFuture ? createNestedFuture(numbers) /** [9,9] */ : numbers
+
+      return <PropDrill prop={nums} level={level}/>
     }
     const App = ({ level, nestedFuture = false }) => {
-      let numbers = new StubFutureArray(4)
+      const numbers = new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
@@ -253,7 +248,6 @@ const testSuspense = async (el, expected, suspenseTime = 2000) => {
   });
 
   await waitForSuspense(suspenseTime);
-  await flushMicroTasks;
   act(() => {
     expect(container.innerHTML).toEqual(expected);
   });
