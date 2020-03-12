@@ -79,8 +79,8 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   }
   #map = function map(nextFn: Function) { 
     const newNextFn = (...args) => {
-
-      return nextFn(...args);
+      let result = nextFn(...args);;
+      return result
     }
     return new this.constructor[Symbol.species]( pipe(this.#deferredFn, newNextFn));
   }
@@ -89,18 +89,19 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     if(isRendering()) {
       // TODO: implement custom error message per method
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
-    } 
+  } 
     const newNextFn = (...args) => {
+      let result = fn(...args);
 
-      return fn(...args);
+      return result;
     }
     this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
     return this;
   }
   #run = function run (fn: Function){
     const newNextFn = (...args) => {
-
-      return fn(...args);
+      let result = fn(...args);
+      return result
     }
     return pipe(this.#deferredFn, newNextFn)();
   }
