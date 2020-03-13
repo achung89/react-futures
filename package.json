@@ -19,7 +19,7 @@
     "babel-plugin-transform-default-import": "^1.0.0",
     "jest": "^24.9.0",
     "react-noop-renderer": "^0.0.0",
-    "react-test-renderer": "0.0.0-experimental-f42431abe",
+    "react-test-renderer": "^0.0.0-experimental-8b155d261",
     "react-testing-library": "^8.0.1",
     "rollup": "^1.31.0",
     "rollup-plugin-babel": "^4.3.3",
@@ -40,8 +40,8 @@
     "core-js": "3",
     "delay": "^4.3.0",
     "lru-cache": "^5.1.1",
-    "react": "^0.0.0-experimental-235a6c4af",
-    "react-dom": "^0.0.0-experimental-235a6c4af",
+    "react": "^0.0.0-experimental-8b155d261",
+    "react-dom": "^0.0.0-experimental-8b155d261",
     "regenerator-runtime": "^0.13.3"
   },
   "scripts": {
