@@ -2,15 +2,14 @@
 import React, {Suspense} from 'react';
 import ReactDOM from 'react-dom';
 import { createFutureObject } from '../index';
-import { act } from 'react-dom/test-utils';
-import {objectStatic, futureObjectStatic} from './FutureObj-statics';
+import {eachObjectStatic, eachFutureObjectStatic} from './FutureObj-statics';
 import waitForSuspense from '../test-utils/waitForSuspense';
 import FutureObject from './FutureObject';
 import Effect from '../Effect/Effect';
+import TestRenderer, {_Scheduler as Scheduler, act} from 'react-test-renderer';
+console.log(Object.getOwnPropertyNames(Scheduler));
 
 // TODO: test error handling
-
-let Scheduler;
 const expectedJSON = (val) => ({
   foo: "futon",
   bar: "barcandy",
@@ -25,7 +24,8 @@ const fetchJson = val => new Promise((res, rej) => {
   }, 1000)
 })
 
-let container;
+let renderer;
+let FutureObj;
 const LogSuspense = ({ action }) => {
   try {
     action();
@@ -39,27 +39,23 @@ const LogSuspense = ({ action }) => {
       Scheduler.unstable_yieldValue(`Error!`);
     }
   }
+  return <div></div>
 }
 
 beforeEach(() => {
   FutureObj = createFutureObject(fetchJson);
-  Scheduler = require('scheduler')
-  container = document.createElement('div');
-  document.body.appendChild(container);
 });
 afterEach(() => {
   FutureObj = null;
-  document.body.removeChild(container);
-  container = null;
+  // document.body.removeChild(container);
+  renderer = null
 });
 
 describe("Object static methods behaviour", () => {
-  test.each`${objectStatic}`
-  (async ({staticMethod, inRender, outRender}) => {
-    test(`${typeof staticMethod === 'string' ? staticMethod : staticMethod.toString()} should ${inRender} inside render and ${outRender} outside render`, () => {
+  eachObjectStatic('Expect sync object static method $staticMethod to $inRender in render and $outRender outside render', async ({staticMethod, inRender, outRender}) => {
       const futureObj = new FutureObj(1);
       const method = typeof staticMethod === 'string' ? Object[staticMethod] : staticMethod;
-      const assertions = {
+      const assertions = { 
         autothrow: () => expect(() => method(futureObj)).toThrowError(/** TODO: outofrender error */),
         throw: () => expect(() => method(futureObj)).toThrowError(/** TODO: outofrender error */),
         defer: () => expect(method(futureObj)).toBeInstanceOf(FutureObj),
@@ -82,23 +78,26 @@ describe("Object static methods behaviour", () => {
         </Suspense>
       };
 
-      act(() => { ReactDOM.createRoot(container).render(<App />) });
+      act(() => { renderer = TestRenderer.create(<App />,         {
+        unstable_isAsync: true,
+      },
+) });
 
       switch(inRender) {
         case "suspend":
-          expect(Scheduler).toFlushAndYieldThrough([
+          expect(Scheduler.unstable_clearYields()).toEqual([
             'Suspend!'
            ]);
            await waitForSuspense();
           expect(resolved).toEqual(expectedJSON(1))
           break;
         case "throw":
-          expect(Scheduler).toFlushAndYieldThrough([
+          expect(Scheduler.unstable_clearYields()).toEquql([
             'Error!'
            ])
           break;
         case "defer":
-          expect(Scheduler).toFlushAndYieldThrough([
+          expect(renderer).toFlushAll([
             'No Suspense'
            ])
            expect(resolved).toBeInstanceOf(Effect);
@@ -109,11 +108,9 @@ describe("Object static methods behaviour", () => {
           throw new Error(`Invalid value for inRender "${inRender}"`)
       }
 
-    })
   })
-  test.each`${futureObjectStatic}`
-  (async ({staticMethod, inRender, outRender}) => {
-    test(`${typeof staticMethod === 'string' ? staticMethod : staticMethod.toString()} should ${inRender} inside render and ${outRender} outside render`, () => {
+
+  eachFutureObjectStatic( 'Expect future object static method $staticMethod to $inRender in render and $outRender outside render', async ({staticMethod, inRender, outRender}) => {
       const futureObj = new FutureObj;
       const method = typeof staticMethod === 'string' ? FutureObj[staticMethod] : staticMethod;
       const assertions = {
@@ -140,23 +137,26 @@ describe("Object static methods behaviour", () => {
       };
 
       act(() => {
-        ReactDOM.createRoot(container).render(<App />)
+        renderer = TestRenderer.create(<App />,         {
+          unstable_isAsync: true,
+        },
+  )
       });
       switch(inRender) {
         case "suspend":
-          expect(Scheduler).toFlushAndYieldThrough([
+          expect(Scheduler.unstable_clearYields()).toEqual([
             'Suspend!'
            ])
           await waitForSuspense();
           expect(resolved).toEqual(expectedJSON(1))
           break;
         case "throw":
-          expect(Scheduler).toFlushAndYieldThrough([
+          expect(Scheduler.unstable_clearYields()).toEqual([
             'Error!'
            ])
           break;
         case "defer":
-          expect(Scheduler).toFlushAndYieldThrough([
+          expect(TestRenderer).toFlushAll([
             'No Suspense'
            ])
            expect(resolved).toBeInstanceOf(Effect);
@@ -166,7 +166,7 @@ describe("Object static methods behaviour", () => {
         default:
           throw new Error(`Invalid value for inRender "${inRender}"`)
       }
-    })
+
   })
 });
 
