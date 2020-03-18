@@ -1,5 +1,4 @@
 import {  pipe, tap, first, isRendering } from "../utils";
-import TransparentObjectEffect from "../FutureObject/TransparentObjectEffect";
 
 const thisMap = new WeakMap;
 // implements IO
@@ -34,6 +33,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     this.#deferredFn = first(deferredFn);
     const proxy = new Proxy(this, {
       defineProperty: (_target, key, descriptor) => {
+
         this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'defineProperty');
         return true;
       },
@@ -48,12 +48,14 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         if(typeof this[key] === 'function') { // TODO: what is this?
           return Reflect.get(target, key, receiver);
         }
-        return Reflect.get(this.#deferredFn(), key, receiver)
+        return Reflect.get(this.#deferredFn(), key, this.#deferredFn())
       },
       getOwnPropertyDescriptor: (_target, prop) => {
+        console.log('lolol')
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
       },
       getPrototypeOf: (_target) => {
+
         return Reflect.getPrototypeOf(this.#deferredFn());
       },
       has: (_target, key) => {
@@ -62,8 +64,9 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       isExtensible: (_target) => {
         return Reflect.isExtensible(this.#deferredFn());
       },
-      ownKeys: () => { // TODO: is this right?
-        return TransparentObjectEffect.getOwnPropertyNames(this)
+      ownKeys: _target => { // TODO: is this right?
+        const {default: TransparentArrayEffect} = require("../FutureArray/TransparentArrayEffect");
+        return new TransparentArrayEffect(() =>  Reflect.ownKeys(this.#deferredFn()))
       },
       preventExtensions: () => {
         return Reflect.preventExtensions(this.#deferredFn())

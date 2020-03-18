@@ -9,6 +9,9 @@ const isObjectEffect = inst => inst instanceof ObjectEffect || inst instanceof A
 
 // TODO test non future params
 export default class TransparentObjectEffect<T extends object> extends ObjectEffect<T> {
+  constructor(fn) {
+    super(fn);
+  }
   static assign(target, ...rest) {
     if(isRendering() && isObjectEffect(target)) {
       // TODO: more descriptive message

@@ -9,7 +9,8 @@ export default class FutureObject<T extends object> extends TransparentObjectEff
   }
   constructor(promise) {
     super(() => {
-      let meta = promiseStatusStore.get(promise)
+      let meta = promiseStatusStore.get(promise);
+
       if (typeof meta !== "undefined") {
         var { status, value } = meta;
       } else {

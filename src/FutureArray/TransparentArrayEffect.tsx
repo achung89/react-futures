@@ -1,12 +1,9 @@
 import {ArrayEffect} from '../Effect/Effect';
 
-export const { map, run, tap } = ArrayEffect;
+const { map, run, tap } = ArrayEffect;
 
 class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
-
-  constructor(deferredFn) {
-    super(deferredFn)
-  }
+  constructor(deferredFn) { super(deferredFn) }
 
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter

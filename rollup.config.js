@@ -5,13 +5,11 @@ export default {
   input: './src/index.ts',
   output: {
     file: 'build/index.js',
-    format: 'esm'
+    format: 'umd',
+    name: 'ReactFutures'
   },
   plugins: [
-    babel({
-      exclude: 'node_modules/**' 
-    }),
+    babel(),
     typescript()
-
   ]
 };
