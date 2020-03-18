@@ -5,7 +5,7 @@
       "target":"ES2020",
       "strictNullChecks": true,
       "removeComments": true,
-      "preserveConstEnums": true,9
+      "preserveConstEnums": true,
       "sourceMap": true,
       // "noImplicitAny": true,
       "esModuleInterop": true,

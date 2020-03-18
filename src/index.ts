@@ -2,7 +2,7 @@ import { isRendering } from './utils';
 import { promiseStatusStore } from "./shared-properties";
 import FutureObject from './FutureObject/FutureObject';
 import FutureArray from './FutureArray/FutureArray';
-import  LRU from 'lru-cache';
+import LRU from 'lru-cache';
 import TransparentArrayEffect from './FutureArray/TransparentArrayEffect';
 
 
@@ -17,6 +17,9 @@ export const createFutureObject = <T extends object>(promiseCb) => {
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
     static invalidate(key) {
       cache.del(key);
+    }
+    static reset() {
+      cache.reset();
     }
     constructor(key) {
       let promise;
@@ -44,6 +47,7 @@ export const createFutureArray = <T>(promiseCb) => {
     throw new Error("cannot create cache in render")
   }
    return class FutureArrayCache<A = T> extends FutureArray<A> {
+     
     static get [Symbol.species]() { return TransparentArrayEffect }
     static reset() {
       cache.reset();
