@@ -15,43 +15,96 @@ function captureAssertion(fn) {
   }
   return {pass: true};
 }
+'use strict';
 
-function toFlushAll(renderer, expectedYields) {
-  const actualYields = renderer.unstable_flushAll();
-  return captureAssertion(() => expect(actualYields).toEqual(expectedYields));
+const JestReact = require('jest-react');
+
+
+function assertYieldsWereCleared(Scheduler) {
+  const actualYields = Scheduler.unstable_clearYields();
+  if (actualYields.length !== 0) {
+    throw new Error(
+      'Log of yielded values is not empty. ' +
+        'Call expect(Scheduler).toHaveYielded(...) first.'
+    );
+  }
 }
 
-function toFlushThrough(renderer, expectedYields) {
-  const actualYields = renderer.unstable_flushNumberOfYields(
-    expectedYields.length
-  );
-  return captureAssertion(() => expect(actualYields).toEqual(expectedYields));
+function toMatchRenderedOutput(ReactNoop, expectedJSX) {
+  if (typeof ReactNoop.getChildrenAsJSX === 'function') {
+    const Scheduler = ReactNoop._Scheduler;
+    assertYieldsWereCleared(Scheduler);
+    return captureAssertion(() => {
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(expectedJSX);
+    });
+  }
+  return JestReact.unstable_toMatchRenderedOutput(ReactNoop, expectedJSX);
 }
 
-function toClearYields(ReactTestRenderer, expectedYields) {
-  const actualYields = ReactTestRenderer.unstable_clearYields();
-  return captureAssertion(() => expect(actualYields).toEqual(expectedYields));
-}
 
-function toFlushAndThrow(renderer, expectedYields, ...rest) {
+function toFlushAndYield(Scheduler, expectedYields) {
+  assertYieldsWereCleared(Scheduler);
+  Scheduler.unstable_flushAllWithoutAsserting();
+  const actualYields = Scheduler.unstable_clearYields();
   return captureAssertion(() => {
-    try {
-      expect(() => {
-        renderer.unstable_flushAll();
-      }).toThrow(...rest);
-    } catch (error) {
-      const actualYields = renderer.unstable_clearYields();
-      expect(actualYields).toEqual(expectedYields);
-      throw error;
-    }
-    const actualYields = renderer.unstable_clearYields();
     expect(actualYields).toEqual(expectedYields);
   });
 }
 
+function toFlushAndYieldThrough(Scheduler, expectedYields) {
+  assertYieldsWereCleared(Scheduler);
+  Scheduler.unstable_flushNumberOfYields(expectedYields.length);
+  const actualYields = Scheduler.unstable_clearYields();
+  return captureAssertion(() => {
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+function toFlushUntilNextPaint(Scheduler, expectedYields) {
+  assertYieldsWereCleared(Scheduler);
+  Scheduler.unstable_flushUntilNextPaint();
+  const actualYields = Scheduler.unstable_clearYields();
+  return captureAssertion(() => {
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+function toFlushWithoutYielding(Scheduler) {
+  return toFlushAndYield(Scheduler, []);
+}
+
+function toFlushExpired(Scheduler, expectedYields) {
+  assertYieldsWereCleared(Scheduler);
+  Scheduler.unstable_flushExpired();
+  const actualYields = Scheduler.unstable_clearYields();
+  return captureAssertion(() => {
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+function toHaveYielded(Scheduler, expectedYields) {
+  return captureAssertion(() => {
+    const actualYields = Scheduler.unstable_clearYields();
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+function toFlushAndThrow(Scheduler, ...rest) {
+  assertYieldsWereCleared(Scheduler);
+  return captureAssertion(() => {
+    expect(() => {
+      Scheduler.unstable_flushAllWithoutAsserting();
+    }).toThrow(...rest);
+  });
+}
+
 module.exports = {
-  toFlushAll,
-  toFlushThrough,
+  toFlushAndYield,
+  toFlushAndYieldThrough,
+  toFlushUntilNextPaint,
+  toFlushWithoutYielding,
+  toFlushExpired,
+  toHaveYielded,
   toFlushAndThrow,
-  toClearYields
+  toMatchRenderedOutput
 };

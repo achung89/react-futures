@@ -33,28 +33,27 @@ ${'values'}                                                    |    ${'defer'}  
 function getOwnPropertyDescriptor(obj) { 
        return Object.getOwnPropertyDescriptor(obj, 'foo')
 }
-function assign(obj) { return Object.assign({},obj) }
-// ${assign}                       |    ${'throw'}                                             |   ${'autothrow'}                                         
+function assign_secondParam(obj) { return Object.assign({},obj) };
 export const eachObjectStatic = test.only.each` 
-       staticMethod             |   inRender                                                |  outRender                                                                                                                                                                               
-${getOwnPropertyDescriptor}     |    ${'suspend'}                                           |   ${'throw'}       `
-let b =`                                                      
-${'getOwnPropertyDescriptors'}  |    ${'autosuspend'}                                       |   ${'throw'}                                                                
-${'getOwnPropertyNames'}        |    ${'suspend'}                                           |   ${'defer'}                                                       
-${'getOwnPropertySymbols'}      |    ${'return FutureObject.getOwnPropertyNames'}           |   ${'defer'}                                                           
+staticMethod                    |   inRender                                                |  outRender 
+${assign_secondParam}           |    ${'suspend'}                                           |   ${'throw'}                                         
+${getOwnPropertyDescriptor}     |    ${'suspend'}                                           |   ${'throw'}                                                          
+${'getOwnPropertyDescriptors'}  |    ${'suspend'}                                           |   ${'throw'}                                                                
+${'getOwnPropertyNames'}        |    ${'suspend'}                                           |   ${'throw'}                                                       
+${'getOwnPropertySymbols'}      |    ${'suspend'}                                           |   ${'throw'}                                                           
 ${'is'}                         |    ${'none'}                                              |   ${'none'}                                        
-${'preventExtensions'}          |    ${'throw'}                                             |   ${'defermutate'}                                                          
-${'seal'}                       |    ${'autothrow'}                                         |   ${'autothrow'}                                         
-${'create'}                     |    ${'suspend'}                                           |   ${'throw'}                                            
-${'defineProperties'}           |    ${'throw'}                                             |   ${'autodefermutate'}                                                     
-${'defineProperty'}             |    ${'throw'}                                             |   ${'defermutate'}                                                 
-${'freeze'}                     |    ${'throw'}                                             |   ${'throw'}                                          
-${'getPrototypeOf'}             |    ${'delegateToObject?'}                                 |   ${'delegateToObject?'}                                                     
-${'setPrototypeOf'}             |    ${'throw'}                                             |   ${'throw? (show warning maybe)'}                                               
-${'isExtensible'}               |    ${'suspend'}                                           |   ${'throw'}                                             
-${'isFrozen'}                   |    ${'suspend'}                                           |   ${'throw'}                                         
-${'isSealed'}                   |    ${'suspend'}                                           |   ${'throw'}                                              
-${'keys'}                       |    ${'suspend'}                                           |   ${'throw'}                                       
-${'entries'}                    |    ${'suspend'}                                           |   ${'throw'}                                                
-${'values'}                     |    ${'suspend'}                                           |   ${'throw'}                                      
-`
+${'preventExtensions'}          |    ${'throw'}                                             |   ${'throw'} `                                                         
+// `${'seal'}                       |    ${'autothrow'}                                         |   ${'autothrow'}                                         
+// ${'create'}                     |    ${'suspend'}                                           |   ${'throw'}                                            
+// ${'defineProperties'}           |    ${'throw'}                                             |   ${'autodefermutate'}                                                     
+// ${'defineProperty'}             |    ${'throw'}                                             |   ${'defermutate'}                                                 
+// ${'freeze'}                     |    ${'throw'}                                             |   ${'throw'}                                          
+// ${'getPrototypeOf'}             |    ${'delegateToObject?'}                                 |   ${'delegateToObject?'}                                                     
+// ${'setPrototypeOf'}             |    ${'throw'}                                             |   ${'throw? (show warning maybe)'}                                               
+// ${'isExtensible'}               |    ${'suspend'}                                           |   ${'throw'}                                             
+// ${'isFrozen'}                   |    ${'suspend'}                                           |   ${'throw'}                                         
+// ${'isSealed'}                   |    ${'suspend'}                                           |   ${'throw'}                                              
+// ${'keys'}                       |    ${'suspend'}                                           |   ${'throw'}                                       
+// ${'entries'}                    |    ${'suspend'}                                           |   ${'throw'}                                                
+// ${'values'}                     |    ${'suspend'}                                           |   ${'throw'}                                      
+// `
