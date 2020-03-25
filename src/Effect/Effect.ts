@@ -51,7 +51,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.get(this.#deferredFn(), key, this.#deferredFn())
       },
       getOwnPropertyDescriptor: (_target, prop) => {
-        console.log('lolol')
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
       },
       getPrototypeOf: (_target) => {
@@ -69,7 +68,8 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return new TransparentArrayEffect(() =>  Reflect.ownKeys(this.#deferredFn()))
       },
       preventExtensions: () => {
-        return Reflect.preventExtensions(this.#deferredFn())
+          // TODO: error message
+        throw new Error("Operation preventExtensions not allowed on future, use FutureObject.preventExtensions instead");
       },
       setPrototypeOf: (_target, proto) => {
         this.#tap(target => Object.setPrototypeOf(target, proto), 'Object.setPrototype')
