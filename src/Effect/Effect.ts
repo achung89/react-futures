@@ -45,6 +45,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         throw new Error("deletion on lazy future not permitted")
       },
       get: (target, key, receiver) => {
+        
         if(typeof this[key] === 'function') { // TODO: what is this?
           return Reflect.get(target, key, receiver);
         }
@@ -54,8 +55,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
       },
       getPrototypeOf: (_target) => {
-
-        return Reflect.getPrototypeOf(this.#deferredFn());
+        return Reflect.getPrototypeOf(thisMap.get(proxy));
       },
       has: (_target, key) => {
         return Reflect.has(this.#deferredFn(), key);
@@ -67,13 +67,16 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         const {default: TransparentArrayEffect} = require("../FutureArray/TransparentArrayEffect");
         return new TransparentArrayEffect(() =>  Reflect.ownKeys(this.#deferredFn()))
       },
-      preventExtensions: () => {
+      preventExtensions: target => {
           // TODO: error message
-        throw new Error("Operation preventExtensions not allowed on future, use FutureObject.preventExtensions instead");
+          this.#tap(target => Reflect.preventExtensions(target), 'preventExtensions');
+          return Reflect.preventExtensions(target);
       },
-      setPrototypeOf: (_target, proto) => {
-        this.#tap(target => Object.setPrototypeOf(target, proto), 'Object.setPrototype')
-        return true;
+      setPrototypeOf: (target, proto) => {
+        if(isRendering()) {
+          throw new Error("operation setPrototypeOf on future invalid during render")
+        }
+        return Reflect.setPrototypeOf(target,proto);
       },
       ...childProxy
     });
