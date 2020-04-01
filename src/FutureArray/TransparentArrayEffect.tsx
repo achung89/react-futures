@@ -4,7 +4,9 @@ const { map, run, tap } = ArrayEffect;
 
 class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(deferredFn) { super(deferredFn) }
-
+  static of() {
+    
+  }
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args){ return map(target => target.concat(...args), this)}

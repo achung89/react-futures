@@ -4,7 +4,6 @@ import { isRendering } from "../utils";
 
 export default class FutureArray<T> extends TransparentArrayEffect<T> {
   #promise: Promise<any>
-  static toPromise(inst: FutureArray<any>) { return inst.#promise; }
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise)

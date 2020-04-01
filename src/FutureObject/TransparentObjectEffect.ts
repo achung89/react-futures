@@ -3,7 +3,7 @@ import {ObjectEffect, ArrayEffect} from "../Effect/Effect";
 import TransparentArrayEffect from "../FutureArray/TransparentArrayEffect";
 
 type Object = object | any[];
-const {run} = ObjectEffect;
+const {tap, map} = ObjectEffect;
 
 const isObjectEffect = inst => inst instanceof ObjectEffect || inst instanceof ArrayEffect;
 
@@ -13,17 +13,19 @@ export default class TransparentObjectEffect<T extends object> extends ObjectEff
     super(fn);
   }
   static assign(target, ...rest) {
-    if(isRendering() && isObjectEffect(target)) {
-      // TODO: more descriptive message
-      throw new Error('no sideaffect')
+    
+    if(isObjectEffect(target)) {
+      const Klass = target.constructor[Symbol.species];
+      return Klass.tap( target => Object.assign(target, ...rest), 'FutureObject.assign', target);
+    } else {
+      return Object.assign(target, ...rest);
     }
-    return new TransparentObjectEffect(() => Object.assign(target, ...rest))
   }
   static getOwnPropertyDescriptor(target, property) {
-    return new TransparentObjectEffect(() => Object.getOwnPropertyDescriptor(target, property))
+    return map(() => Object.getOwnPropertyDescriptor(target, property), target)
   }
   static getOwnPropertyDescriptors(target) {
-    return new TransparentObjectEffect(() => Object.getOwnPropertyDescriptors(target))
+    return map(() => Object.getOwnPropertyDescriptors(target), target)
   }
   static getOwnPropertyNames(target) {
     return new TransparentArrayEffect(() => Object.getOwnPropertyNames(target))
@@ -37,13 +39,13 @@ export default class TransparentObjectEffect<T extends object> extends ObjectEff
       throw new Error('hello')
     }
     const suspend = futureObj => run(obj => obj, futureObj);
-    obj1 = obj1 instanceof Effect ? suspend(obj1) : obj1;
-    obj2 = obj2 instanceof Effect ? suspend(obj2) : obj2;
+    obj1 = isObjectEffect(obj1) ? suspend(obj1) : obj1;
+    obj2 = isObjectEffect(obj2) ? suspend(obj2) : obj2;
     return Object.is(obj1, obj2);
   }
   static preventExtensions(target) {
     return target instanceof ObjectEffect 
-            ? this.tap(Object.preventExtensions, target, 'Object.preventExtensions') 
+            ? tap(Object.preventExtensions, target, 'Object.preventExtensions') 
             : Object.preventExtensions(target);
   }
   static seal(target: Object) {
@@ -57,17 +59,17 @@ export default class TransparentObjectEffect<T extends object> extends ObjectEff
   }
   static defineProperties(obj:Object, descs) {
     return  isObjectEffect(obj) 
-            ? this.tap(target => Object.defineProperties(target, descs), obj, 'Object.defineProperties') 
+            ? tap(target => Object.defineProperties(target, descs), obj, 'Object.defineProperties') 
             : Object.defineProperties(obj, descs);
   }
   static defineProperty(obj, prop, desc) {
     return  isObjectEffect(obj) 
-      ? this.tap(target => Object.defineProperty(target, prop, desc), obj, 'Object.defineProperty') 
+      ? tap(target => Object.defineProperty(target, prop, desc), obj, 'Object.defineProperty') 
       : Object.defineProperty(obj, prop, desc); 
   }
   static freeze(obj) {
     return  isObjectEffect(obj)
-            ? this.tap(Object.freeze, obj, 'Object.freeze') 
+            ? tap(Object.freeze, obj, 'Object.freeze') 
             : Object.freeze(obj);
   }
   static getPrototypeOf(obj) {
@@ -77,7 +79,7 @@ export default class TransparentObjectEffect<T extends object> extends ObjectEff
   }
   static setPrototypeOf(obj, proto) {
     return  isObjectEffect(obj)
-            ? this.tap(() => Object.setPrototypeOf(obj, proto), obj, 'Object.setPrototypeOf')
+            ? tap(() => Object.setPrototypeOf(obj, proto), obj, 'Object.setPrototypeOf')
             : Object.setPrototypeOf(obj, proto);
   }
   static isExtensible(obj) {

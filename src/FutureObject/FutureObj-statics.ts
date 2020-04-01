@@ -1,6 +1,6 @@
 import FutureObject from "./FutureObject"
 import FutureArray from "../FutureArray/FutureArray";
-
+// TODO: test assign with array as first argument
 const getOwnPropertyDescriptor = obj => Object.getOwnPropertyDescriptor(obj, 'foo')
 const assign_secondParam = obj => Object.assign({},obj);
 const defineProperty = obj => Object.defineProperty(obj, 'foo', {writable: false})
@@ -9,6 +9,7 @@ const setPrototypeOf = obj => Object.setPrototypeOf(obj, FutureArray)
 
 const getOwnPropertyDescriptorFuture = obj => FutureObject.getOwnPropertyDescriptor(obj, 'foo')
 const assign_secondParamFuture = obj => FutureObject.assign({},obj);
+const assign_firstParamFuture = obj => FutureObject.assign(obj, {bar:'bar'});
 const definePropertyFuture = obj => FutureObject.defineProperty(obj, 'foo', {writable: false})
 const definePropertiesFuture = obj => FutureObject.defineProperties(obj, {'foo':{ writable: false}})
 const setPrototypeOfFuture = obj => FutureObject.setPrototypeOf(obj, FutureArray)
@@ -16,18 +17,19 @@ const setPrototypeOfFuture = obj => FutureObject.setPrototypeOf(obj, FutureArray
 // TODO: add expected value
 export const eachFutureObjectStatic = test.only.each`
                                staticMethod                    |   inRender                |  outRender                                                                                                                                                                               
-${assign_secondParamFuture}                                    |    ${'throw'}             |   ${'defermutate'}                                                 
-${getOwnPropertyDescriptorFuture}                              |    ${'defer'}             |   ${'defer'}                                                             
+${getOwnPropertyDescriptorFuture}                              |    ${'defer'}             |   ${'defer'}     `;`                                                        
+${assign_firstParamFuture}                                    |    ${'throw'}             |   ${'defer'}                                                 
+${assign_secondParamFuture}                                    |    ${'suspend'}             |   ${'throw'}                                                 
 ${'getOwnPropertyDescriptors'}                                 |    ${'defer'}             |   ${'defer'}                                                                
 ${'getOwnPropertyNames'}                                       |    ${'defer'}             |   ${'defer'}                                                       
 ${'getOwnPropertySymbols'}                                     |    ${'defer'}             |   ${'defer'}                                                           
 ${'is'}                                                        |    ${'suspend'}           |   ${'throw'}                                        
-${'preventExtensions'}                                         |    ${'throw'}             |   ${'defermutate'}                                                          
-${'seal'}                                                      |    ${'throw'}             |   ${'defermutate'}                                         
+${'preventExtensions'}                                         |    ${'throw'}             |   ${'defer'}                                                          
+${'seal'}                                                      |    ${'throw'}             |   ${'defer'}                                         
 ${'create'}                                                    |    ${'throw'}             |   ${'throw'}                                            
-${definePropertiesFuture}                                          |    ${'throw'}             |   ${'defermutate'}                                                     
-${definePropertyFuture}                                            |    ${'throw'}             |   ${'defermutate'}                                                 
-${'freeze'}                                                    |    ${'throw'}             |   ${'defermutate'}                                          
+${definePropertiesFuture}                                          |    ${'throw'}             |   ${'defer'}                                                     
+${definePropertyFuture}                                            |    ${'throw'}             |   ${'defer'}                                                 
+${'freeze'}                                                    |    ${'throw'}             |   ${'defer'}                                          
 ${'getPrototypeOf'}                                            |    ${'suspend'}           |   ${'throw'}                                                     
 ${setPrototypeOfFuture}                                            |    ${'throw'}             |   ${'defer'}                                                    
 ${'isExtensible'}                                              |    ${'suspend'}           |   ${'throw'}                                             
