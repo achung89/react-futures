@@ -4,9 +4,7 @@ import { isRendering } from "../utils";
 
 export default class FutureObject<T extends object> extends TransparentObjectEffect<T> {
   #promise: Promise<any>
-  static toPromise(inst: FutureObject<any>) {
-    return inst.#promise;
-  }
+
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise);

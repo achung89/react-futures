@@ -10,7 +10,8 @@ import FutureObject from './FutureObject';
 import { act } from 'react-dom/test-utils';
 import  {render} from '../test-utils/rtl-renderer';
 import {waitFor} from '@testing-library/dom';
-
+import TransparentObjectEffect from './TransparentObjectEffect';
+import {isFuture} from '../utils';
 expect.extend(require('../test-utils/renderer-extended-expect'));	  
 
 
@@ -28,7 +29,7 @@ const fetchJson = val => new Promise((res, rej) => {
     try {
       Scheduler.unstable_yieldValue('Promise Resolved')
       res(expectedJSON(val))
-    }catch(err) {
+    } catch (err) {
       rej(err)
     }
 
@@ -40,7 +41,7 @@ const LogSuspense = ({ action }) => {
   try {
     const val = action();
     Scheduler.unstable_yieldValue('No Suspense');
-    if(typeof val !== 'undefined') {
+    if(typeof val !== 'undefined' && !isFuture(val)) {
       Scheduler.unstable_yieldValue(val);
     }
     return 'foo';
@@ -82,8 +83,7 @@ async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
   const method = typeof staticMethod === 'string' ? Object[staticMethod] : staticMethod;
   const assertionsOutsideRender = {
     throw: () => expect(() => method(futureObj)).toThrowError(/** TODO: outofrender error */),
-    defer: () => expect(method(futureObj)).toBeInstanceOf(FutureObj),
-    defermutate: () => expect(method(futureObj)).toBeInstanceOf(FutureObj),
+    defer: () => expect(method(futureObj)).toBeInstanceOf(TransparentObjectEffect),
     none: () => expect(() => method(futureObj)).not.toThrow(),
     suspend: () => method(futureObj)
   }
@@ -91,7 +91,7 @@ async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
   const assertionsInsideRender = {
     none: () => expect(() => method(futureObj)).not.toThrow(),
     suspend: () => method(futureObj),
-    defer: () => expect(method(futureObj)).toBeInstanceOf(FutureObj),
+    defer: () => method(futureObj),
     throw: () => {
       expect(() => method(futureObj)).toThrowError();
     }
@@ -144,7 +144,6 @@ async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
       expect(Scheduler).toHaveYielded([
         'No Suspense'
       ]);
-      resolved = await FutureObject.toPromise(resolved);
       expect(resolved).toEqual(method(expectedJSON(1)))
       expect(Object.getOwnPropertyDescriptors(resolved)).toEqual(Object.getOwnPropertyDescriptor(expectedJSON(1)))
       break;

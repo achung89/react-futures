@@ -2,7 +2,7 @@
   "name": "suspense-data-structures",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "git@github.com:achung89/suspense-data-structures.git",
+  "repository": "git@github.com:achung89/react-futures.git",
   "author": "Andrew Chung <chung.andrew7@gmail.com>",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 import {  pipe, tap, first, isRendering } from "../utils";
 
-const thisMap = new WeakMap;
+export const thisMap = new WeakMap;
 // implements IO
 const createEffect = Type => class Effect<T extends object = object> extends Type {
   static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
@@ -88,7 +88,8 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       let result = nextFn(...args);;
       return result
     }
-    return new this.constructor[Symbol.species]( pipe(this.#deferredFn, newNextFn));
+    const Klass = this.constructor[Symbol.species];
+    return new Klass( pipe(this.#deferredFn, newNextFn) );
   }
 
   #tap = function tapper(fn: Function, name: string) {
