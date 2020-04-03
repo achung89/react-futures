@@ -10,8 +10,8 @@ import FutureObject from './FutureObject';
 import { act } from 'react-dom/test-utils';
 import  {render} from '../test-utils/rtl-renderer';
 import {waitFor} from '@testing-library/dom';
-import TransparentObjectEffect from './TransparentObjectEffect';
-import {isFuture} from '../utils';
+import TransparentObjectEffect, {isEffect} from './TransparentObjectEffect';
+import {isFuture, suspend} from '../utils';
 expect.extend(require('../test-utils/renderer-extended-expect'));	  
 
 
@@ -24,6 +24,7 @@ const expectedJSON = value => ({
 });
 // TODO: test obj instance methods
 // TODO: assert return values of Object/FutureObj static methods
+let resolved = undefined;
 const fetchJson = val => new Promise((res, rej) => {
   setTimeout(() => {
     try {
@@ -41,8 +42,11 @@ const LogSuspense = ({ action }) => {
   try {
     const val = action();
     Scheduler.unstable_yieldValue('No Suspense');
-    if(typeof val !== 'undefined' && !isFuture(val)) {
-      Scheduler.unstable_yieldValue(val);
+    if(isEffect(val)) {
+      suspend(val);
+    }
+    if(typeof val !== 'undefined') {
+      resolved = val;
     }
     return 'foo';
   } catch (promise) {
@@ -71,16 +75,20 @@ afterEach(() => {
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
+  resolved = null;
 });
 
 describe("Object and FutureObject static methods behaviour", () => {
   eachObjectStatic('Expect sync object static method $staticMethod to $inRender in render and $outRender outside render', inRenderOutRenderTests);
-  eachFutureObjectStatic('Expect future object static method $staticMethod to $inRender in render and $outRender outside render', inRenderOutRenderTests);
+  eachFutureObjectStatic('Expect $constructor object static method $staticMethod to $inRender in render and $outRender outside render', inRenderOutRenderTests);
 });
 
-async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
+async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, outRender })  {
   const futureObj = new FutureObj(1);
-  const method = typeof staticMethod === 'string' ? Object[staticMethod] : staticMethod;
+  const method = typeof staticMethod === 'string' 
+                  ? constructor === 'Object' 
+                    ? Object[staticMethod] : FutureObj[staticMethod]
+                  : staticMethod;
   const assertionsOutsideRender = {
     throw: () => expect(() => method(futureObj)).toThrowError(/** TODO: outofrender error */),
     defer: () => expect(method(futureObj)).toBeInstanceOf(TransparentObjectEffect),
@@ -101,10 +109,9 @@ async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
     assertionsOutsideRender[outRender]();
   })
 
-  let resolved;
   const App = ({ render }) => {
     return <Suspense fallback={<div>Loading...</div>}>
-      {render ? <LogSuspense action={() => resolved = assertionsInsideRender[inRender]()}>
+      {render ? <LogSuspense action={() => assertionsInsideRender[inRender]()}>
         <div>
           foo
       </div> 
@@ -133,8 +140,8 @@ async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
       await waitFor(() => getByText('foo'))
       expect(Scheduler).toHaveYielded([          
         'No Suspense',
-        method(expectedJSON(1))
       ])
+      expect(resolved).toEqual(method(expectedJSON(1)))
       break;
     case "throw":
       jest.runTimersToTime(150);
@@ -142,10 +149,17 @@ async function inRenderOutRenderTests ({ staticMethod, inRender, outRender })  {
       break;
     case "defer":
       expect(Scheduler).toHaveYielded([
-        'No Suspense'
+        'No Suspense',
+        'Suspend!'
       ]);
+      jest.runTimersToTime(150);
+      expect(Scheduler).toHaveYielded([
+        'Promise Resolved',
+      ]);
+      await waitForSuspense(0);
+      await waitFor(() => getByText('foo'))
       expect(resolved).toEqual(method(expectedJSON(1)))
-      expect(Object.getOwnPropertyDescriptors(resolved)).toEqual(Object.getOwnPropertyDescriptor(expectedJSON(1)))
+      expect(Object.getOwnPropertyDescriptors(resolved)).toEqual(Object.getOwnPropertyDescriptors(method(expectedJSON(1))))
       break;
     case "none":
       expect(Scheduler).toHaveYielded(['No Suspense']);

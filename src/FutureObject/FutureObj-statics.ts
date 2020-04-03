@@ -16,28 +16,28 @@ const setPrototypeOfFuture = obj => FutureObject.setPrototypeOf(obj, FutureArray
 //FutureObject
 // TODO: add expected value
 export const eachFutureObjectStatic = test.only.each`
-                               staticMethod                    |   inRender                |  outRender                                                                                                                                                                               
-${getOwnPropertyDescriptorFuture}                              |    ${'defer'}             |   ${'defer'}     `;`                                                        
-${assign_firstParamFuture}                                    |    ${'throw'}             |   ${'defer'}                                                 
-${assign_secondParamFuture}                                    |    ${'suspend'}             |   ${'throw'}                                                 
-${'getOwnPropertyDescriptors'}                                 |    ${'defer'}             |   ${'defer'}                                                                
-${'getOwnPropertyNames'}                                       |    ${'defer'}             |   ${'defer'}                                                       
-${'getOwnPropertySymbols'}                                     |    ${'defer'}             |   ${'defer'}                                                           
-${'is'}                                                        |    ${'suspend'}           |   ${'throw'}                                        
-${'preventExtensions'}                                         |    ${'throw'}             |   ${'defer'}                                                          
-${'seal'}                                                      |    ${'throw'}             |   ${'defer'}                                         
-${'create'}                                                    |    ${'throw'}             |   ${'throw'}                                            
-${definePropertiesFuture}                                          |    ${'throw'}             |   ${'defer'}                                                     
-${definePropertyFuture}                                            |    ${'throw'}             |   ${'defer'}                                                 
-${'freeze'}                                                    |    ${'throw'}             |   ${'defer'}                                          
-${'getPrototypeOf'}                                            |    ${'suspend'}           |   ${'throw'}                                                     
-${setPrototypeOfFuture}                                            |    ${'throw'}             |   ${'defer'}                                                    
-${'isExtensible'}                                              |    ${'suspend'}           |   ${'throw'}                                             
-${'isFrozen'}                                                  |    ${'suspend'}           |   ${'throw'}                                         
-${'isSealed'}                                                  |    ${'suspend'}           |   ${'throw'}                                              
-${'keys'}                                                      |    ${'defer'}             |   ${'defer'}                                       
-${'entries'}                                                   |    ${'defer'}             |   ${'defer'}                                                
-${'values'}                                                    |    ${'defer'}             |   ${'defer'}                                      
+  constructor     |                                staticMethod                    |   inRender                |  outRender                                                                                                                                                                               
+${'FutureObject'} | ${getOwnPropertyDescriptorFuture}                              |    ${'defer'}             |   ${'defer'}                                               
+${'FutureObject'} | ${assign_firstParamFuture}                                    |    ${'throw'}             |   ${'defer'}                                                 
+${'FutureObject'} | ${assign_secondParamFuture}                                    |    ${'throw'}             |   ${'throw'}                                                 
+${'FutureObject'} | ${'getOwnPropertyDescriptors'}                                 |    ${'defer'}             |   ${'defer'}                                                                
+${'FutureObject'} | ${'getOwnPropertyNames'}                                       |    ${'defer'}             |   ${'defer'}                                                       
+${'FutureObject'} | ${'getOwnPropertySymbols'}                                     |    ${'defer'}             |   ${'defer'}                                                           
+${'FutureObject'} | ${'is'}                                                        |    ${'none'}           |   ${'none'}                                        
+${'FutureObject'} | ${'preventExtensions'}                                         |    ${'throw'}             |   ${'defer'}                                                          
+${'FutureObject'} | ${'seal'}                                                      |    ${'throw'}             |   ${'defer'}                                         
+${'FutureObject'} | ${'create'}                                                    |    ${'throw'}             |   ${'throw'}                                            
+${'FutureObject'} | ${definePropertiesFuture}                                          |    ${'throw'}             |   ${'defer'}                                                     
+${'FutureObject'} | ${definePropertyFuture}                                            |    ${'throw'}             |   ${'defer'}                                                 
+${'FutureObject'} | ${'freeze'}                                                    |    ${'throw'}             |   ${'defer'}                                          
+${'FutureObject'} | ${'getPrototypeOf'}                                            |    ${'suspend'}           |   ${'throw'}                                                     
+${'FutureObject'} | ${setPrototypeOfFuture}                                            |    ${'throw'}             |   ${'defer'}                                                    
+${'FutureObject'} | ${'isExtensible'}                                              |    ${'suspend'}           |   ${'throw'}                                             
+${'FutureObject'} | ${'isFrozen'}                                                  |    ${'suspend'}           |   ${'throw'}                                         
+${'FutureObject'} | ${'isSealed'}                                                  |    ${'suspend'}           |   ${'throw'}                                              
+${'FutureObject'} | ${'keys'}                                                      |    ${'defer'}             |   ${'defer'}                                       
+${'FutureObject'} | ${'entries'}                                                   |    ${'defer'}             |   ${'defer'}                                                
+${'FutureObject'} | ${'values'}                                                    |    ${'defer'}             |   ${'defer'}                                      
 `
 
 
@@ -46,25 +46,25 @@ ${'values'}                                                    |    ${'defer'}  
 // TODO: add expected value
 
 export const eachObjectStatic = test.each` 
-staticMethod                    |   inRender                                                |  outRender 
-${assign_secondParam}           |    ${'suspend'}                                           |   ${'throw'}                                         
-${getOwnPropertyDescriptor}     |    ${'suspend'}                                           |   ${'throw'}                                                          
-${'getOwnPropertyDescriptors'}  |    ${'suspend'}                                           |   ${'throw'}                                                                
-${'getOwnPropertyNames'}        |    ${'suspend'}                                           |   ${'throw'}                                                       
-${'getOwnPropertySymbols'}      |    ${'suspend'}                                           |   ${'throw'}                                                           
-${'is'}                         |    ${'none'}                                              |   ${'none'}                                        
-${'preventExtensions'}          |    ${'throw'}                                             |   ${'defer'}                                                      
-${'seal'}                       |    ${'throw'}                                             |   ${'throw'}                                         
-${'create'}                     |    ${'none'}                                              |   ${'none'}                                          
-${defineProperties}             |    ${'throw'}                                             |   ${'defer'}                                                     
-${defineProperty}               |    ${'throw'}                                             |   ${'defer'}                                                 
-${'freeze'}                     |    ${'throw'}                                             |   ${'throw'}                                          
-${'getPrototypeOf'}             |    ${'none'}                                              |   ${'none'}                                                     
-${setPrototypeOf}               |    ${'throw'}                                             |   ${'none'}                                               
-${'isExtensible'}               |    ${'suspend'}                                           |   ${'throw'}                                             
-${'isFrozen'}                   |    ${'suspend'}                                           |   ${'throw'}                                         
-${'isSealed'}                   |    ${'suspend'}                                           |   ${'throw'}                                              
-${'keys'}                       |    ${'suspend'}                                           |   ${'throw'}                                       
-${'entries'}                    |    ${'suspend'}                                           |   ${'throw'}                                                
-${'values'}                     |    ${'suspend'}                                           |   ${'throw'}                                      
+constructor | staticMethod                    |   inRender                                                |  outRender 
+${'Object'} | ${assign_secondParam}           |    ${'suspend'}                                           |   ${'throw'}                                         
+${'Object'} | ${getOwnPropertyDescriptor}     |    ${'suspend'}                                           |   ${'throw'}                                                          
+${'Object'} | ${'getOwnPropertyDescriptors'}  |    ${'suspend'}                                           |   ${'throw'}                                                                
+${'Object'} | ${'getOwnPropertyNames'}        |    ${'suspend'}                                           |   ${'throw'}                                                       
+${'Object'} | ${'getOwnPropertySymbols'}      |    ${'suspend'}                                           |   ${'throw'}                                                           
+${'Object'} | ${'is'}                         |    ${'none'}                                              |   ${'none'}                                        
+${'Object'} | ${'preventExtensions'}          |    ${'throw'}                                             |   ${'defer'}                                                      
+${'Object'} | ${'seal'}                       |    ${'throw'}                                             |   ${'throw'}                                         
+${'Object'} | ${'create'}                     |    ${'none'}                                              |   ${'none'}                                          
+${'Object'} | ${defineProperties}             |    ${'throw'}                                             |   ${'defer'}                                                     
+${'Object'} | ${defineProperty}               |    ${'throw'}                                             |   ${'defer'}                                                 
+${'Object'} | ${'freeze'}                     |    ${'throw'}                                             |   ${'throw'}                                          
+${'Object'} | ${'getPrototypeOf'}             |    ${'none'}                                              |   ${'none'}                                                     
+${'Object'} | ${setPrototypeOf}               |    ${'throw'}                                             |   ${'none'}                                               
+${'Object'} | ${'isExtensible'}               |    ${'suspend'}                                           |   ${'throw'}                                             
+${'Object'} | ${'isFrozen'}                   |    ${'suspend'}                                           |   ${'throw'}                                         
+${'Object'} | ${'isSealed'}                   |    ${'suspend'}                                           |   ${'throw'}                                              
+${'Object'} | ${'keys'}                       |    ${'suspend'}                                           |   ${'throw'}                                       
+${'Object'} | ${'entries'}                    |    ${'suspend'}                                           |   ${'throw'}                                                
+${'Object'} | ${'values'}                     |    ${'suspend'}                                           |   ${'throw'}                                      
 `
