@@ -11,7 +11,8 @@ import { act } from 'react-dom/test-utils';
 import  {render} from '../test-utils/rtl-renderer';
 import {waitFor} from '@testing-library/dom';
 import TransparentObjectEffect, {isEffect} from './TransparentObjectEffect';
-import {isFuture, suspend} from '../utils';
+import {isFuture, unwrapProxy, suspend} from '../utils';
+import TransparentArrayEffect from '../FutureArray/TransparentArrayEffect';
 expect.extend(require('../test-utils/renderer-extended-expect'));	  
 
 
@@ -83,7 +84,7 @@ describe("Object and FutureObject static methods behaviour", () => {
   eachFutureObjectStatic('Expect $constructor object static method $staticMethod to $inRender in render and $outRender outside render', inRenderOutRenderTests);
 });
 
-async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, outRender })  {
+async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, outRender, returnType })  {
   const futureObj = new FutureObj(1);
   const method = typeof staticMethod === 'string' 
                   ? constructor === 'Object' 
@@ -91,7 +92,16 @@ async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, ou
                   : staticMethod;
   const assertionsOutsideRender = {
     throw: () => expect(() => method(futureObj)).toThrowError(/** TODO: outofrender error */),
-    defer: () => expect(method(futureObj)).toBeInstanceOf(TransparentObjectEffect),
+    defer: () => {
+      let Constructor;
+      if(returnType === 'object') {
+        Constructor = TransparentObjectEffect;
+      }
+      if(returnType === 'array') {
+        Constructor = TransparentArrayEffect;
+      }
+      expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor)
+    },
     none: () => expect(() => method(futureObj)).not.toThrow(),
     suspend: () => method(futureObj)
   }
@@ -99,7 +109,18 @@ async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, ou
   const assertionsInsideRender = {
     none: () => expect(() => method(futureObj)).not.toThrow(),
     suspend: () => method(futureObj),
-    defer: () => method(futureObj),
+    defer: () => {
+      let Constructor;
+      if(returnType === 'object') {
+        Constructor = TransparentObjectEffect;
+      }
+      if(returnType === 'array') {
+        Constructor = TransparentArrayEffect;
+      }
+      const val = method(futureObj)
+      expect(unwrapProxy(val)).toBeInstanceOf(Constructor)
+      return val;
+    },
     throw: () => {
       expect(() => method(futureObj)).toThrowError();
     }

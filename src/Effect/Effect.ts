@@ -35,7 +35,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     const proxy = new Proxy(this, {
       defineProperty: (_target, key, descriptor) => {
 
-        this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'defineProperty');
+        this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'Object.defineProperty');
         return true;
       },
       set: (_target, key, value) => {
@@ -56,7 +56,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.getOwnPropertyDescriptor(this.#deferredFn(), prop);
       },
       getPrototypeOf: (_target) => {
-        return Reflect.getPrototypeOf(thisMap.get(proxy));
+        return Reflect.getPrototypeOf(this.#deferredFn());
       },
       has: (_target, key) => {
         return Reflect.has(this.#deferredFn(), key);
@@ -70,14 +70,11 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       },
       preventExtensions: target => {
           // TODO: error message
-          this.#tap(target => Reflect.preventExtensions(target), 'preventExtensions');
+          this.#tap(target => Reflect.preventExtensions(target), 'Object.preventExtensions');
           return Reflect.preventExtensions(target);
       },
-      setPrototypeOf: (target, proto) => {
-        if(isRendering()) {
-          throw new Error("operation setPrototypeOf on future invalid during render")
-        }
-        return Reflect.setPrototypeOf(target,proto);
+      setPrototypeOf: (_target, proto) => {
+        return this.#tap(target => Reflect.setPrototypeOf(target,proto), 'Object.setPrototypeOf');
       },
       ...childProxy
     });
