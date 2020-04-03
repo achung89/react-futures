@@ -10,7 +10,11 @@ export const isFuture = proxy => {
 export const isComplete = futr => {
 
 }
+export const unwrapProxy = proxy => {
 
+    return thisMap.get(proxy)
+
+}
 //TODO: don't lookup if completed
 export const suspend = futr => {
   const internalProp = Symbol('internalProp');
