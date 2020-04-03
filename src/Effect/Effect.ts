@@ -5,6 +5,7 @@ export const thisMap = new WeakMap;
 const createEffect = Type => class Effect<T extends object = object> extends Type {
   static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
   //TODO: write explainer for wrapping privates method in static method
+  //TODO: swap name and futr argument to make function variadic
   static tap(fn: Function, name: string, futr: Effect) {
     if(!thisMap.has(futr)) {
       // TODO: change

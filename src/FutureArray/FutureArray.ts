@@ -3,7 +3,6 @@ import TransparentArrayEffect from "./TransparentArrayEffect";
 import { isRendering } from "../utils";
 
 export default class FutureArray<T> extends TransparentArrayEffect<T> {
-  #promise: Promise<any>
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise)
@@ -39,6 +38,5 @@ export default class FutureArray<T> extends TransparentArrayEffect<T> {
       }
     });
 
-    this.#promise = promise;
   }
 }

@@ -6,14 +6,21 @@ export const tap = (fn: Function) => (val: any) => { fn(val); return val };
 export const isFuture = proxy => {
   return thisMap.get(proxy) instanceof ObjectEffect || thisMap.get(proxy) instanceof ArrayEffect;
 }
+//TODO: do
+export const isComplete = futr => {
+
+}
+
+//TODO: don't lookup if completed
+export const suspend = futr => {
+  const internalProp = Symbol('internalProp');
+  // trigger suspend
+  futr[internalProp];
+  return futr;
+}
 export const isRendering = () => {
   var dispatcher = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher.current;
-  console.log(dispatcher)
-  try {
-    throw new Error("");
-  } catch(err) {
-    console.log(err.stack)
-  }
+
   return dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError';
 }
 
