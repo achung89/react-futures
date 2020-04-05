@@ -1,8 +1,8 @@
 import { promiseStatusStore } from "../shared-properties";
-import TransparentArrayEffect from "./TransparentArrayEffect";
-import { isRendering } from "../utils";
+import {TransparentArrayEffect} from "../internal";
+import { isRendering } from "../internal";
 
-export default class FutureArray<T> extends TransparentArrayEffect<T> {
+export class FutureArray<T> extends TransparentArrayEffect<T> {
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise)

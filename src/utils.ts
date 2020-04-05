@@ -1,6 +1,8 @@
 import React from 'react';
-import { ObjectEffect, ArrayEffect, thisMap } from './Effect/Effect';
-
+import { ObjectEffect, ArrayEffect, thisMap } from './internal';
+import * as test from './internal';
+console.log(test);
+console.log(ObjectEffect, ArrayEffect, thisMap)
 export const pipe = (...fns: Function[]) => (val: any = undefined) => fns.reduce( (val, fn) => fn(val), val );
 export const tap = (fn: Function) => (val: any) => { fn(val); return val };
 export const isFuture = proxy => {
@@ -10,11 +12,7 @@ export const isFuture = proxy => {
 export const isComplete = futr => {
 
 }
-export const unwrapProxy = proxy => {
-
-    return thisMap.get(proxy)
-
-}
+export const unwrapProxy = proxy => console.log(proxy) || thisMap.get(proxy);
 //TODO: don't lookup if completed
 export const suspend = futr => {
   const internalProp = Symbol('internalProp');

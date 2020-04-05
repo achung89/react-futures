@@ -6,13 +6,12 @@ import React, { Suspense } from 'react';
 import { createFutureObject } from '../index';
 import { eachObjectStatic, eachFutureObjectStatic } from './FutureObj-statics';
 import waitForSuspense from '../test-utils/waitForSuspense';
-import FutureObject from './FutureObject';
 import { act } from 'react-dom/test-utils';
 import  {render} from '../test-utils/rtl-renderer';
 import {waitFor} from '@testing-library/dom';
-import TransparentObjectEffect, {isEffect} from './TransparentObjectEffect';
-import {isFuture, unwrapProxy, suspend} from '../utils';
-import TransparentArrayEffect from '../FutureArray/TransparentArrayEffect';
+import {TransparentObjectEffect, isEffect} from '../internal';
+import {unwrapProxy, suspend} from '../internal';
+import {TransparentArrayEffect} from '../internal';
 expect.extend(require('../test-utils/renderer-extended-expect'));	  
 
 
@@ -84,12 +83,12 @@ describe("Object and FutureObject static methods behaviour", () => {
   eachFutureObjectStatic('Expect $constructor object static method $staticMethod to $inRender in render and $outRender outside render', inRenderOutRenderTests);
 });
 
-async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, outRender, returnType })  {
+async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, outRender, returnType, expected })  {
   const futureObj = new FutureObj(1);
   const method = typeof staticMethod === 'string' 
-                  ? constructor === 'Object' 
-                    ? Object[staticMethod] : FutureObj[staticMethod]
-                  : staticMethod;
+                  ? (constructor === 'Object' ?  Object[staticMethod] :
+                  constructor === 'FutureObject' ? FutureObj[staticMethod] : new Error("invalid methodType")) : 
+                  staticMethod;
   const assertionsOutsideRender = {
     throw: () => expect(() => method(futureObj)).toThrowError(/** TODO: outofrender error */),
     defer: () => {
@@ -162,7 +161,12 @@ async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, ou
       expect(Scheduler).toHaveYielded([          
         'No Suspense',
       ])
-      expect(resolved).toEqual(method(expectedJSON(1)))
+      const expected = constructor === 'Object' 
+      ? method(expectedJSON(1))
+      : constructor === 'FutureObject'
+      ? method(new TransparentObjectEffect(() => expectedJSON(1)))
+      : undefined;
+      expect(resolved).toEqual(expected)
       break;
     case "throw":
       jest.runTimersToTime(150);
@@ -179,6 +183,7 @@ async function inRenderOutRenderTests ({ constructor, staticMethod, inRender, ou
       ]);
       await waitForSuspense(0);
       await waitFor(() => getByText('foo'))
+
       expect(resolved).toEqual(method(expectedJSON(1)))
       expect(Object.getOwnPropertyDescriptors(resolved)).toEqual(Object.getOwnPropertyDescriptors(method(expectedJSON(1))))
       break;

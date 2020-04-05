@@ -1,10 +1,12 @@
-import { isRendering, suspend } from "../utils";
-import {ObjectEffect, ArrayEffect} from "../Effect/Effect";
-import TransparentArrayEffect from "../FutureArray/TransparentArrayEffect";
+import { isRendering, thisMap } from "../internal";
+import {ObjectEffect, ArrayEffect} from "../internal";
+import { TransparentArrayEffect } from "../internal";
 
 type Object = object | any[];
 const {tap, map} = ObjectEffect;
-export const isEffect = inst => inst instanceof ObjectEffect || inst instanceof ArrayEffect;
+console.log(ObjectEffect, ArrayEffect);
+export const isEffect = futr => thisMap.has(futr);
+
 class MutableOperationInRenderError extends Error {
   constructor(methodName) {
     super(`Mutable operation ${methodName} detected in render`)
@@ -19,6 +21,7 @@ class SuspendOperationOutsideRenderError extends Error {
 }
 const staticMutableOperation = (target, cb, methodName) => {
   if(isEffect(target)) {
+    console.log("ISEFFECT");
     const Klass = target.constructor[Symbol.species];
     return Klass.tap( cb, methodName, target);
   } else {
@@ -36,7 +39,9 @@ const staticSuspendOperation = (target, cb, methodName) => {
   }
 }
 // TODO test non future params
-export default class TransparentObjectEffect<T extends object> extends ObjectEffect<T> {
+export  class TransparentObjectEffect<T extends object> extends ObjectEffect<T> {
+  static get [Symbol.species]() { return TransparentObjectEffect; }
+
   constructor(fn) {
     super(fn);
   }

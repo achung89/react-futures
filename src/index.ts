@@ -1,10 +1,10 @@
-import { isRendering } from './utils';
+import { isRendering } from './internal';
 import { promiseStatusStore } from "./shared-properties";
-import FutureObject from './FutureObject/FutureObject';
-import FutureArray from './FutureArray/FutureArray';
+import {FutureObject} from './internal';
+import {FutureArray} from './internal';
 import LRU from 'lru-cache';
-import TransparentArrayEffect from './FutureArray/TransparentArrayEffect';
-import TransparentObjectEffect from './FutureObject/TransparentObjectEffect';
+import {TransparentArrayEffect} from './internal';
+import {TransparentObjectEffect} from './internal';
 
 
 export const createFutureObject = <T extends object>(promiseCb) => {
