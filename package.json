@@ -1,7 +1,7 @@
 {
-  "name": "suspense-data-structures",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "react-futures",
+  "version": "0.1.0",
+  "main": "build/index.js",
   "repository": "git@github.com:achung89/react-futures.git",
   "author": "Andrew Chung <chung.andrew7@gmail.com>",
   "license": "MIT",
@@ -42,9 +42,12 @@
     "delay": "^4.3.0",
     "jest-react": "^0.11.1",
     "lru-cache": "^5.1.1",
-    "react": "^0.0.0-experimental-aae83a4b9",
-    "react-dom": "^0.0.0-experimental-aae83a4b9",
+
     "regenerator-runtime": "^0.13.3"
+  },
+  "peerDependencies": {
+    "react": "^0.0.0-experimental-aae83a4b9",
+    "react-dom": "^0.0.0-experimental-aae83a4b9"
   },
   "scripts": {
     "test": "jest",

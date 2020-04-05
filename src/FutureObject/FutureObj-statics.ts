@@ -1,5 +1,5 @@
-import FutureObject from "./FutureObject"
-import FutureArray from "../FutureArray/FutureArray";
+import {FutureObject} from "../internal"
+import {FutureArray} from "../internal";
 // TODO: test assign with array as first argument
 const getOwnPropertyDescriptor = obj => Object.getOwnPropertyDescriptor(obj, 'foo')
 const assign_secondParam = obj => Object.assign({},obj);
@@ -16,28 +16,28 @@ const setPrototypeOfFuture = obj => FutureObject.setPrototypeOf(obj, FutureArray
 //FutureObject
 // TODO: add expected value
 export const eachFutureObjectStatic = test.only.each`
-  constructor     |                                staticMethod                    |   inRender                |  outRender        | returnType                                                                                                                                                                      
-${'FutureObject'} | ${getOwnPropertyDescriptorFuture}                              |    ${'defer'}             |   ${'defer'}      |   ${'object'}                                      
-${'FutureObject'} | ${assign_firstParamFuture}                                    |    ${'throw'}             |   ${'defer'}       |   ${'object'}                                     
-${'FutureObject'} | ${assign_secondParamFuture}                                    |    ${'throw'}             |   ${'throw'}      |   ${'object'}                                        
-${'FutureObject'} | ${'getOwnPropertyDescriptors'}                                 |    ${'defer'}             |   ${'defer'}      |   ${'object'}                                                       
-${'FutureObject'} | ${'getOwnPropertyNames'}                                       |    ${'defer'}             |   ${'defer'}      |   ${'array'}                                              
-${'FutureObject'} | ${'getOwnPropertySymbols'}                                     |    ${'defer'}             |   ${'defer'}      |   ${'array'}                                                  
-${'FutureObject'} | ${'is'}                                                        |    ${'none'}           |   ${'none'}          |   ${'boolean'}                           
-${'FutureObject'} | ${'preventExtensions'}                                         |    ${'throw'}             |   ${'defer'}      |   ${'object'}                                                 
-${'FutureObject'} | ${'seal'}                                                      |    ${'throw'}             |   ${'defer'}      |   ${'object'}                              
-${'FutureObject'} | ${'create'}                                                    |    ${'throw'}             |   ${'throw'}      |   ${'none'}                                   
-${'FutureObject'} | ${definePropertiesFuture}                                          |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                               
-${'FutureObject'} | ${definePropertyFuture}                                            |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                            
-${'FutureObject'} | ${'freeze'}                                                    |    ${'throw'}             |   ${'defer'}      |   ${'object'}                                 
-${'FutureObject'} | ${'getPrototypeOf'}                                            |    ${'suspend'}           |   ${'throw'}      |   ${'object'}                                            
-${'FutureObject'} | ${setPrototypeOfFuture}                                            |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                               
-${'FutureObject'} | ${'isExtensible'}                                              |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                                    
-${'FutureObject'} | ${'isFrozen'}                                                  |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                                 
-${'FutureObject'} | ${'isSealed'}                                                  |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                                      
-${'FutureObject'} | ${'keys'}                                                      |    ${'defer'}             |   ${'defer'}      |  ${'array'}                               
-${'FutureObject'} | ${'entries'}                                                   |    ${'defer'}             |   ${'defer'}      |  ${'array'}                                        
-${'FutureObject'} | ${'values'}                                                    |    ${'defer'}             |   ${'defer'}      |  ${'array'}                              
+  constructor     |                                staticMethod                    |   inRender                |  outRender        | returnType                                                                                                                                                              
+  ${'FutureObject'} | ${assign_firstParamFuture}                                    |    ${'throw'}             |   ${'defer'}       |   ${'object'}                     
+  ${'FutureObject'} | ${assign_secondParamFuture}                                    |    ${'throw'}             |   ${'throw'}      |   ${'object'}                            
+  ${'FutureObject'} | ${getOwnPropertyDescriptorFuture}                              |    ${'defer'}             |   ${'defer'}      |   ${'object'}                          
+${'FutureObject'} | ${'getOwnPropertyDescriptors'}                                 |    ${'defer'}             |   ${'defer'}      |   ${'object'}                                           
+${'FutureObject'} | ${'getOwnPropertyNames'}                                       |    ${'defer'}             |   ${'defer'}      |   ${'array'}                                  
+${'FutureObject'} | ${'getOwnPropertySymbols'}                                     |    ${'defer'}             |   ${'defer'}      |   ${'array'}                                      
+${'FutureObject'} | ${'is'}                                                        |    ${'none'}           |   ${'none'}          |   ${'boolean'}               
+${'FutureObject'} | ${'preventExtensions'}                                         |    ${'throw'}             |   ${'defer'}      |   ${'object'}                                     
+${'FutureObject'} | ${'seal'}                                                      |    ${'throw'}             |   ${'defer'}      |   ${'object'}                  
+${'FutureObject'} | ${'create'}                                                    |    ${'throw'}             |   ${'throw'}      |   ${'none'}                       
+${'FutureObject'} | ${definePropertiesFuture}                                          |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                   
+${'FutureObject'} | ${definePropertyFuture}                                            |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                
+${'FutureObject'} | ${'freeze'}                                                    |    ${'throw'}             |   ${'defer'}      |   ${'object'}                     
+${'FutureObject'} | ${'getPrototypeOf'}                                            |    ${'defer'}           |   ${'defer'}      |   ${'object'}                                
+${'FutureObject'} | ${setPrototypeOfFuture}                                            |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                   
+${'FutureObject'} | ${'isExtensible'}                                              |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                   
+${'FutureObject'} | ${'isFrozen'}                                                  |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                    
+${'FutureObject'} | ${'isSealed'}                                                  |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                          
+${'FutureObject'} | ${'keys'}                                                      |    ${'defer'}             |   ${'defer'}      |  ${'array'}                   
+${'FutureObject'} | ${'entries'}                                                   |    ${'defer'}             |   ${'defer'}      |  ${'array'}                            
+${'FutureObject'} | ${'values'}                                                    |    ${'defer'}             |   ${'defer'}      |  ${'array'}                  
 `
 
 

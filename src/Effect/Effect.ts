@@ -1,5 +1,5 @@
-import {  pipe, tap, first, isRendering } from "../utils";
-
+import {  pipe, tap, first, isRendering } from "../internal";
+import {TransparentArrayEffect} from '../internal';
 export const thisMap = new WeakMap;
 // implements IO
 const createEffect = Type => class Effect<T extends object = object> extends Type {
@@ -11,7 +11,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       // TODO: change
       throw new Error("NOT INSTANCE")
     }
-    return thisMap.get(futr).#tap(fn, name);
+    return thisMap.get(futr).#tap(fn, name, futr);
   }
   static map(fn: Function, futr: Effect) {
     if(!thisMap.has(futr)) {
@@ -65,7 +65,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.isExtensible(this.#deferredFn());
       },
       ownKeys: _target => { // TODO: is this right?
-        const {default: TransparentArrayEffect} = require("../FutureArray/TransparentArrayEffect");
         return new TransparentArrayEffect(() =>  Reflect.ownKeys(this.#deferredFn()))
       },
       preventExtensions: target => {
@@ -90,7 +89,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     return new Klass( pipe(this.#deferredFn, newNextFn) );
   }
 
-  #tap = function tapper(fn: Function, name: string) {
+  #tap = function tapper(fn: Function, name: string, futr: Effect) {
     if(isRendering()) {
       // TODO: implement custom error message per method
       throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
@@ -101,7 +100,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       return result;
     }
     this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
-    return this;
+    return futr;
   }
   #run = function run (fn: Function){
     const newNextFn = (...args) => {

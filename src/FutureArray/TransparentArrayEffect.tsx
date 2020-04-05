@@ -1,9 +1,11 @@
-import {ArrayEffect} from '../Effect/Effect';
+import {ArrayEffect} from '../internal';
 
 const { map, run, tap } = ArrayEffect;
 
-class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
+export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(deferredFn) { super(deferredFn) }
+  static get [Symbol.species]() { return TransparentArrayEffect; }
+
   static of() {
     
   }
@@ -67,5 +69,4 @@ class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T
   keys() { return this.#suspenseIterator(); }
   entries() { return this.#suspenseIterator(); }
 }
-
-export default TransparentArrayEffect;
+;
