@@ -41,7 +41,7 @@ export const testRenderWithoutSuspense = async (el, expected) => {
   await act(async () => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);
   });
-  jest.runOnlyPendingTimers();
+  await waitForSuspense(0);
   await act(async () => {
     expect(container.innerHTML).toEqual(expected);
   });

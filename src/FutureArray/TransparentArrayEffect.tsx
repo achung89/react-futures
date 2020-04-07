@@ -4,7 +4,6 @@ const { map, run, tap } = ArrayEffect;
 
 export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(deferredFn) { super(deferredFn) }
-  static get [Symbol.species]() { return TransparentArrayEffect; }
 
   static of() {
     
