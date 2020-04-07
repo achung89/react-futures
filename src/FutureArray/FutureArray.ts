@@ -3,6 +3,8 @@ import {TransparentArrayEffect} from "../internal";
 import { isRendering } from "../internal";
 
 export class FutureArray<T> extends TransparentArrayEffect<T> {
+  static get [Symbol.species]() { return TransparentArrayEffect; }
+
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise)

@@ -4,7 +4,6 @@ import { TransparentArrayEffect } from "../internal";
 
 type Object = object | any[];
 const {tap, map} = ObjectEffect;
-console.log(ObjectEffect, ArrayEffect);
 export const isEffect = futr => thisMap.has(futr);
 
 class MutableOperationInRenderError extends Error {
@@ -21,7 +20,6 @@ class SuspendOperationOutsideRenderError extends Error {
 }
 const staticMutableOperation = (target, cb, methodName) => {
   if(isEffect(target)) {
-    console.log("ISEFFECT");
     const Klass = target.constructor[Symbol.species];
     return Klass.tap( cb, methodName, target);
   } else {

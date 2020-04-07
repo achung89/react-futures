@@ -34,12 +34,12 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     this.#deferredFn = first(deferredFn);
     const proxy = new Proxy(this, {
       defineProperty: (_target, key, descriptor) => {
-
-        this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'Object.defineProperty');
+        
+        this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'Object.defineProperty', proxy);
         return true;
       },
       set: (_target, key, value) => {
-        this.#tap(target => Reflect.set(target,key,value), 'set');
+        this.#tap(target => Reflect.set(target,key,value), 'set', proxy);
         return true;
       },
       deleteProperty: () => {
@@ -69,11 +69,11 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
       },
       preventExtensions: target => {
           // TODO: error message
-          this.#tap(target => Reflect.preventExtensions(target), 'Object.preventExtensions');
+          this.#tap(target => Reflect.preventExtensions(target), 'Object.preventExtensions', proxy);
           return Reflect.preventExtensions(target);
       },
       setPrototypeOf: (_target, proto) => {
-        return this.#tap(target => Reflect.setPrototypeOf(target,proto), 'Object.setPrototypeOf');
+        return this.#tap(target => Reflect.setPrototypeOf(target,proto), 'Object.setPrototypeOf', proxy);
       },
       ...childProxy
     });
@@ -92,7 +92,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   #tap = function tapper(fn: Function, name: string, futr: Effect) {
     if(isRendering()) {
       // TODO: implement custom error message per method
-      throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant')
+      throw new Error('Cannot invoke mutable operation ' + name + ' in render. Consider using a immutable variant or performing the operation outside render.')
   } 
     const newNextFn = (...args) => {
       let result = fn(...args);

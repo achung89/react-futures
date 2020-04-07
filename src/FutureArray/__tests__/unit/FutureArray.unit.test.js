@@ -1,10 +1,13 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createFutureArray } from '../index';
+import { createFutureArray } from '../../../index';
 import { act } from 'react-dom/test-utils';
-import FutureArray from './FutureArray';
-
+import { thisMap } from '../../../Effect/Effect';
+import { TransparentArrayEffect } from '../../TransparentArrayEffect';
+import  {render} from '../../../test-utils/rtl-renderer';
+expect.extend(require('../../../test-utils/renderer-extended-expect'));	  
+jest.useFakeTimers();
 
 // TODO: setter should not suspend
 // TODO: lazy before suspense, eager after suspense <=== does this still apply???????
@@ -24,21 +27,25 @@ let fetchArray = val => new Promise((res, rej) => {
 let container;
 let FutureArr;
 beforeEach(() => {
+  jest.resetModules();
   FutureArr =  createFutureArray(fetchArray);
-  Scheduler = require('scheduler')
+  Scheduler = require('scheduler/unstable_mock')
   container = document.createElement('div');
   document.body.appendChild(container);
 });
 afterEach(() => {
+  FutureArr.reset();
   FutureArr = null;
   document.body.removeChild(container);
   container = null;
+  Scheduler.unstable_clearYields();
+  Scheduler = null;
 });
 const LogSuspense = ({ action }) => {
   try {
     action();
     Scheduler.unstable_yieldValue('No Suspense');
-    return <span prop={text} />;
+    return null;
   } catch (promise) {
     if (typeof promise.then === 'function') {
       Scheduler.unstable_yieldValue(`Suspend!`);
@@ -49,25 +56,25 @@ const LogSuspense = ({ action }) => {
   }
 }
 describe("In only render context", () => {
-
   it.skip("should render properly", () => {
-    let App = () => <div>
-    </div>;
+    let App = () => <div></div>;
     act(() => {
-      ReactDOM.createRoot(container).render(<App />)
-    })
+      render(<App />, container)
+    });
 
     expect(container.innerHTML).toEqual(`<div><div></div></div>`)
   });
 
   it.skip("should suspend when rendering", () => {
-    let thrownValue;
-    let App = () => <div>
-      {new FutureArr(5)}
-    </div>;
+
+    const App = () => <Suspense fallback={<div>Loading...</div>}>
+      <div>
+        {new FutureArr(5)}
+      </div>
+    </Suspense>;
 
     act(() => {
-      ReactDOM.createRoot(container).render(<App />)
+      render(<App />, container)
     })
     // TODO: test render after resolve
   });
@@ -75,21 +82,23 @@ describe("In only render context", () => {
   test.each(['1', 2, '3', 4])(`should suspend on %i index access`, (index) => {
       const resources = new FutureArr(5);
       let App = () => {
-        return <LogSuspense action={() => resolvedValue = resources[index]}>
+        return <Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => resolvedValue = resources[index]}>
           <div>
             foo
         </div>
-        </LogSuspense>
+        </LogSuspense></Suspense>
       };
 
       act(() => {
-        ReactDOM.createRoot(container).render(<App />)
+        render(<App />, container)
       });
-      expect(Scheduler).toFlushAndYieldThrough([
+
+      expect(Scheduler).toHaveYielded([
         'Suspend!'
       ]);
-      jest.advanceTimersByTime(5000);
-      expect(Scheduler).toFlushAndYieldThrough([
+
+      jest.advanceTimersByTime(2000);
+      expect(Scheduler).toHaveYielded([
         'No Suspense'
       ])
       expect(resolvedValue).toEqual(3);
@@ -98,15 +107,15 @@ describe("In only render context", () => {
   test.each(['bar', Symbol('foo'), {}, 'baz'])(`should not suspend on non-indexed %s access  access access`, key => {
       const resources = new FutureArr(5);
       let App = () => {
-        return <LogSuspense action={() => resources[0]}>
+        return <Suspense fallback={<div>Loading...</div>}> <LogSuspense action={() => resources[0]}>
           <div>
             foo
         </div>
-        </LogSuspense>
+        </LogSuspense></Suspense>
       };
 
     act(() => {
-      ReactDOM.createRoot(container).render(<App />)
+      render(<App />, container)
     });
     expect(Scheduler).toFlushAndYieldThrough([
       'No Suspense'
@@ -126,10 +135,10 @@ describe('Array operations', () => {
     'copyWithin'
   ].forEach(method => {
     const resources = new FutureArr(5);
-    test.skip(`mutator method ${method} should defer outside render and throw in render`, () => {
+    test(`mutator method ${method} should defer outside render and throw in render`, () => {
       expect(() => resources[method]()).not.toThrow();
       act(() => {
-        ReactDOM.createRoot(container).render(<LogSuspense action={() => resources[method]()}></LogSuspense>)
+        render(<LogSuspense action={() => resources[method]()}></LogSuspense>, container)
       });
       expect(Scheduler).toFlushAndYieldThrough(['No Suspense'])
       // TODO: test lazy results
@@ -148,8 +157,7 @@ describe('Array operations', () => {
           ${'reduceRight'} | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}
           ${'values'}      | ${arr => arr.values()}
           ${'flat'}        | ${() => new ArrayResource([1, 2, createPromise([3, 4]), 5]).flat()}
-          ${'flatMap'}     | ${() => new ArrayResource([1, 2, createPromise([3, 4]), 5])
-      .flatMap(i => i + 3)}
+          ${'flatMap'}     | ${() => new ArrayResource([1, 2, createPromise([3, 4]), 5]).flatMap(i => i + 3)}
   `(({ name, method }) => {
         test(`Applies method ${name} lazily`, async () => {
           let created;
@@ -157,19 +165,15 @@ describe('Array operations', () => {
           expect(() => method(resources)).not.toThrow();
           
           act(() => {
-            ReactDOM.createRoot(container).render(<LogSuspense action={() => {
+            render(<LogSuspense action={() => {
               created = method(resources);
-            }}></LogSuspense>)
+            }}></LogSuspense>, container)
           })
           expect(Scheduler).toFlushAndYieldThrough(['No Suspense']);
 
-          expect(created).toBeInstanceOf(FutureArray);
+          expect(thisMap(created)).toBeInstanceOf(TransparentArrayEffect);
 
 
-          let resourceResult = await FutureArray.toPromise(resources);
-          let createdResult = await FutureArray.toPromise(created);
-
-          expect(resourceResult).toStrictEqual([2, 3, 4, 5]);
           expect(createdResult).toStrictEqual(method([2, 3, 4, 5]));
         })
       })
@@ -198,12 +202,12 @@ describe('Array operations', () => {
       let created;
       expect(() => method(resource)).toThrow(); //TODO: specify error
       act(() => {
-        ReactDOM.createRoot(container).render(<LogSuspense action={() => {
+        render(<LogSuspense action={() => {
           created = method(resource);
-        }}></LogSuspense>)
+        }}></LogSuspense>, container)
       })
       expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
-      jest.advanceTimersByTime(5000);
+      jest.advanceTimersByTime(2000);
       expect(Scheduler).toFlushAndYieldThrough([
         'No Suspense'
       ])
@@ -230,9 +234,9 @@ describe('Array operations', () => {
     let created;
     expect(() => Array.from(resources)).toThrow(); //TODO: specify error
     act(() => {
-      ReactDOM.createRoot(container).render(<LogSuspense action={() => {
+      render(<LogSuspense action={() => {
         created = Array.from(resource);
-      }}></LogSuspense>)
+      }}></LogSuspense>, container)
     })
     expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
     jest.advanceTimersByTime(5000);
