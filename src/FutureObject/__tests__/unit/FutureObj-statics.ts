@@ -1,5 +1,6 @@
-import {FutureObject} from "../internal"
-import {FutureArray} from "../internal";
+import { FutureObject } from "../../FutureObject";
+import { FutureArray } from "../../../FutureArray/FutureArray";
+
 // TODO: test assign with array as first argument
 const getOwnPropertyDescriptor = obj => Object.getOwnPropertyDescriptor(obj, 'foo')
 const assign_secondParam = obj => Object.assign({},obj);

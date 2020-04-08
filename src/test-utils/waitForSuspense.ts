@@ -5,7 +5,7 @@ const waitForSuspense = async waitTime => {
     jest.advanceTimersByTime(waitTime);
   });
 
-  for ( let a = 0; a < 30; a++ ) {
+  for ( let a = 0; a < 10; a++ ) {
     await act( async () => {
       jest.runAllTimers();
       jest.runAllTicks();
