@@ -14,31 +14,46 @@ const definePropertyFuture = obj => FutureObject.defineProperty(obj, 'foo', {wri
 const definePropertiesFuture = obj => FutureObject.defineProperties(obj, {'foo':{ writable: false}})
 const setPrototypeOfFuture = obj => FutureObject.setPrototypeOf(obj, FutureArray)
 //FutureObject
-// TODO: add expected value
-export const eachFutureObjectStatic = test.only.each`
-  constructor     |          staticMethod                           |   inRender                |  outRender        | returnType                                                                                                                                                              
-  ${'FutureObject'} | ${'create'}                                   |    ${'throw'}             |   ${'throw'}      |   ${'none'}                       
-  ${'FutureObject'} | ${assign_firstParamFuture}                   |    ${'throw'}             |   ${'defer'}       |   ${'object'}                     
-  ${'FutureObject'} | ${'preventExtensions'}                        |    ${'throw'}             |   ${'defer'}      |   ${'object'}                                     
-  ${'FutureObject'} | ${setPrototypeOfFuture}                           |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                   
-  ${'FutureObject'} | ${'seal'}                                     |    ${'throw'}             |   ${'defer'}      |   ${'object'}                  
-  ${'FutureObject'} | ${definePropertiesFuture}                         |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                   
-  ${'FutureObject'} | ${definePropertyFuture}                           |    ${'throw'}             |   ${'defer'}  |   ${'object'}                                
-  ${'FutureObject'} | ${'freeze'}                                   |    ${'throw'}             |   ${'defer'}      |   ${'object'}                     
-  ${'FutureObject'} | ${getOwnPropertyDescriptorFuture}             |    ${'defer'}             |   ${'defer'}      |   ${'object'}                          
-  ${'FutureObject'} | ${'getOwnPropertyDescriptors'}                |    ${'defer'}             |   ${'defer'}      |   ${'object'}                                           
-  ${'FutureObject'} | ${'getOwnPropertyNames'}                      |    ${'defer'}             |   ${'defer'}      |   ${'array'}                                  
-  ${'FutureObject'} | ${'getOwnPropertySymbols'}                    |    ${'defer'}             |   ${'defer'}      |   ${'array'}                                      
-  ${'FutureObject'} | ${'getPrototypeOf'}                           |    ${'defer'}           |   ${'defer'}      |   ${'object'}                                
-${'FutureObject'} | ${'keys'}                                     |    ${'defer'}             |   ${'defer'}      |  ${'array'}                   
-${'FutureObject'} | ${'entries'}                                  |    ${'defer'}             |   ${'defer'}      |  ${'array'}                            
-${'FutureObject'} | ${'values'}                                   |    ${'defer'}             |   ${'defer'}      |  ${'array'}                  
-${'FutureObject'} | ${'is'}                                       |    ${'none'}           |   ${'none'}          |   ${'boolean'}               
-${'FutureObject'} | ${assign_secondParamFuture}                   |    ${'suspend'}             |   ${'throw'}      |   ${'object'}                            
-${'FutureObject'} | ${'isExtensible'}                             |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                   
-${'FutureObject'} | ${'isFrozen'}                                 |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                    
-${'FutureObject'} | ${'isSealed'}                                 |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                          
+export const getterFutureObjectStaticEach = test.each`
+staticMethod                                  |        inRender            |     outRender    |  returnType 
+${'isExtensible'}                             |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                   
+${'isFrozen'}                                 |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                    
+${'isSealed'}                                 |    ${'suspend'}           |   ${'throw'}      |   ${'boolean'}                   
 `
+
+export const immutableDeferredFutureObjectEach = test.each`
+staticMethod                         | returnType
+${getOwnPropertyDescriptorFuture}     |   ${'object'}                          
+${'getOwnPropertyDescriptors'}       |   ${'object'}                                           
+${'getOwnPropertyNames'}             |   ${'array'}                                  
+${'getOwnPropertySymbols'}           |   ${'array'}                                      
+${'getPrototypeOf'}                |   ${'object'}                                
+${'keys'}                            |  ${'array'}                   
+${'entries'}                         |  ${'array'}                            
+${'values'}                          |  ${'array'} `;
+
+// TODO: add expected value
+export const invalidFutureObjectStaticEach = test.each`
+          staticMethod                           |   inRender                |  outRender        | returnType                                                                                                                                                              
+ ${'create'}                                   |    ${'throw'}             |   ${'throw'}      |   ${'none'}  `;
+ 
+ export const mutableFutureObjectStaticEach = test.each`   
+ staticMethod               |   returnType                  
+ ${assign_firstParamFuture} |   ${'object'}                     
+ ${'preventExtensions'}     |   ${'object'}                                     
+ ${setPrototypeOfFuture}    |   ${'object'}                                   
+ ${'seal'}                  |   ${'object'} 
+ ${assign_secondParamFuture}    |   ${'object'}                                 
+ ${definePropertiesFuture}  |   ${'object'}                                   
+ ${definePropertyFuture}    |   ${'object'}                                
+ ${'freeze'}                |   ${'object'}`;
+
+
+ export const noopFutureObjectStaticEach = test.each`      
+ staticMethod
+ ${'is'}      ` 
+
+
 
 
 // Object

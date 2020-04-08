@@ -23,8 +23,14 @@ const staticMutableOperation = (target, cb, methodName) => {
     const Klass = target.constructor[Symbol.species];
     return Klass.tap( cb, methodName, target);
   } else {
-    if(isRendering()) throw new MutableOperationInRenderError(methodName)
-    return cb(target);
+    if(isRendering()) {
+      throw new MutableOperationInRenderError(methodName);
+    }
+    if(Array.isArray(target)){
+      return new TransparentArrayEffect(() => cb(target));
+    } else {
+      return new TransparentObjectEffect(() => cb(target));
+    }
   }
 }
 const staticSuspendOperation = (target, cb, methodName) => {
