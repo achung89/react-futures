@@ -1,13 +1,17 @@
 
-import React from 'react';
+jest.useFakeTimers();
+jest.mock('scheduler', () => require('scheduler/unstable_mock'));
+
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { createFutureArray } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
 import { TransparentArrayEffect } from '../../TransparentArrayEffect';
 import  {render} from '../../../test-utils/rtl-renderer';
+import waitForSuspense from '../../../test-utils/waitForSuspense';
+import { waitFor } from '@testing-library/dom';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));	  
-jest.useFakeTimers();
 
 // TODO: setter should not suspend
 // TODO: lazy before suspense, eager after suspense <=== does this still apply???????
@@ -20,8 +24,9 @@ jest.useFakeTimers();
 let Scheduler
 let fetchArray = val => new Promise((res, rej) => {
   setTimeout(() => {
+    Scheduler.unstable_yieldValue('Promise Resolved')
     res([2,3,4,val])
-  }, 1000)
+  }, 100)
 })
 
 let container;
@@ -56,31 +61,44 @@ const LogSuspense = ({ action }) => {
   }
 }
 describe("In only render context", () => {
-  it.skip("should render properly", () => {
+  it("should render properly", async () => {
     let App = () => <div></div>;
     act(() => {
       render(<App />, container)
     });
-
-    expect(container.innerHTML).toEqual(`<div><div></div></div>`)
+    await waitForSuspense(0);
+    expect(container.innerHTML).toEqual(`<div></div>`)
   });
 
-  it.skip("should suspend when rendering", () => {
+  it("should suspend when rendering", async () => {
+
+
+    const MiniApp = () =><>{new FutureArr(5)}</>
 
     const App = () => <Suspense fallback={<div>Loading...</div>}>
       <div>
-        {new FutureArr(5)}
+        <MiniApp />
       </div>
     </Suspense>;
-
+    let renderer;
     act(() => {
-      render(<App />, container)
-    })
-    // TODO: test render after resolve
+      renderer = render(<App />, container)
+    });
+    const {getByText} = renderer;
+    await waitFor(() => getByText('Loading...'))
+
+    jest.runTimersToTime(150);
+    expect(Scheduler).toHaveYielded([
+      'Promise Resolved',
+    ]);
+    await waitForSuspense(0);
+    await waitFor(() => getByText('2345'))
+
   });
 
-  test.each(['1', 2, '3', 4])(`should suspend on %i index access`, (index) => {
+  test.each(['1', 2, '3', 4,'bar', Symbol('foo'), {}, 'baz'])(`should suspend on %i index access`, (index) => {
       const resources = new FutureArr(5);
+      let resolvedValue
       let App = () => {
         return <Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => resolvedValue = resources[index]}>
           <div>
@@ -104,23 +122,6 @@ describe("In only render context", () => {
       expect(resolvedValue).toEqual(3);
   })
 
-  test.each(['bar', Symbol('foo'), {}, 'baz'])(`should not suspend on non-indexed %s access  access access`, key => {
-      const resources = new FutureArr(5);
-      let App = () => {
-        return <Suspense fallback={<div>Loading...</div>}> <LogSuspense action={() => resources[0]}>
-          <div>
-            foo
-        </div>
-        </LogSuspense></Suspense>
-      };
-
-    act(() => {
-      render(<App />, container)
-    });
-    expect(Scheduler).toFlushAndYieldThrough([
-      'No Suspense'
-    ]);
-  });
 });
 
 //TODO: these should suspend

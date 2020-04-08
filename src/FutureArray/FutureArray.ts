@@ -1,7 +1,7 @@
 import { promiseStatusStore } from "../shared-properties";
 import {TransparentArrayEffect} from "../internal";
 import { isRendering } from "../internal";
-
+import React from 'react';
 export class FutureArray<T> extends TransparentArrayEffect<T> {
   static get [Symbol.species]() { return TransparentArrayEffect; }
 
@@ -27,7 +27,7 @@ export class FutureArray<T> extends TransparentArrayEffect<T> {
 
         if(!isRendering()) {
           // TODO: add custom error message per method
-          throw new Error("cannot suspend outside render")
+          throw new Error(`cannot suspend outside render`)
         }
 
         throw promise;
