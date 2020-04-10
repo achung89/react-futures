@@ -13,12 +13,12 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     }
     return thisMap.get(futr).#tap(fn, name, futr);
   }
-  static map(fn: Function, futr: Effect) {
+  static map(fn: Function, futr: Effect, KlassToConvertTo) {
     if(!thisMap.has(futr)) {
       // TODO: change
       throw new Error("NOT INSTANCE")
     }    
-    return thisMap.get(futr).#map(fn)
+    return thisMap.get(futr).#map(fn, KlassToConvertTo)
   }
   static run(fn: Function, futr: Effect) {
     if(!thisMap.has(futr)) {
@@ -46,7 +46,6 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         throw new Error("deletion on lazy future not permitted")
       },
       get: (target, key, receiver) => {
-        
         if(typeof this[key] === 'function') { // TODO: what is this?
           return Reflect.get(target, key, receiver);
         }
@@ -80,12 +79,11 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     thisMap.set(proxy, this);
     return proxy;
   }
-  #map = function map(nextFn: Function) { 
+  #map = function map(nextFn: Function, Klass = this.constructor[Symbol.species]) { 
     const newNextFn = (...args) => {
       let result = nextFn(...args);;
       return result
     }
-    const Klass = this.constructor[Symbol.species];
     return new Klass( pipe(this.#deferredFn, newNextFn) );
   }
 

@@ -1,4 +1,5 @@
 import {ArrayEffect} from '../internal';
+import { ObjectEffect } from '../internal';
 
 const { map, run, tap } = ArrayEffect;
 
@@ -19,7 +20,6 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   flat(...args) {return map(target => target.flat(...args), this)}
   flatMap(...args) {return map(target => target.flatMap(...args), this)}
   immReverse(...args) {return map(target => target.slice().reverse(...args), this)}
-  immSplice(...args) {return map(target => target.slice().splice(...args), this)}
   immCopyWithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
   immSort(...args) {return map(target => target.slice().sort(...args), this)}
   immFill(...args) {return map(target => target.slice().fill(...args), this)}
@@ -52,14 +52,24 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   pop(): never { throw new Error('Invalid method')}
   shift(): never{ throw new Error('Invalid method')}
   immUnshift(): never { throw new Error('Invalid method')}
+  immSplice(): never { throw new Error('Invalid method')}
   static of(x) {
     return new TransparentArrayEffect(() => x);
   }
 
   // suspend on iterator access 
   [Symbol.iterator]() { return run(target => target[Symbol.iterator](), this)}
-  values() { return run(target => target.values(), this); }
-  keys() { return run(target => target.keys(), this) }
-  entries() { return run(target => target.entries(), this) }
+  values() { return map((target) => target.values(), this, TransparentIteratorEffect); }
+  keys() { return map(target => target.keys(), this, TransparentIteratorEffect) }
+  entries() { return map(target => target.entries(), this, TransparentIteratorEffect) }
+};
+
+export class TransparentIteratorEffect extends ObjectEffect {
+  static get [Symbol.species]() {
+    return TransparentIteratorEffect
+  }
+  next(...args) { ObjectEffect.run(target => target.next(...args), this) } 
+  [Symbol.iterator]() {
+    return ObjectEffect.run(target => target[Symbol.iterator](), this)
+  }
 }
-;
