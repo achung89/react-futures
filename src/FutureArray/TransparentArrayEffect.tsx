@@ -22,7 +22,9 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   immSplice(...args) {return map(target => target.slice().splice(...args), this)}
   immUnshift(...args) {return map(target => target.slice().unshift(...args), this)}
   immCopywithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
-
+  immSort(...args) {return map(target => target.slice().sort(...args), this)}
+  immFill(...args) {return map(target => target.slice().fill(...args), this)}
+  
   // mutableMethods  
   splice(...args) {return tap(target => target.splice(...args), 'splice', this)}
   copyWithin(...args) {return tap(target => target.copyWithin(...args), 'copyWithin', this)}
@@ -55,17 +57,10 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
     return new TransparentArrayEffect(() => x);
   }
 
-  // implement return and throw
-  #suspenseIterator = () => ({
-    next: () => {
-      return run(target => target.next(), this)
-    },
-    [Symbol.iterator]: function() { return this }
-  });
-
-  [Symbol.iterator]() { return this.#suspenseIterator(); }
-  values() { return this.#suspenseIterator(); }
-  keys() { return this.#suspenseIterator(); }
-  entries() { return this.#suspenseIterator(); }
+  // suspend on iterator access 
+  [Symbol.iterator]() { return run(target => target[Symbol.iterator](), this)}
+  values() { return run(target => target.values(), this); }
+  keys() { return run(target => target.keys(), this) }
+  entries() { return run(target => target.entries(), this) }
 }
 ;
