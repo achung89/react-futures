@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 import { createFutureArray } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
-import { TransparentArrayEffect } from '../../TransparentArrayEffect';
+import { TransparentArrayEffect, TransparentIteratorEffect } from '../../TransparentArrayEffect';
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
@@ -22,6 +22,7 @@ expect.extend(require('../../../test-utils/renderer-extended-expect'));
 // TODO: test freeze, seal, delete
 // TODO: test error handling
 // TODO: imm methods
+// TODO: future value shouldn't be accessible from outside render ( add get raw value function )
 let Scheduler
 let fetchArray = val => new Promise((res, rej) => {
   setTimeout(() => {
@@ -220,6 +221,37 @@ describe('Array operations', () => {
     expect(unwrapProxy(created)).toBeInstanceOf(TransparentArrayEffect);
     expect(created).toEqual(method([2, 3, 4, 5]));
   });
+  test.each`
+  name           | method
+${'entries'}     | ${arr => arr.entries()}
+${'values'}      | ${arr => arr.values()}                         
+${'keys'}        | ${arr => arr.keys()}  
+`(`Applies defers native iterator-returning immutable method $name both in and outside render`, async ({method}) => {
+  let created;
+  let spreaded;
+  const futrArr = new FutureArr(5);
+  expect(() =>{ 
+    expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentIteratorEffect)
+  }).not.toThrow();
+  let renderer;
+  act(() => {
+    renderer = render(<Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => {
+      created = method(futrArr);
+    }}>foo</LogSuspense></Suspense>, container)
+  })
+  const {getByText} = renderer
+  expect(Scheduler).toHaveYielded([
+    'No Suspense'
+  ]);
+
+  await waitForSuspense(150);
+  await waitFor(() => getByText('foo'))
+  expect(unwrapProxy(created)).toBeInstanceOf(TransparentIteratorEffect);
+  expect([...created]).toEqual([...method([2, 3, 4, 5])]);
+})
+
+
+
   test.each` name           |       expected                              |    method
           ${'immReverse'}   | ${arr => arr.slice().reverse()}             |  ${arr => arr.immReverse()}
           ${'immCopywithin'}| ${arr => arr.slice().copyWithin(1,2,3)}     | ${arr => arr. immCopyWithin(1,2,3)}
@@ -261,9 +293,6 @@ describe('Array operations', () => {
     ${'findIndex'}       |  ${arr => arr.findIndex(a => a === 5)}     |     ${3}
     ${'forEach'}         |  ${arr => arr.forEach(a => a)}             |     ${undefined}
     ${'some'}            |  ${arr => arr.some(a => a % 2 === 0)}      |     ${true}
-    ${'entries'}     | ${arr => [...arr.entries()]}                        | ${[[0,2], [1,3], [2,4],[3,5]]}
-    ${'values'}      | ${arr => [...arr.values()]}                         | ${[2,3,4,5]}
-    ${'keys'}        | ${arr => [...arr.keys()]}                             | ${[0,1,2,3]}
     ${Symbol.iterator}   |  ${arr => [...arr, ...arr]}                  |     ${[2, 3, 4, 5, 2, 3, 4, 5]}
   `(`suspends on $name inside render and throws outside render`, async ({ method, expected }) => {
     const futureArr = new FutureArr(5);
@@ -339,5 +368,5 @@ describe('Array operations', () => {
   // });
     test.skip("should have debug method", () => { })
     test.skip('should have suspend method', () => { })
-  
+
 });
