@@ -20,7 +20,6 @@ expect.extend(require('../../../test-utils/renderer-extended-expect'));
 // TODO: should push and unshift suspend since they require knowledge of length?
 // TODO: all subsequently created arrays should all share the same promise
 // TODO: test freeze, seal, delete
-// TODO: test creating FutureArr instance in render
 // TODO: test error handling
 // TODO: imm methods
 let Scheduler
@@ -221,7 +220,33 @@ describe('Array operations', () => {
     expect(unwrapProxy(created)).toBeInstanceOf(TransparentArrayEffect);
     expect(created).toEqual(method([2, 3, 4, 5]));
   });
+  test.each` name           |       expected                              |    method
+          ${'immReverse'}   | ${arr => arr.slice().reverse()}             |  ${arr => arr.immReverse()}
+          ${'immCopywithin'}| ${arr => arr.slice().copyWithin(1,2,3)}     | ${arr => arr. immCopyWithin(1,2,3)}
+          ${'immSort'}      | ${arr => arr.slice().sort((a,b) => b-a)}    |  ${arr => arr.immSort((a,b) => b-a)}
+          ${'immFill'}      | ${arr => arr.slice().fill(1)}               |  ${arr => arr.immFill(1)}
+   `(`Applies defers non-native immutable method $name both in and outside render `, async ({ method, expected }) => {
+    let created;
+    const futrArr = new FutureArr(5);
+    expect(() =>{ 
+      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentArrayEffect)
+    }).not.toThrow();
+    let renderer;
+    act(() => {
+      renderer = render(<Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => {
+        created = method(futrArr);
+      }}>foo</LogSuspense></Suspense>, container)
+    })
+    const {getByText} = renderer
+    expect(Scheduler).toHaveYielded([
+      'No Suspense'
+    ]);
 
+    await waitForSuspense(150);
+    await waitFor(() => getByText('foo'))
+    expect(unwrapProxy(created)).toBeInstanceOf(TransparentArrayEffect);
+    expect(created).toEqual(expected([2, 3, 4, 5]));
+  });
   //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
 
   test.each`   name             |  method                             |        expected
@@ -231,7 +256,6 @@ describe('Array operations', () => {
     ${'lastIndexOf'}     |  ${arr => arr.lastIndexOf(4)}              |     ${2}
     ${'toString'}        |  ${arr => arr.toString()}                  |     ${'2,3,4,5'}
     ${'toLocaleString'}  |  ${arr => arr.toLocaleString()}            |     ${'2,3,4,5'}
-
     ${'every'}           |  ${arr => arr.every(a => a % 2 === 0)}     |     ${false}
     ${'find'}            |  ${arr => arr.find(a => a === 5)}          |     ${5}
     ${'findIndex'}       |  ${arr => arr.findIndex(a => a === 5)}     |     ${3}

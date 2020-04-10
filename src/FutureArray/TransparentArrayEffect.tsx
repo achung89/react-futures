@@ -20,8 +20,7 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   flatMap(...args) {return map(target => target.flatMap(...args), this)}
   immReverse(...args) {return map(target => target.slice().reverse(...args), this)}
   immSplice(...args) {return map(target => target.slice().splice(...args), this)}
-  immUnshift(...args) {return map(target => target.slice().unshift(...args), this)}
-  immCopywithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
+  immCopyWithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
   immSort(...args) {return map(target => target.slice().sort(...args), this)}
   immFill(...args) {return map(target => target.slice().fill(...args), this)}
   
@@ -52,7 +51,7 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   push(): never { throw new Error('Invalid method')}
   pop(): never { throw new Error('Invalid method')}
   shift(): never{ throw new Error('Invalid method')}
-
+  immUnshift(): never { throw new Error('Invalid method')}
   static of(x) {
     return new TransparentArrayEffect(() => x);
   }
