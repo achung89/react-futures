@@ -58,7 +58,7 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   }
 
   // suspend on iterator access 
-  [Symbol.iterator]() { return run(target => target[Symbol.iterator](), this)}
+  [Symbol.iterator]() { return map(target => target[Symbol.iterator](), this, TransparentIteratorEffect)}
   values() { return map((target) => target.values(), this, TransparentIteratorEffect); }
   keys() { return map(target => target.keys(), this, TransparentIteratorEffect) }
   entries() { return map(target => target.entries(), this, TransparentIteratorEffect) }
@@ -68,7 +68,7 @@ export class TransparentIteratorEffect extends ObjectEffect {
   static get [Symbol.species]() {
     return TransparentIteratorEffect
   }
-  next(...args) { ObjectEffect.run(target => target.next(...args), this) } 
+  next(...args) {  return ObjectEffect.run(target => target.next(...args), this) } 
   [Symbol.iterator]() {
     return ObjectEffect.run(target => target[Symbol.iterator](), this)
   }

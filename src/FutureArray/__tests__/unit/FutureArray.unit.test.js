@@ -228,7 +228,6 @@ ${'values'}      | ${arr => arr.values()}
 ${'keys'}        | ${arr => arr.keys()}  
 `(`Applies defers native iterator-returning immutable method $name both in and outside render`, async ({method}) => {
   let created;
-  let spreaded;
   const futrArr = new FutureArr(5);
   expect(() =>{ 
     expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentIteratorEffect)
@@ -247,8 +246,9 @@ ${'keys'}        | ${arr => arr.keys()}
   await waitForSuspense(150);
   await waitFor(() => getByText('foo'))
   expect(unwrapProxy(created)).toBeInstanceOf(TransparentIteratorEffect);
+  
   expect([...created]).toEqual([...method([2, 3, 4, 5])]);
-})
+});
 
 
 
@@ -342,7 +342,7 @@ ${'keys'}        | ${arr => arr.keys()}
 
 
     let created;
-    expect(() => Array.from(resources)).toThrow(); //TODO: specify error
+    expect(() => Array.from(resources)).toThrowError(); //TODO: specify error
     let renderer;
     act(() => {
       renderer = render(<Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => {
