@@ -4,7 +4,7 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import { createFutureArray } from '../../../index';
+import { createFutureArrayConstructor } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
 import { TransparentArrayEffect, TransparentIteratorEffect } from '../../TransparentArrayEffect';
@@ -35,7 +35,7 @@ let container;
 let FutureArr;
 beforeEach(() => {
   jest.resetModules();
-  FutureArr = createFutureArray(fetchArray);
+  FutureArr = createFutureArrayConstructor(fetchArray);
   Scheduler = require('scheduler/unstable_mock')
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -186,14 +186,12 @@ describe('Array operations', () => {
       renderer = render(<Suspense fallback={<div>Loading...</div>}><LogSuspense action={inRender}>foo</LogSuspense></Suspense>, container)
     });
     await waitForSuspense(150);
-
   })
 
   test.each` name          |       method
           ${'concat'}      | ${arr => arr.concat([6, 7])}
           ${'filter'}      | ${arr => arr.filter(num => num % 2)}
           ${'slice'}       | ${arr => arr.slice(0, 1)}
-
           ${'map'}         | ${arr => arr.map(i => i + 3)}
           ${'reduce'}      | ${arr => arr.reduce((coll, i) => [...coll, i + 3], [])}
           ${'reduceRight'} | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}
@@ -222,33 +220,33 @@ describe('Array operations', () => {
     expect(created).toEqual(method([2, 3, 4, 5]));
   });
   test.each`
-  name           | method
-${'entries'}     | ${arr => arr.entries()}
-${'values'}      | ${arr => arr.values()}                         
-${'keys'}        | ${arr => arr.keys()}  
-`(`Applies defers native iterator-returning immutable method $name both in and outside render`, async ({method}) => {
-  let created;
-  const futrArr = new FutureArr(5);
-  expect(() =>{ 
-    expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentIteratorEffect)
-  }).not.toThrow();
-  let renderer;
-  act(() => {
-    renderer = render(<Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => {
-      created = method(futrArr);
-    }}>foo</LogSuspense></Suspense>, container)
-  })
-  const {getByText} = renderer
-  expect(Scheduler).toHaveYielded([
-    'No Suspense'
-  ]);
+    name           | method
+  ${'entries'}     | ${arr => arr.entries()}
+  ${'values'}      | ${arr => arr.values()}                         
+  ${'keys'}        | ${arr => arr.keys()}  
+  `(`Applies defers native iterator-returning immutable method $name both in and outside render`, async ({method}) => {
+    let created;
+    const futrArr = new FutureArr(5);
+    expect(() =>{ 
+      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentIteratorEffect)
+    }).not.toThrow();
+    let renderer;
+    act(() => {
+      renderer = render(<Suspense fallback={<div>Loading...</div>}><LogSuspense action={() => {
+        created = method(futrArr);
+      }}>foo</LogSuspense></Suspense>, container)
+    })
+    const {getByText} = renderer
+    expect(Scheduler).toHaveYielded([
+      'No Suspense'
+    ]);
 
-  await waitForSuspense(150);
-  await waitFor(() => getByText('foo'))
-  expect(unwrapProxy(created)).toBeInstanceOf(TransparentIteratorEffect);
-  
-  expect([...created]).toEqual([...method([2, 3, 4, 5])]);
-});
+    await waitForSuspense(150);
+    await waitFor(() => getByText('foo'))
+    expect(unwrapProxy(created)).toBeInstanceOf(TransparentIteratorEffect);
+    
+    expect([...created]).toEqual([...method([2, 3, 4, 5])]);
+  });
 
 
 
