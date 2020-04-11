@@ -2,12 +2,12 @@ import { isRendering } from './internal';
 import { promiseStatusStore } from "./shared-properties";
 import {FutureObject} from './internal';
 import {FutureArray} from './internal';
-import LRU from 'lru-cache';
+import * as  LRU from 'lru-cache';
 import {TransparentArrayEffect} from './internal';
 import {TransparentObjectEffect} from './internal';
 
 
-export const createFutureObject = <T extends object>(promiseCb) => {
+export const createFutureObjectConstructor = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
 
   if(isRendering()) {
@@ -42,7 +42,7 @@ export const createFutureObject = <T extends object>(promiseCb) => {
   }
 }
 
-export const createFutureArray = <T>(promiseCb) => {
+export const createFutureArrayConstructor = <T>(promiseCb) => {
   const cache = new LRU(500);
 
   if(isRendering()) {
