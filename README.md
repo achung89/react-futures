@@ -2,7 +2,7 @@
 
 Manipulate asynchronous data synchronously
 
-## Installation
+## How to install
 ```
 #npm
 npm i react-futures
@@ -11,8 +11,10 @@ npm i react-futures
 yarn add react-futures
 ```
 
-## Usage
+## Explainer
+React Futures is a collection of datatypes that focuses on deferring data manipulation and suspending when the data is consumed.  
 
+Ex.
 ```javascript
 import { createFutureArrayConstructor } from 'react-futures';
 
@@ -29,12 +31,12 @@ const Blogs = ({ user }) => {
 }
 ```
 
-React Futures is a collection of datatypes that focuses on deferring data manipulation and suspending when the data is consumed. React Futures follows the "wait-by-necessity" principle, which means it defers suspension until the content of the data is being examined. Only after suspension are operations like `map`, `slice`, and `filter` applied to the data. This allows us to simplify data construction by making data fetching as transparent as possible.  
+ React Futures follows the "wait-by-necessity" principle, meaning it defers suspension until the content of the data is being examined. Only after the suspense is resolved are operations like `map`, `slice`, and `filter` applied. This simplifies data construction by making data fetching transparent to the developer.  
 
 When the requirements for data-fetching increases, the benefits of React Futures become clearer.
 
 ```javascript
-// with React Futures
+// With React Futures
 import { createFutureArrayConstructor, createFutureObjectConstructor } from 'react-futures';
 
 const toJSON = res => res.json()
@@ -45,8 +47,8 @@ const FutrUser = createFutureObjectConstructor(user => fetch(`/user?name=${user}
 const userName = 'Tom'
 
 const user = new FutrUser(userName) //can prefetch outside render
-const friends = new FutrFriends(userName)
-const sharedGroups = new FutrGroups(userName)
+const friends = new FutrFriends(userName) 
+const sharedGroups = new FutrGroups(userName) 
                           .filter(group => { // can manipulate data outside render
                             const friendsGroups = friends
                                                     .flatMap(friend => new FutrGroups(friend.name))
@@ -67,7 +69,7 @@ const App = () => {
 
 
 
-// with async await
+// With async await
 const userName = 'Tom';
 
 const toJSON = res => res.json();
@@ -103,5 +105,22 @@ const App = () => {
 
 ```
 
-This example demonstrates several benefits of React Futures. The first is that futures allows the code that manipulates and constructs the data to be separated from the code that fetches it. Second, React Futures can be used within the callbacks of other future data operations (see above where `FutureGroups` is used in `flatMap`). Third, the manipulation and construction of asynchronous data can be done outside of render, something that is not possible with other implementations of suspense.
+This example demonstrates several benefits of React Futures:
 
+- Futures allows the code that manipulates and constructs the data to be separated from the code that fetches it.  
+- React Futures can be used within the callbacks of other future data operations (see above where `FutureGroups` is used in `flatMap`)
+- With React Futures the manipulation and construction of asynchronous data can be done **outside of render**, something that is not possible with other implementations of suspense.
+- With React Futures asynchronicity is transparent; you can use a future as you would a normal object or an array. 
+
+
+## Restrictions
+
+To achieve transparency, React Futures places  restrictions on what type of operations can be used where. 
+
+The general rule of thumb is if an operation is mutable, it will not be allowed inside render. If an operation suspends, it will not be allowed outside render.
+
+Click the toggle for a complete overview of what operations are allowed where
+
+## ADD CHART HERE
+
+## API
