@@ -3,7 +3,7 @@
     jest.useFakeTimers();
 
 import React, { Suspense } from 'react';
-import { createFutureObjectConstructor } from '../../../index';
+import { createObjectType } from '../../../index';
 import {  getterObjectStaticEach, noopObjectStaticEach, mutableObjectStaticEach, invalidObjectStaticEach } from './FutureObj-statics';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
@@ -74,7 +74,7 @@ beforeEach(() => {
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
-  FutureObj = createFutureObjectConstructor(fetchJson);
+  FutureObj = createObjectType(fetchJson);
 });
 
 afterEach(() => {
