@@ -153,9 +153,9 @@ createArrayType( promiseReturningFunction ) // => FutureArrayConstructor
 
 Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.  
 
-##### Arguments
+###### ARGUMENTS
 promiseReturningFunction  ((...any[]) => Promise<any[]>): function that returns a promise that resolves to an array.
-##### Returns
+###### RETURNS
 future array constructor (class FutureArrayCache): future array constructor
 ##### Basic Usage
 ```javascript
@@ -175,10 +175,10 @@ A `FutureArrayCache` constructor is returned from `createArrayType` and is used 
 new FutureArrayCache(...argumentsOfPromiseReturningFunction) // => future array instance
 ```
 
-##### Arguments
+###### ARGUMENTS
 ...argumentsOfPromiseReturningFunction (...any[]): arguments that are passed to the promiseReturningFunction above
 
-##### Returns
+###### RETURNS
 future array (intanceof `FutureArrayCache`): a future with the same interface as an array, except for added variants `immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`
 
 
@@ -251,14 +251,14 @@ Takes an immutable function and and a future array instance as parameters. The i
   FutureArrayCache.map(fn, futureArray) // => future instance with deferred function operation
 ```
 
-##### Arguments
+###### ARGUMENTS
 fn ((arr: any[]) => any[]): Deferred callback. Accepts the resolved future array as a parameter. Return value must be an array.  
 futureArray (instanceof FutureArrayCache): future array to apply the deferred callback to
-##### Returns
+###### RETURNTS
 future instance with deferred callback (instanceof FutureArrayCache): returns a future array instance with the deferred callback store
 
 #### tap
-Takes a mutable function and an future array instance. The mutable function must mutate the array and return it. The operation is deferred until after the promise has been resolved. Can be performed outside render but not in.
+Takes a mutable function and a future array instance. The mutable function must mutate the array and return it. The operation is deferred until after the promise has been resolved. Can be performed outside render but not in.
 ```javascript
   FutureArrayCache.tap(fn, futureArray) // => future instance with deferred callback
 ```
