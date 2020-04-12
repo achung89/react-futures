@@ -1,5 +1,5 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
-import { createFutureArrayConstructor } from "../../../index";
+import { createArrayType } from "../../../index";
 
 import React from "react";
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
@@ -32,7 +32,7 @@ const DeepPassThrough = ({ children, level }) => {
 };
 
 beforeEach(() => {
-  StubFutureArray = createFutureArrayConstructor(
+  StubFutureArray = createArrayType(
     val =>
       new Promise((res, rej) => {
         setTimeout(() => {

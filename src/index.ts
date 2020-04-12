@@ -7,7 +7,7 @@ import {TransparentArrayEffect} from './internal';
 import {TransparentObjectEffect} from './internal';
 
 
-export const createFutureObjectConstructor = <T extends object>(promiseCb) => {
+export const createObjectType = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
 
   if(isRendering()) {
@@ -42,7 +42,7 @@ export const createFutureObjectConstructor = <T extends object>(promiseCb) => {
   }
 }
 
-export const createFutureArrayConstructor = <T>(promiseCb) => {
+export const createArrayType = <T>(promiseCb) => {
   const cache = new LRU(500);
 
   if(isRendering()) {

@@ -4,7 +4,7 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import { createFutureArrayConstructor } from '../../../index';
+import { createArrayType } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
 import { TransparentArrayEffect, TransparentIteratorEffect } from '../../TransparentArrayEffect';
@@ -35,7 +35,7 @@ let container;
 let FutureArr;
 beforeEach(() => {
   jest.resetModules();
-  FutureArr = createFutureArrayConstructor(fetchArray);
+  FutureArr = createArrayType(fetchArray);
   Scheduler = require('scheduler/unstable_mock')
   container = document.createElement('div');
   document.body.appendChild(container);

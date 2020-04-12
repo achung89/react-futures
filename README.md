@@ -2,7 +2,7 @@
 
 Manipulate asynchronous data synchronously
 
-## How to install
+## Install
 ```
 #npm
 npm i react-futures
@@ -12,21 +12,21 @@ yarn add react-futures
 ```
 
 ## Explainer
-React Futures is a collection of datatypes that focuses on deferring data manipulation and suspending when the data is consumed.  
+React Futures is a collection of datatypes that defer data manipulation and suspends when the data is consumed.  
 
 Ex.
 ```javascript
-import { createFutureArrayConstructor } from 'react-futures';
+import { createArrayType } from 'react-futures';
 
-const FutureBlogs = createFutureArrayConstructor(user => fetch(`/blogs?user=${user}`))
+const FutureBlogs = createArrayType(user => fetch(`/blogs?user=${user}`)
 
 const Blogs = ({ user }) => {
   const blogs = new FutureBlogs(user) // prefetches here
-                  .sort((a, b) => a.timestamp - b.timestamp) //deferred
+                  .filter( blog => blog.tags.includes('sports')) // deferred
                   .slice(0,10) // deferred
 
   const featured = blogs[0] //suspend!
-  
+
   return ...
 }
 ```
@@ -37,12 +37,12 @@ When the requirements for data-fetching increases, the benefits of React Futures
 
 ```javascript
 // With React Futures
-import { createFutureArrayConstructor, createFutureObjectConstructor } from 'react-futures';
+import { createArrayType, createObjectType } from 'react-futures';
 
 const toJSON = res => res.json()
-const FutrFriends = createFutureArrayConstructor(user => fetch(`/${user}/friends`).then(toJSON));
-const FutrGroups = createFutureArrayConstructor(user => fetch(`/${user}/groups`).then(toJSON));
-const FutrUser = createFutureObjectConstructor(user => fetch(`/user?name=${user}`).then(toJSON));
+const FutrFriends = createArrayType(user => fetch(`/${user}/friends`).then(toJSON));
+const FutrGroups = createArrayType(user => fetch(`/${user}/groups`).then(toJSON));
+const FutrUser = createObjectType(user => fetch(`/user?name=${user}`).then(toJSON));
 
 const userName = 'Tom'
 
@@ -72,12 +72,12 @@ const App = () => {
 // With async await
 const userName = 'Tom';
 
-const toJSON = res => res.json();
+const toJSON = res => res.json()
 
 const App = () => {
-  const [friends, setFriends] = useState([]);
-  const [sharedGroups, setSharedGroups] = useState([]); 
-  const [user, setUser] = useState({});
+  const [friends, setFriends] = useState([])
+  const [sharedGroups, setSharedGroups] = useState([])
+  const [user, setUser] = useState({})
 
   const profile = {
         user,
@@ -86,18 +86,19 @@ const App = () => {
   }
   useEffect(() => {
     const getAllData = async () => {
-      const user = await fetch(`/user?name${userName}`).then(toJSON);
-      const friends = await fetch(`/${userName}/friends`).then(toJSON);
-      const groups = await  fetch(`/${userName}/groups`).then(toJSON);
+      const user = await fetch(`/user?name${userName}`).then(toJSON)
+      const friends = await fetch(`/${userName}/friends`).then(toJSON)
+      const groups = await  fetch(`/${userName}/groups`).then(toJSON)
       const friendsGroups = (await Promise.all(friends.map(getGroup)))
                             .flat()
                             .map(group => group.name)
 
-      const sharedGroups = groups.filter( group => friendsGroups.includes(group.name));
-      setFriends(friends);
-      setSharedGroups(sharedGroups);
+      const sharedGroups = groups.filter( group => friendsGroups.includes(group.name))
+      setUser(user)
+      setFriends(friends)
+      setSharedGroups(sharedGroups)
     }
-    getAllData();
+    getAllData()
   }, [])
   
   return ...
@@ -107,20 +108,59 @@ const App = () => {
 
 This example demonstrates several benefits of React Futures:
 
-- Futures allows the code that manipulates and constructs the data to be separated from the code that fetches it.  
-- React Futures can be used within the callbacks of other future data operations (see above where `FutureGroups` is used in `flatMap`)
-- With React Futures the manipulation and construction of asynchronous data can be done **outside of render**, something that is not possible with other implementations of suspense.
 - With React Futures asynchronicity is transparent; you can use a future as you would a normal object or an array. 
+- Futures allows the code that manipulates and constructs the data to be separated from the code that fetches it.  
+- React Futures can be used within the callbacks of other future data operations (see above where `FutureGroups` is used within the callback of `flatMap`)
+- With React Futures the manipulation and construction of asynchronous data can be done **outside of render**, something not possible with other implementations of suspense.
 
 
 ## Restrictions
 
-To achieve transparency, React Futures places  restrictions on what type of operations can be used where. 
+To achieve transparency, React Futures places restrictions on certain type of operations: mutable operations are prohibited inside of render and suspend operations are prohibited outside of render. 
 
-The general rule of thumb is if an operation is mutable, it will not be allowed inside render. If an operation suspends, it will not be allowed outside render.
+Ex. 
 
-Click the toggle for a complete overview of what operations are allowed where
+```javascript
+const blogs = FutrBlogs()
+
+const first = blogs[0] // Error: suspense not allowed outside render
+const sorted = blogs.sort((a, b) => a.timestamp - b.timestamp)
+
+const App = () => {
+
+  const first = blogs[0]
+  const sorted = blogs.sort((a, b) => a.timestamp - b.timestamp) //Error: mutable operation `sort` not allowed inside render
+  return ...
+}
+
+```
+
+for mutable methods like `array.sort` and `array.reverse`, React Futures provides immutable variants like `array.immSort` and `array.immReverse`
+
+There are also operations that are prohibited globally like `array.push` and `array.shift`, a full list of these restrictions are listed below 
 
 ## ADD CHART HERE
 
-## API
+## API Reference
+
+### Future Array
+
+#### createArrayType
+
+```javascript
+createArrayType( promiseReturningFunction ) // => FutureArrayConstructor
+```
+
+Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.  
+
+##### Arguments
+promiseReturningFunction  ((val: any) => Promise<any[]>): function that returns a promise that resolves to an array.
+##### Returns
+future array constructor (class FutureA65rrayCache): future array constructor
+##### Basic Usage
+```javascript
+import {createArrayType} from 'react-future';
+
+const fetchBlogs = ({ count }) => fetch(`/blogs?count=${count}`).then(res => res.json())
+const FutrBlogs = createArrayType(fetchBlogs)
+```
