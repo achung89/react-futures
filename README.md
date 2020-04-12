@@ -143,9 +143,9 @@ There are also operations that are prohibited globally like `array.push` and `ar
 
 ## API Reference
 
-### Future Array
+## Future Array
 
-#### createArrayType
+### createArrayType
 
 ```javascript
 createArrayType( promiseReturningFunction ) // => FutureArrayConstructor
@@ -154,9 +154,9 @@ createArrayType( promiseReturningFunction ) // => FutureArrayConstructor
 Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.  
 
 ##### Arguments
-promiseReturningFunction  ((val: any) => Promise<any[]>): function that returns a promise that resolves to an array.
+promiseReturningFunction  ((...any[]) => Promise<any[]>): function that returns a promise that resolves to an array.
 ##### Returns
-future array constructor (class FutureA65rrayCache): future array constructor
+future array constructor (class FutureArrayCache): future array constructor
 ##### Basic Usage
 ```javascript
 import {createArrayType} from 'react-future';
@@ -164,3 +164,109 @@ import {createArrayType} from 'react-future';
 const fetchBlogs = ({ count }) => fetch(`/blogs?count=${count}`).then(res => res.json())
 const FutrBlogs = createArrayType(fetchBlogs)
 ```
+
+### FutureArrayCache
+
+A `FutureArrayCache` constructor is returned from `createArrayType` and is used to instantiate future arrays. It consumes the promise from the promiseReturningFunction and caches the resultes using LRU.
+
+#### constructor
+
+```javascript
+new FutureArrayCache(...argumentsOfPromiseReturningFunction) // => future array instance
+```
+
+##### Arguments
+...argumentsOfPromiseReturningFunction (...any[]): arguments that are passed to the promiseReturningFunction above
+
+##### Returns
+future array (intanceof `FutureArrayCache`): a future with the same interface as an array, except for added variants `immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`
+
+
+#### Instance methods
+Future arrays share the same methods as host arrays, with the exception of added immutable variants of methods (`immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`)
+
+##### Immutable instance methods
+Immutable methods will defer operations both inside and outside render. The methods include all immutable methods of array including additional immutable variants of methods (`immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`)
+
+<details><summary>List of immutable methods</summary>
+<p>
+- concat<br/>
+- filter<br/>
+- slice<br/>
+- map<br/>
+- reduce<br/>
+- reduceRight<br/>
+- flat<br/>
+- flatMap<br/>
+- immReverse<br/>
+- immCopyWithin<br/>
+- immSort<br/>
+- immFill<br/>
+- immSplice<br/>
+</p>
+</details>
+
+##### Mutable instance methods
+Mutable instance methods will defer operations outside render and throw a `MutableOperationError` inside render. The error is thrown because any mutable operation inside render is likely to result in bugs since it mutates the array at every re-renders. TODO: for more info link
+<details><summary>List of mutable methods</summary>
+<p>
+- splice<br />
+- copyWithin<br />
+- sort<br />
+- unshift<br />
+- reverse<br />
+- fill<br />
+</p>
+</details>
+
+##### Suspend instance methods
+Suspend methods are opearations that require examining the contents of the array. These methods throw an error outside render and suspend inside render.
+
+<details><summary>List of suspend methods</summary>
+- indexOf<br />
+- includes<br />
+- join<br />
+- lastIndex<br />
+- toString<br />
+- toLocaleString<br />
+- forEach<br />
+- find<br />
+- every<br />
+- some<br />
+- findIndex<br />
+</details>
+
+#### Static methods
+
+##### of
+
+instantiantes a future array with the same arguments as the constructor
+```javascript
+FutureArrayCache.of(...argumentsOfPromiseReturningFunction) // => future array instance
+```
+
+##### map
+Takes an immutable function and and a future array instance as parameters. The immutable function is deferred until after the promise is resolved. The immutable function must return an array. Can be performed inside and outside render.
+```javascript
+  FutureArrayCache.map(fn, futureArray) // => future instance with deferred function operation
+```
+
+##### Arguments
+fn ((arr: any[]) => any[]): Deferred callback. Accepts the resolved future array as a parameter. Return value must be an array.  
+futureArray (instanceof FutureArrayCache): future array to apply the deferred callback to
+##### Returns
+future instance with deferred callback (instanceof FutureArrayCache): returns a future array instance with the deferred callback store
+
+#### tap
+Takes a mutable function and an future array instance. The mutable function must mutate the array and return it. The operation is deferred until after the promise has been resolved. Can be performed outside render but not in.
+```javascript
+  FutureArrayCache.tap(fn, futureArray) // => future instance with deferred callback
+```
+
+##### Arguments
+fn ((arr: any[]) => any[]): Deferred callback. Accepts the resolved future array as a parameter. Return value must be the same reference to the array that was passed in.  
+futureArray (instanceof FutureArrayCache): future array to apply the deferred callback to
+##### Returns
+future instance with deferred callback (instanceof FutureArrayCache): returns a future array instance with the deferred callback store
+
+

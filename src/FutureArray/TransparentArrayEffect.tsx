@@ -6,9 +6,7 @@ const { map, run, tap } = ArrayEffect;
 export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(deferredFn) { super(deferredFn) }
 
-  static of() {
-    
-  }
+
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args){ return map(target => target.concat(...args), this)}
@@ -23,7 +21,8 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   immCopyWithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
   immSort(...args) {return map(target => target.slice().sort(...args), this)}
   immFill(...args) {return map(target => target.slice().fill(...args), this)}
-  
+  immSplice() { return map(target => target.slice().splice(...args), this)}
+
   // mutableMethods  
   splice(...args) {return tap(target => target.splice(...args), 'splice', this)}
   copyWithin(...args) {return tap(target => target.copyWithin(...args), 'copyWithin', this)}
@@ -52,7 +51,6 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   pop(): never { throw new Error('Invalid method')}
   shift(): never{ throw new Error('Invalid method')}
   immUnshift(): never { throw new Error('Invalid method')}
-  immSplice(): never { throw new Error('Invalid method')}
   static of(x) {
     return new TransparentArrayEffect(() => x);
   }
