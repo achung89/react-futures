@@ -1,13 +1,21 @@
 {
-  "presets": [["@babel/preset-env", {
-    "useBuiltIns": "usage",
-    "corejs": "3",
-    "targets": {
-      "ie": "11"
-    }
-  }],
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "usage",
+        "corejs": "3",
+        "targets": {
+          "ie": "11"
+        }
+      }
+    ],
     "@babel/preset-typescript",
-    "@babel/preset-react"],
+    "@babel/preset-react"
+  ],
   "exclude": "node_modules/**",
-  "plugins": ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
+  "plugins": [
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-transform-runtime"
+  ]
 }

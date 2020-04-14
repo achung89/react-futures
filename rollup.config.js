@@ -1,6 +1,6 @@
 import babel from 'rollup-plugin-babel';
 import typescript from 'rollup-plugin-typescript';
-import { terser } from "rollup-plugin-terser";
+import { terser } from 'rollup-plugin-terser';
 
 export default {
   input: './src/index.ts',
@@ -9,12 +9,8 @@ export default {
     format: 'umd',
     name: 'ReactFutures',
     globals: {
-      react: 'React'
-    }
+      react: 'React',
+    },
   },
-  plugins: [
-    babel(),
-    typescript(),
-    terser()
-  ]
+  plugins: [babel(), typescript(), terser()],
 };

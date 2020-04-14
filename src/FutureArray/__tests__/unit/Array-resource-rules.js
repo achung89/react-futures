@@ -37,5 +37,5 @@
     ${'sort'}              |   ${'throw'}                        |         ${'defer mutable'}
     ${'splice'}            |   ${'throw'}                        |         ${'defer mutable'}
     ${'copyWithin'}        |   ${'throw'}                        |         ${'defer mutable'}
-`
+`;
 // make immutable variants of reverse,fill,  sort, splice, unshift and copywithin. no need for one for push since we have concat

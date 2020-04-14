@@ -13,4 +13,4 @@
       preventExtensions         | throw               | defer                                                                                      
       set                       | throw               | defer                                                                        
       setPrototypeOf            | throw               | throw                                                                                    
-`
+`;

@@ -1,15 +1,19 @@
-import waitForSuspense from "./waitForSuspense";
-import waitForLoading from "./waitForLoading";
-import React, { Suspense } from "react";
-import ReactDOM from "react-dom";
-import { act } from "react-dom/test-utils";
-export const testSuspenseWithLoader = async (el, expected, suspenseTime = 2000) => {
+import waitForSuspense from './waitForSuspense';
+import waitForLoading from './waitForLoading';
+import React, { Suspense } from 'react';
+import ReactDOM from 'react-dom';
+import { act } from 'react-dom/test-utils';
+export const testSuspenseWithLoader = async (
+  el,
+  expected,
+  suspenseTime = 2000
+) => {
   let container;
   let root;
   act(() => {
-    container = document.createElement("div");
+    container = document.createElement('div');
     document.body.appendChild(container);
-  })
+  });
   act(() => {
     root = ReactDOM.createRoot(container);
   });
@@ -32,9 +36,9 @@ export const testRenderWithoutSuspense = async (el, expected) => {
   let container;
   let root;
   act(() => {
-    container = document.createElement("div");
+    container = document.createElement('div');
     document.body.appendChild(container);
-  })
+  });
   act(() => {
     root = ReactDOM.createRoot(container);
   });
@@ -45,4 +49,4 @@ export const testRenderWithoutSuspense = async (el, expected) => {
   await act(async () => {
     expect(container.innerHTML).toEqual(expected);
   });
-}
+};

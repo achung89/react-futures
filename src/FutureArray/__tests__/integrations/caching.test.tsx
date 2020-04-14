@@ -1,8 +1,11 @@
-jest.mock("scheduler", () => require("scheduler/unstable_mock"));
-import { createArrayType } from "../../../index";
+jest.mock('scheduler', () => require('scheduler/unstable_mock'));
+import { createArrayType } from '../../../index';
 
-import React from "react";
-import { testSuspenseWithLoader, testRenderWithoutSuspense } from "../../../test-utils/testSuspense";
+import React from 'react';
+import {
+  testSuspenseWithLoader,
+  testRenderWithoutSuspense,
+} from '../../../test-utils/testSuspense';
 
 jest.useFakeTimers();
 
@@ -29,9 +32,8 @@ afterEach(() => {
   StubFutureArray = null;
 });
 
-describe('Caching arrays instantiated in render',  () => {
-  test("should cache shallow renders", async () => {
-
+describe('Caching arrays instantiated in render', () => {
+  test('should cache shallow renders', async () => {
     const App = ({ nestedFuture = false }) => {
       let numbers = new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
@@ -39,7 +41,7 @@ describe('Caching arrays instantiated in render',  () => {
         .filter(val => val % 2 === 0) // [2,4,6,8]
         .immReverse(); // [8,6,4,2]
 
-      const nums  = nestedFuture ? createNestedFuture(numbers) : numbers // [9,9]
+      const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
 
       return <div>{nums}</div>;
     };
@@ -50,11 +52,9 @@ describe('Caching arrays instantiated in render',  () => {
 
     StubFutureArray.reset();
   });
-
 });
 
-
-const createNestedFuture = numbers =>{
+const createNestedFuture = numbers => {
   let numbers2 = new StubFutureArray(7); //[1,2,3,7];
   return numbers
     .map((num, ind) => num + numbers2[ind]) // [9,8,7,9]
@@ -63,4 +63,4 @@ const createNestedFuture = numbers =>{
         .map(num => num * 3) // [3,6,9,24]
         .includes(num)
     ); //[9,9]
-}
+};

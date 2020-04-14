@@ -19,6 +19,7 @@
     "@types/jest": "^25.1.2",
     "babel-plugin-transform-default-import": "^1.0.0",
     "jest": "^25.1.0",
+    "prettier": "^2.0.4",
     "react-noop-renderer": "^0.0.0",
     "react-test-renderer": "^0.0.0-experimental-aae83a4b9",
     "react-testing-library": "^8.0.1",
