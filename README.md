@@ -431,31 +431,6 @@ instantiantes a future array with the same arguments as the constructor
 FutureArrayCache.of(...argumentsOfPromiseReturningFunction) // => future array instance
 ```
 
-##### map
-Takes an immutable function and and a future array instance as parameters. The immutable function is deferred until after the promise is resolved. The immutable function must return an array. Can be performed inside and outside render.
-```javascript
-  FutureArrayCache.map(fn, futureArray) // => future instance with deferred function operation
-```
-
-###### ARGUMENTS
-fn ((arr: any[]) => any[]): Deferred callback. Accepts the resolved future array as a parameter. Return value must be an array.  
-futureArray (instanceof FutureArrayCache): future array to apply the deferred callback to
-###### RETURNTS
-future instance with deferred callback (instanceof FutureArrayCache): returns a future array instance with the deferred callback store
-
-#### tap
-Takes a mutable function and a future array instance. The mutable function must mutate the array and return it. The operation is deferred until after the promise has been resolved. Can be performed outside render but not in.
-```javascript
-  FutureArrayCache.tap(fn, futureArray) // => future instance with deferred callback
-```
-
-###### ARGUMENTS
-fn ((arr: any[]) => any[]): Deferred callback. Accepts the resolved future array as a parameter. Return value must be the same reference to the array that was passed in.  
-futureArray (instanceof FutureArrayCache): future array to apply the deferred callback to
-###### RETURNS
-future instance with deferred callback (instanceof FutureArrayCache): returns the futureArray that was passed in with the deferred callback stored
-
-
 ## Future Object
 
 ### createObjectType
@@ -495,9 +470,10 @@ new FutureObjectCache(...argumentsOfPromiseReturningFunction) // => future array
 future object (intanceof `FutureObjectCache`): a future with the same interface as an object. All property lookups will suspend. 
 
 #### Instance methods
-Future object share the same methods as host objects. All property lookups will suspend.
+Future objects share the same methods as host objects. All property lookups will suspend.
 
 #### Static methods
+Future objects share the same static methods as the host Object constructor. Most have been repurposed to defer when possible.
 
 ##### of
 
@@ -506,11 +482,49 @@ instantiantes a future array with the same arguments as the constructor
 FutureObjectCache.of(...argumentsOfPromiseReturningFunction) // => future object instance
 ```
 
-##### map
-Takes an immutable function and and a future array instance as parameters. The immutable function is deferred until after the promise is resolved. The immutable function must return an array. Can be performed inside and outside render.
-```javascript
-  FutureObjectCache.map(fn, futureObj) // => future instance with deferred function operation
-```
+##### Immutable static methods
+These methods return a future object or a future array and can be used both in and outside render.
+
+<details><summary>List of immutable static</summary>
+- getOwnPropertyDescriptor
+- getOwnPropertyNames
+- getOwnPropertySymbols
+- getPrototypeOf
+- keys
+- entries
+- fromEntries
+- values
+</details>
+
+##### Mutable static methods
+These methods mutate and return the future object passed in. These operations are allowed outside render but prohibited inside render.
+
+<details><summary>List of immutable static</summary>
+- assign
+- seal
+- preventExtensions
+- defineProperties
+- defineProperty
+- freeze
+- setPrototypeOf
+</details>
+
+##### Suspend static methods
+These methods require examining the contents of the object and therefore suspend. They can be used inside render but not out.
+
+<details><summary>List of immutable static</summary>
+- isExtensible
+- isFrozen
+- isSealed
+</details>
+
+##### Invalid method
+These methods are invalid globally because their use cases are currently not well understood. We will enable these once we understand how these methods are used, for now please use the methods on the Object constructor.
+
+<details><summary>List of immutable static</summary>
+- is
+- create
+</details>
 
 ###### ARGUMENTS
 fn ((obj: object) => object): Deferred callback. Accepts the resolved future object as a parameter. Return value must be an object.  
@@ -535,3 +549,4 @@ future instance with deferred callback (instanceof FutureObjectCache): returns t
 Operation: a function that processes input and returns a new object/array or the input object/array
 immutable operation: a function that does not mutate the input object/array and returns a new object/array 
 mutable operation: a function that mutates the input object/array
+

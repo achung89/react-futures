@@ -118,11 +118,11 @@ export  class LazyObject<T extends object> extends ObjectEffect<T> {
   //invalid method
   static create() {
     // TODO: think through why this shouldn't be allowed
-    throw Error('Future object does not support Object.create')
+    throw Error('FutureObject.create not supported')
   }
   // forward
   static is(obj1, obj2) {
-    return Object.is(obj1, obj2);
+    throw Error('FutreObject.is not supported')
   }
 }
 
