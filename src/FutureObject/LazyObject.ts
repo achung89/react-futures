@@ -1,6 +1,6 @@
 import { isRendering, thisMap } from "../internal";
 import {ObjectEffect, ArrayEffect} from "../internal";
-import { TransparentArrayEffect } from "../internal";
+import { LazyArray } from "../internal";
 
 type Object = object | any[];
 const {tap, map} = ObjectEffect;
@@ -27,9 +27,9 @@ const staticMutableOperation = (target, cb, methodName) => {
       throw new MutableOperationInRenderError(methodName);
     }
     if(Array.isArray(target)){
-      return new TransparentArrayEffect(() => cb(target));
+      return new LazyArray(() => cb(target));
     } else {
-      return new TransparentObjectEffect(() => cb(target));
+      return new LazyObject(() => cb(target));
     }
   }
 }
@@ -43,8 +43,8 @@ const staticSuspendOperation = (target, cb, methodName) => {
   }
 }
 // TODO test non future params
-export  class TransparentObjectEffect<T extends object> extends ObjectEffect<T> {
-  static get [Symbol.species]() { return TransparentObjectEffect; }
+export  class LazyObject<T extends object> extends ObjectEffect<T> {
+  static get [Symbol.species]() { return LazyObject; }
 
   constructor(fn) {
     super(fn);
@@ -74,28 +74,32 @@ export  class TransparentObjectEffect<T extends object> extends ObjectEffect<T> 
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {
-    return new TransparentObjectEffect(() => Object.getOwnPropertyDescriptor(obj, property));
+    return new LazyObject(() => Object.getOwnPropertyDescriptor(obj, property));
   }
   static getOwnPropertyDescriptors(obj) {
-    return new TransparentObjectEffect(() =>  Object.getOwnPropertyDescriptors(obj))
+    return new LazyObject(() =>  Object.getOwnPropertyDescriptors(obj))
   }
   static getOwnPropertyNames(obj) {
-    return new TransparentArrayEffect(() => Object.getOwnPropertyNames(obj))
+    return new LazyArray(() => Object.getOwnPropertyNames(obj))
   }
   static getOwnPropertySymbols(obj) {
-    return new TransparentArrayEffect(() => Object.getOwnPropertySymbols(obj))
+    return new LazyArray(() => Object.getOwnPropertySymbols(obj))
   }
   static getPrototypeOf(obj) {
-    return new TransparentObjectEffect(() =>  Object.getPrototypeOf(obj));
+    return new LazyObject(() =>  Object.getPrototypeOf(obj));
   }
   static keys(obj) {
-    return new TransparentArrayEffect(() => Object.keys(obj));
+    return new LazyArray(() => Object.keys(obj));
   }
   static entries(obj) {
-    return new TransparentArrayEffect(() => Object.entries(obj));
+    return new LazyArray(() => Object.entries(obj));
+  }
+  //TODO: write test for fromEntries
+  static fromEntries(obj) {
+    return new LazyObject(() => Object.fromEntries(obj));
   }
   static values(obj) {
-    return new TransparentArrayEffect(() => Object.values(obj));
+    return new LazyArray(() => Object.values(obj));
   }
 
 

@@ -9,9 +9,9 @@ import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import {TransparentObjectEffect, isEffect} from '../../../internal';
+import {LazyObject, isEffect} from '../../../internal';
 import {unwrapProxy, suspend} from '../../../internal';
-import {TransparentArrayEffect} from '../../../internal';
+import {LazyArray} from '../../../internal';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));	  
 
 
@@ -103,10 +103,10 @@ afterEach(() => {
 //     defer: () => {
 //       let Constructor;
 //       if(returnType === 'object') {
-//         Constructor = TransparentObjectEffect;
+//         Constructor = LazyObject;
 //       }
 //       if(returnType === 'array') {
-//         Constructor = TransparentArrayEffect;
+//         Constructor = LazyArray;
 //       }
 //       expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor)
 //     },
@@ -120,10 +120,10 @@ afterEach(() => {
 //     defer: () => {
 //       let Constructor;
 //       if(returnType === 'object') {
-//         Constructor = TransparentObjectEffect;
+//         Constructor = LazyObject;
 //       }
 //       if(returnType === 'array') {
-//         Constructor = TransparentArrayEffect;
+//         Constructor = LazyArray;
 //       }
 //       const val = method(futureObj)
 //       expect(unwrapProxy(val)).toBeInstanceOf(Constructor)
@@ -164,7 +164,7 @@ afterEach(() => {
 //       const expected = constructor === 'Object' 
 //       ? method(expectedJSON(1))
 //       : constructor === 'FutureObject'
-//       ? method(new TransparentObjectEffect(() => expectedJSON(1)))
+//       ? method(new LazyObject(() => expectedJSON(1)))
 //       : undefined;
 //       expect(resolved).toEqual(expected)
 //       break;
@@ -233,7 +233,7 @@ describe('FutureObject static methods', () => {
     expect(Scheduler).toHaveYielded([          
       'No Suspense',
     ])
-    const expected = method(new TransparentObjectEffect(() => expectedJSON(1)))
+    const expected = method(new LazyObject(() => expectedJSON(1)))
     expect(resolved).toEqual(expected);
   });
   immutableDeferredFutureObjectEach('Expect immutable method $staticMethod to defer inside and outside render', async ({ staticMethod, returnType}) => {
@@ -243,20 +243,20 @@ describe('FutureObject static methods', () => {
     const outsideRender =  () =>    {
       let Constructor;
       if(returnType === 'object') {
-        Constructor = TransparentObjectEffect;
+        Constructor = LazyObject;
       }
       if(returnType === 'array') {
-        Constructor = TransparentArrayEffect;
+        Constructor = LazyArray;
       }
       expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor)
     }  
     const inRender = () => {
       let Constructor;
       if(returnType === 'object') {
-        Constructor = TransparentObjectEffect;
+        Constructor = LazyObject;
       }
       if(returnType === 'array') {
-        Constructor = TransparentArrayEffect;
+        Constructor = LazyArray;
       }
       const val = method(futureObj)
       expect(unwrapProxy(val)).toBeInstanceOf(Constructor)
@@ -325,10 +325,10 @@ describe('FutureObject static methods', () => {
     const outsideRender = () => {
       let Constructor;
       if(returnType === 'object') {
-        Constructor = TransparentObjectEffect;
+        Constructor = LazyObject;
       }
       if(returnType === 'array') {
-        Constructor = TransparentArrayEffect;
+        Constructor = LazyArray;
       }
 
       expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor)
