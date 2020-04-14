@@ -1,4 +1,3 @@
-
-export default  () => {
-  jest.runOnlyPendingTimers()
-}
+export default () => {
+  jest.runOnlyPendingTimers();
+};

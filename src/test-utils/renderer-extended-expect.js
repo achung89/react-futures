@@ -13,12 +13,11 @@ function captureAssertion(fn) {
       message: () => error.message,
     };
   }
-  return {pass: true};
+  return { pass: true };
 }
-'use strict';
+('use strict');
 
 const JestReact = require('jest-react');
-
 
 function assertYieldsWereCleared(Scheduler) {
   const actualYields = Scheduler.unstable_clearYields();
@@ -40,7 +39,6 @@ function toMatchRenderedOutput(ReactNoop, expectedJSX) {
   }
   return JestReact.unstable_toMatchRenderedOutput(ReactNoop, expectedJSX);
 }
-
 
 function toFlushAndYield(Scheduler, expectedYields) {
   assertYieldsWereCleared(Scheduler);
@@ -106,5 +104,5 @@ module.exports = {
   toFlushExpired,
   toHaveYielded,
   toFlushAndThrow,
-  toMatchRenderedOutput
+  toMatchRenderedOutput,
 };
