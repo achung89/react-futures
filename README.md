@@ -12,7 +12,7 @@ yarn add react-futures
 ```
 
 ## Explainer
-React Futures is a collection of datatypes that allow syncronous-looking data manipulation of asynchronous data by deferring data manipulation and suspending only when the data is consumed.  
+React Futures is a collection of datatypes that allow syncronous-looking data manipulation of asynchronous data by suspending only when the data is consumed  and deferring data manipulation until after the promise resolves.  
 
 Ex.
 ```javascript
@@ -131,7 +131,7 @@ const App = () => {
 
 ```
 
-React Futures tries to provide work arounds for these restrictions. For mutable methods like `array.sort` and `array.reverse`, React Futures provides immutable variants like `array.immSort` and `array.immReverse` that can be used in render. For suspense operations React Futures provides utilities that can defer suspense operations TODO: (see using 3rd party libraries and using suspense operations outside render)
+React Futures tries to provide work arounds for these restrictions. For mutable methods like `array.sort` and `array.reverse`, immutable variants that can be used in render like `array.immSort` and `array.immReverse` are provided. For suspense operations, React Futures provides utilities that can defer suspense operations (see [Using with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc))
 
 There are also operations that are globally prohibited like `array.push` and `array.shift`, click below for a list of all cases  
 
@@ -142,24 +142,24 @@ There are also operations that are globally prohibited like `array.push` and `ar
 
 ### Object iteration
 
-Object iteration with native types is typically done using `Object.entries` and `Object.fromEntries`, but `Object.entries` with a future will suspend, making iteration outside of render impossible. To allow this type of iteration React Futures put a deferred version of `entries` and `fromEntries` on the future object constructors.
+Object iteration with native types is typically done using `Object.entries` and `Object.fromEntries`, but `Object.entries` with a future will suspend, making iteration outside of render impossible. To allow this type of iteration React Futures puts a deferred version of `entries` and `fromEntries` on the future object constructors.
 ```javascript
 import {createObjectType} from 'react-futures';
 const FutureUser = createObjectType(() => fetch('/user').then(res => res.json()));
 
 const user = new FutureUser();
 
-const uppercaseUserEntries = FutureUser.entries(user)
-                                .map(([key, value]) => ({ // deferred
+const uppercaseUserEntries = FutureUser.entries(user) //lazy
+                                .map(([key, value]) => ({ // lazy
                                   [key]: value.toUpperCase()
                                 }))
 
-const uppercaseUser = FutureUser.fromEntries(uppercaseUser); // deferred
+const uppercaseUser = FutureUser.fromEntries(uppercaseUserEntries); // lazy
 
 ```
 
 ### Cache invalidation
-React Futures use values passed into a future constructor as keys for an in-memory cache, so multiple instantiations with the same constructor pulls from the cache
+React Futures use values passed into a future constructor as keys for an in-memory cache, so multiple instantiations with the same constructor will pull from the cache
 
 ```javascript
 const dave = new FutureUser('Dave') // fetches
@@ -172,7 +172,7 @@ const App = () => {
 }
 ```
 
-Caching is performed using LRU, so invalidation is done automatically after the cache reaches a certain size and the key hasn't been used in a while.  
+CSince caching is performed using LRU, invalidation is done automatically after the cache reaches a certain size and the key hasn't been used in a while.  
 
 To manually invalidate a key, you can use the static method `invalidate` on the future constructor. 
 ```javascript
@@ -181,13 +181,13 @@ const dave = new FutrUser('Dave') // fetches;
 const App = () => {
   let dave = new FutrUser('Dave') // pulls from cache
 
-  FutureUser.invalidate('Dave') // removes 'Dave' from cache
+  FutureUser.invalidate('Dave') // deletes 'Dave' from cache
 
   dave = new FutrUser('Dave') // fetches
 }
 ```
 
-Sometimes it's useful to clear the entire cache, like on a page refresh. This can be accomplished with React Futures using the static method `reset` on the future constructor
+Sometimes it's useful to clear the entire cache, like on a page refresh. This can be accomplished using the static method `reset` on the future constructor
 
 ```javascript
 const dave = new FutrUser('Dave')
@@ -203,7 +203,7 @@ const App = () => {
 
 ### Fetching on component mount
 
-Sometimes it's desirable to fetch whenever a component is mounted, similar to how you would in the good old pre-suspense days when you put fetch in componentDidMount. To achieve this with futures, use `useEffect` to invalidate the cache on unmount.
+Sometimes it's desirable to fetch whenever a component is mounted, similar to how you would in the good old days with fetch and componentDidMount. To achieve this with futures, use `useEffect` to invalidate the cache on unmount.
 
 ```javascript
 const useUser = name => {
@@ -288,9 +288,9 @@ const lazyCloneDeep = fmapObj(_.cloneDeep)
 
 const daveTwin = lazyCloneDeep(dave) // => future object
 ```
-use `fmapObj` for object returning function and `fmapArr` for array returning operations.
+`fmapObj` are for object returning operations and `fmapArr` are for array returning operations.
 
-For mutable operations, like `_.assign`, use `ftap`. `ftap` takes a function as a first parameter and a future as a second parameter. It returns the passed in future.
+For mutable operations, like `_.assign`, use `ftap`. `ftap` takes a function as a first parameter and a future as a curried parameter. It returns the passed in future.
 
 ```javascript
 import { ftap } from 'react-futures'
@@ -305,9 +305,10 @@ const dave2 = lazyAssign(dave) // => dave
 
 dave2 === dave // true
 ```
-`dave2` now has the `_.assign` operation stored in it and because we use `ftap`, `dave` also has the operation stored in it to reflect mutability.
+`dave2` now has the `_.assign` operation stored in it and because we use `ftap`, a mutable operation, `dave` also has the operation stored inside it.
 
-With ramda you can use `pipeWith` or `composeWith` to wrap callbacks in `fmapArr` or `fmapObj` for function composition
+To defer function composition, you can use ramda's `pipeWith` or `composeWith` to wrap callbacks in `fmapArr` or `fmapObj`.
+
 ```javascript
 import { pipeWith, filter, sort } from 'ramda';
 import { createArrayType, fmapArr } from 'react-futures';
@@ -369,10 +370,10 @@ future array (intanceof `FutureArrayCache`): a future with the same interface as
 
 
 #### Instance methods
-Future arrays share the same methods as host arrays, with the exception of added immutable variants of methods (`immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`)
+Future arrays share the same methods as host arrays, with the exception of added immutable variants of methods 
 
 ##### Immutable instance methods
-Immutable methods will defer operations both inside and outside render. The methods include all immutable methods of array including additional immutable variants of methods (`immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`)
+Immutable methods will defer operations both inside and outside render. The methods include all immutable methods of array and include additional immutable variants of methods (`immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`)
 
 <details><summary>List of immutable methods</summary>
 <p>
@@ -393,7 +394,7 @@ Immutable methods will defer operations both inside and outside render. The meth
 </details>
 
 ##### Mutable instance methods
-Mutable instance methods will defer operations outside render and throw a `MutableOperationError` inside render. The error is thrown because any mutable operation inside render is likely to result in bugs since it mutates the array at every re-renders. TODO: for more info link
+Mutable instance methods will defer operations outside render and throw a `MutableOperationError` inside render. The error is thrown because  mutable operation in render could lead to unintended consequences.
 <details><summary>List of mutable methods</summary>
 <p>
 - splice<br />
@@ -439,7 +440,7 @@ FutureArrayCache.of(...argumentsOfPromiseReturningFunction) // => future array i
 createObjectType( promiseReturningFunction ) // => FutureArrayConstructor
 ```
 
-Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.  
+Produces a future object constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.  
 
 ###### ARGUMENTS
 promiseReturningFunction  ((...any[]) => Promise\<object>): function that returns a promise that resolves to an object
@@ -486,50 +487,50 @@ FutureObjectCache.of(...argumentsOfPromiseReturningFunction) // => future object
 These methods return a future object or a future array and can be used both in and outside render.
 
 <details><summary>List of immutable static</summary>
-- getOwnPropertyDescriptor
-- getOwnPropertyNames
-- getOwnPropertySymbols
-- getPrototypeOf
-- keys
-- entries
-- fromEntries
-- values
+- getOwnPropertyDescriptor<br />
+- getOwnPropertyNames<br />
+- getOwnPropertySymbols<br />
+- getPrototypeOf<br />
+- keys<br />
+- entries<br />
+- fromEntries<br />
+- values<br />
 </details>
 
 ##### Mutable static methods
 These methods mutate and return the future object passed in. These operations are allowed outside render but prohibited inside render.
 
 <details><summary>List of immutable static</summary>
-- assign
-- seal
-- preventExtensions
-- defineProperties
-- defineProperty
-- freeze
-- setPrototypeOf
+- assign<br />
+- seal<br />
+- preventExtensions<br />
+- defineProperties<br />
+- defineProperty<br />
+- freeze<br />
+- setPrototypeOf<br />
 </details>
 
 ##### Suspend static methods
 These methods require examining the contents of the object and therefore suspend. They can be used inside render but not out.
 
 <details><summary>List of immutable static</summary>
-- isExtensible
-- isFrozen
-- isSealed
+- isExtensible<br />
+- isFrozen<br />
+- isSealed<br />
 </details>
 
 ##### Invalid method
 These methods are invalid globally because their use cases are currently not well understood. We will enable these once we understand how these methods are used, for now please use the methods on the Object constructor.
 
 <details><summary>List of immutable static</summary>
-- is
-- create
+- is<br />
+- create<br />
 </details>
 
 ###### ARGUMENTS
 fn ((obj: object) => object): Deferred callback. Accepts the resolved future object as a parameter. Return value must be an object.  
 futureObj (instanceof FutureObjectCache): future object to apply the deferred callback to
-###### RETURNTS
+###### RETURNS
 future instance with deferred callback (instanceof FutureObjectCache): returns a future object instance with the deferred callback store
 
 #### tap
@@ -544,9 +545,4 @@ futureObj (instanceof FutureObjectCache): future object to apply the deferred ca
 ###### RETURNS
 future instance with deferred callback (instanceof FutureObjectCache): returns the futureObj that was passed in with the deferred callback stored
 
-
-## Definitions
-Operation: a function that processes input and returns a new object/array or the input object/array
-immutable operation: a function that does not mutate the input object/array and returns a new object/array 
-mutable operation: a function that mutates the input object/array
 
