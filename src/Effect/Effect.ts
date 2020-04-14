@@ -1,10 +1,15 @@
 import {  pipe, tap, first, isRendering } from "../internal";
-import {TransparentArrayEffect} from '../internal';
+import {LazyArray} from '../internal';
+import { LazyObject } from "../FutureObject/LazyObject";
+import { isFuture, suspend } from "../utils";
 export const thisMap = new WeakMap;
 // implements IO
+
+
+
 const createEffect = Type => class Effect<T extends object = object> extends Type {
   static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
-  //TODO: write explainer for wrapping privates method in static method
+
   //TODO: swap name and futr argument to make function variadic
   static tap(fn: Function, name: string, futr: Effect) {
     if(!thisMap.has(futr)) {
@@ -13,12 +18,16 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     }
     return thisMap.get(futr).#tap(fn, name, futr);
   }
-  static map(fn: Function, futr: Effect, KlassToConvertTo) {
+
+  // TODO: test curry implentation
+  static map(fn: Function, futr: Effect, ReturnClass = thisMap.get(futr).constructor[Symbol.species]) {
+
+
     if(!thisMap.has(futr)) {
       // TODO: change
       throw new Error("NOT INSTANCE")
     }    
-    return thisMap.get(futr).#map(fn, KlassToConvertTo)
+    return thisMap.get(futr).#map(fn, ReturnClass)
   }
   static run(fn: Function, futr: Effect) {
     if(!thisMap.has(futr)) {
@@ -30,23 +39,30 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
   #deferredFn: Function;
   constructor(deferredFn: Function, childProxy: ProxyHandler<typeof Type> = {}) {
     super();
+    
     //TODO: will there be problem in doing first?
     this.#deferredFn = first(deferredFn);
     const proxy = new Proxy(this, {
       defineProperty: (_target, key, descriptor) => {
         
-        this.#tap(target => Reflect.defineProperty(target,key,descriptor), 'Object.defineProperty', proxy);
+        this.#tap(target => Reflect.defineProperty(target, key, descriptor), 'Object.defineProperty', proxy);
         return true;
       },
       set: (_target, key, value) => {
-        this.#tap(target => Reflect.set(target,key,value), 'set', proxy);
+        
+        this.#tap(target => {
+          if(isFuture(value)) {
+            suspend(value);
+          }
+          Reflect.set(target,key,value);
+        }, 'set', proxy);
         return true;
       },
       deleteProperty: () => {
         throw new Error("deletion on lazy future not permitted")
       },
       get: (target, key, receiver) => {
-        if(typeof this[key] === 'function') { // TODO: what is this?
+        if(typeof this[key] === 'function') {
           return Reflect.get(target, key, receiver);
         }
         return Reflect.get(this.#deferredFn(), key, this.#deferredFn())
@@ -64,7 +80,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
         return Reflect.isExtensible(this.#deferredFn());
       },
       ownKeys: _target => { // TODO: is this right?
-        return new TransparentArrayEffect(() =>  Reflect.ownKeys(this.#deferredFn()))
+        return new LazyArray(() =>  Reflect.ownKeys(this.#deferredFn()))
       },
       preventExtensions: target => {
           // TODO: error message
@@ -72,14 +88,15 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
           return Reflect.preventExtensions(target);
       },
       setPrototypeOf: (_target, proto) => {
-        return this.#tap(target => Reflect.setPrototypeOf(target,proto), 'Object.setPrototypeOf', proxy);
+        this.#tap(target => Reflect.setPrototypeOf(target,proto), 'Object.setPrototypeOf', proxy);
+        return true;
       },
       ...childProxy
     });
     thisMap.set(proxy, this);
     return proxy;
   }
-  #map = function map(nextFn: Function, Klass = this.constructor[Symbol.species]) { 
+  #map = function map(nextFn: Function, Klass) { 
     const newNextFn = (...args) => {
       let result = nextFn(...args);;
       return result
@@ -100,7 +117,7 @@ const createEffect = Type => class Effect<T extends object = object> extends Typ
     this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
     return futr;
   }
-  #run = function run (fn: Function){
+  #run = function run (fn: Function) {
     const newNextFn = (...args) => {
       let result = fn(...args);
       return result

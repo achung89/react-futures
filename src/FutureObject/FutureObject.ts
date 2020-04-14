@@ -1,8 +1,8 @@
 import { promiseStatusStore } from "../shared-properties";
-import {TransparentObjectEffect} from "../internal";
+import {LazyObject} from "../internal";
 import { isRendering } from "../internal";
 
-export class FutureObject<T extends object> extends TransparentObjectEffect<T> {
+export class FutureObject<T extends object> extends LazyObject<T> {
 
   constructor(promise) {
     super(() => {

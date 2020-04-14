@@ -3,7 +3,7 @@ import { ObjectEffect } from '../internal';
 
 const { map, run, tap } = ArrayEffect;
 
-export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements Array<T> {
+export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(deferredFn) { super(deferredFn) }
 
 
@@ -21,7 +21,7 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   immCopyWithin(...args) {return map(target => target.slice().copyWithin(...args), this)}
   immSort(...args) {return map(target => target.slice().sort(...args), this)}
   immFill(...args) {return map(target => target.slice().fill(...args), this)}
-  immSplice() { return map(target => target.slice().splice(...args), this)}
+  immSplice(...args) { return map(target => target.slice().splice(...args), this)}
 
   // mutableMethods  
   splice(...args) {return tap(target => target.splice(...args), 'splice', this)}
@@ -52,19 +52,19 @@ export class TransparentArrayEffect<T> extends ArrayEffect<Array<T>> implements 
   shift(): never{ throw new Error('Invalid method')}
   immUnshift(): never { throw new Error('Invalid method')}
   static of(x) {
-    return new TransparentArrayEffect(() => x);
+    return new LazyArray(() => x);
   }
 
   // suspend on iterator access 
-  [Symbol.iterator]() { return map(target => target[Symbol.iterator](), this, TransparentIteratorEffect)}
-  values() { return map((target) => target.values(), this, TransparentIteratorEffect); }
-  keys() { return map(target => target.keys(), this, TransparentIteratorEffect) }
-  entries() { return map(target => target.entries(), this, TransparentIteratorEffect) }
+  [Symbol.iterator]() { return map(target => target[Symbol.iterator](), this, LazyIterator)}
+  values() { return map((target) => target.values(), this, LazyIterator); }
+  keys() { return map(target => target.keys(), this, LazyIterator) }
+  entries() { return map(target => target.entries(), this, LazyIterator) }
 };
 
-export class TransparentIteratorEffect extends ObjectEffect {
+export class LazyIterator extends ObjectEffect {
   static get [Symbol.species]() {
-    return TransparentIteratorEffect
+    return LazyIterator
   }
   next(...args) {  return ObjectEffect.run(target => target.next(...args), this) } 
   [Symbol.iterator]() {

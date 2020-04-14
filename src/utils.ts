@@ -1,5 +1,5 @@
 import React from 'react';
-import { ObjectEffect, ArrayEffect, thisMap } from './internal';
+import { ObjectEffect, ArrayEffect, thisMap, LazyObject, LazyArray } from './internal';
 export const pipe = (...fns: Function[]) => (val: any = undefined) => fns.reduce( (val, fn) => fn(val), val );
 export const tap = (fn: Function) => (val: any) => { fn(val); return val };
 export const isFuture = proxy => {
@@ -37,4 +37,33 @@ export const first = (fn: Function) => {
     return memo
   }
 };
+// TODO: Write tests for fmap
+export const fmapObj = fn => {
+  const lazyFn = (...args) => new LazyObject(() => fn(...args));
+  lazyFn.name = `lazyFn ${fn.name}`;
+  lazyFn.displayName = `lazyFn ${fn.displayName}`;
+  return lazyFn;
+}
 
+export const fmapArr = (fn, ...rest) => {
+  const lazyFn = (...args) => new LazyArray(() => fn(...args));
+  lazyFn.name = `lazyFn ${fn.name}`;
+  lazyFn.displayName = `lazyFn ${fn.displayName}`;
+  if(rest.length > 0) {
+    return lazyFn(...rest);
+  }
+  return lazyFn;
+}
+
+export const ftap = (fn, futr) => {
+  if(isRendering()) {
+    throw new Error("cannot tap in render")
+  }
+  const lazyFn = futr => (fn(futr), futr);
+  lazyFn.name = `lazyFn ${fn.name}`;
+  lazyFn.displayName = `lazyFn ${fn.displayName}`;
+  if(typeof futr !== 'undefined') {
+    return lazyFn(futr);
+  }
+  return lazyFn;
+}

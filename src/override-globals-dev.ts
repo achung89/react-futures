@@ -1,4 +1,4 @@
-import FutureObject from "./FutureObject/TransparentObjectEffect"
+import FutureObject from "./FutureObject/LazyObject"
 import FutureArray from "./ArrayResource/FutureArr"
 
 

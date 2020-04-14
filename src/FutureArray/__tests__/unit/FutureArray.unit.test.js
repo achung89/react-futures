@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 import { createArrayType } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
-import { TransparentArrayEffect, TransparentIteratorEffect } from '../../TransparentArrayEffect';
+import { LazyArray, LazyIterator } from '../../LazyArray';
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
@@ -176,7 +176,7 @@ describe('Array operations', () => {
     const inRender = () => expect(() => method(futArr)).toThrowError();
 
     const outsideRender = () => {
-      expect(unwrapProxy(method(futArr))).toBeInstanceOf(TransparentArrayEffect)
+      expect(unwrapProxy(method(futArr))).toBeInstanceOf(LazyArray)
     };
     act(() => {
       outsideRender();
@@ -201,7 +201,7 @@ describe('Array operations', () => {
     let created;
     const futrArr = new FutureArr(5);
     expect(() =>{ 
-      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentArrayEffect)
+      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray)
     }).not.toThrow();
     let renderer;
     act(() => {
@@ -216,7 +216,7 @@ describe('Array operations', () => {
 
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
-    expect(unwrapProxy(created)).toBeInstanceOf(TransparentArrayEffect);
+    expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
     expect(created).toEqual(method([2, 3, 4, 5]));
   });
   test.each`
@@ -228,7 +228,7 @@ describe('Array operations', () => {
     let created;
     const futrArr = new FutureArr(5);
     expect(() =>{ 
-      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentIteratorEffect)
+      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyIterator)
     }).not.toThrow();
     let renderer;
     act(() => {
@@ -243,7 +243,7 @@ describe('Array operations', () => {
 
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
-    expect(unwrapProxy(created)).toBeInstanceOf(TransparentIteratorEffect);
+    expect(unwrapProxy(created)).toBeInstanceOf(LazyIterator);
     
     expect([...created]).toEqual([...method([2, 3, 4, 5])]);
   });
@@ -259,7 +259,7 @@ describe('Array operations', () => {
     let created;
     const futrArr = new FutureArr(5);
     expect(() =>{ 
-      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(TransparentArrayEffect)
+      expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray)
     }).not.toThrow();
     let renderer;
     act(() => {
@@ -274,7 +274,7 @@ describe('Array operations', () => {
 
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
-    expect(unwrapProxy(created)).toBeInstanceOf(TransparentArrayEffect);
+    expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
     expect(created).toEqual(expected([2, 3, 4, 5]));
   });
   //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
@@ -356,7 +356,7 @@ describe('Array operations', () => {
     expect(created).not.toBeInstanceOf(FutureArr);
     expect(created).toEqual([2, 3, 4, 5])
 
-    expect(unwrapProxy(FutureArr.of([2, 3, 4]))).toBeInstanceOf(TransparentArrayEffect);
+    expect(unwrapProxy(FutureArr.of([2, 3, 4]))).toBeInstanceOf(LazyArray);
 
   });
   // it('has immutable static @@species', () => {

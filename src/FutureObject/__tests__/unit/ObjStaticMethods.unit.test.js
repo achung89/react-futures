@@ -9,9 +9,9 @@ import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import {TransparentObjectEffect, isEffect} from '../../../internal';
+import {LazyObject, isEffect} from '../../../internal';
 import {unwrapProxy, suspend} from '../../../internal';
-import {TransparentArrayEffect} from '../../../internal';
+import {LazyArray} from '../../../internal';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));	  
 
 
@@ -161,10 +161,10 @@ describe('Object static methods', () => {
     const outsideRender = () => {
       let Constructor;
       if(returnType === 'object') {
-        Constructor = TransparentObjectEffect;
+        Constructor = LazyObject;
       }
       if(returnType === 'array') {
-        Constructor = TransparentArrayEffect;
+        Constructor = LazyArray;
       }
       
       expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor)

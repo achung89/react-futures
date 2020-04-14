@@ -1,9 +1,9 @@
 import { promiseStatusStore } from "../shared-properties";
-import {TransparentArrayEffect} from "../internal";
+import {LazyArray} from "../internal";
 import { isRendering } from "../internal";
 import React from 'react';
-export class FutureArray<T> extends TransparentArrayEffect<T> {
-  static get [Symbol.species]() { return TransparentArrayEffect; }
+export class FutureArray<T> extends LazyArray<T> {
+  static get [Symbol.species]() { return LazyArray; }
 
   constructor(promise) {
     super(() => {

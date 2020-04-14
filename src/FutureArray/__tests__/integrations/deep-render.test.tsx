@@ -378,6 +378,7 @@ describe('Instantiate outside render, deep render scenario', () => {
 });
 
 
+
 const createNestedFuture = numbers =>{
   let numbers2 = new StubFutureArray(7); //[1,2,3,7];
   return numbers
