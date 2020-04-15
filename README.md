@@ -134,7 +134,7 @@ const App = () => {
 
 React Futures tries to provide work arounds for these restrictions. For mutable methods like `array.sort` and `array.reverse`, immutable variants that can be used in render like `array.immSort` and `array.immReverse` are provided. For suspense operations, React Futures provides utilities that can defer suspense operations (see [Using with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc))
 
-There are also operations that are globally prohibited like `array.push` and `array.shift`, click below for a list of all cases
+There are also operations that are globally prohibited like `array.push` and `array.shift`, click below for a full list of restrictions
 
 <details><summary>Complete restriction reference</summary>
 <p>
