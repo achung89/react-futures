@@ -41,6 +41,7 @@ When the requirements for data-fetching increases, the benefits of React Futures
 ```javascript
 
 // With React Futures
+
 import { createArrayType, createObjectType } from 'react-futures';
 
 const toJSON = res => res.json()
@@ -108,7 +109,6 @@ This example demonstrates several benefits of React Futures:
 
 - With React Futures asynchronicity is transparent; you can use a future as you would a normal object or an array.
 - With React Futures the manipulation and construction of asynchronous data can be done **outside of render**, something not possible with other implementations of suspense.
-- Futures allows the code that manipulates and constructs the data to be separated from the code that fetches it.
 - React Futures can be used within the callbacks of other future data operations (see above where `FutureGroups` is used within the callback of `flatMap`)
 
 ## Restrictions
@@ -138,6 +138,7 @@ There are also operations that are globally prohibited like `array.push` and `ar
 
 <details><summary>Complete restriction reference</summary>
 <p>
+<br />
     <i>FutureObjectConstructor represents the class returned by `createObjectType`</i>
 <ul>
   <h3>Suspend methods: suspend inside render, errors outside render</h3>
@@ -225,19 +226,19 @@ Object iteration with native types is typically done using `Object.entries` and 
 
 ```javascript
 import { createObjectType } from 'react-futures';
-const FutureUser = createObjectType(() =>
+const FutrUser = createObjectType(() =>
   fetch('/user').then(res => res.json())
 );
 
-const user = new FutureUser();
+const user = new FutrUser();
 
-const uppercaseUserEntries = FutureUser.entries(user) //lazy
-  .map(([key, value]) => ({
-    // lazy
-    [key]: value.toUpperCase(),
-  }));
+const uppercaseUserEntries = FutrUser.entries(user) //lazy
+                              .map(([key, value]) => ({
+                                // lazy
+                                [key]: value.toUpperCase(),
+                              }));
 
-const uppercaseUser = FutureUser.fromEntries(uppercaseUserEntries); // lazy
+const uppercaseUser = FutrUser.fromEntries(uppercaseUserEntries); // lazy
 ```
 
 ### Cache invalidation
@@ -255,7 +256,7 @@ const App = () => {
 };
 ```
 
-CSince caching is performed using LRU, invalidation is done automatically after the cache reaches a certain size and the key hasn't been used in a while.
+Since caching is performed using LRU, invalidation is done automatically after the cache reaches a certain size and the key hasn't been used in a while.
 
 To manually invalidate a key, you can use the static method `invalidate` on the future constructor.
 
@@ -656,11 +657,76 @@ These methods are invalid globally because their use cases are currently not wel
 - create<br />
 </details>
 
+<br />
+
+### Utility functions
+<hr />
+
+#### fmapArr
+
+fmapArr converts an immutable, array returning function into a lazy callback that returns a future array. 
+
+```javascript
+fmapArr(arrayReturningImmutableFunction) // => lazyArrayReturningImmutableFunction
+```
 ###### ARGUMENTS
 
-fn ((obj: object) => object): Deferred callback. Accepts the resolved future object as a parameter. Return value must be an object.  
-futureObj (instanceof FutureObjectCache): future object to apply the deferred callback to
+arrayReturningImmutableFunction ((...any[]) => any[]): Functon to defer. Return value must be an array.  
 
 ###### RETURNS
 
-future instance with deferred callback (instanceof FutureObjectCache): returns a future object instance with the deferred callback store
+lazyArrayReturningImmutableFunction ((...any) => future array): lazy version of the passed in callback, returns a future array
+
+##### Basic usage
+```javascript
+// `values` takes an object and returns an array of all property values.
+import { values } from 'ramda'
+import { createObjectType, fmapArr } from 'react-futures'
+
+const FutrUser = createObjectType(...);
+const lazyValues = fmapArr(values);
+const user = new FutureUser();
+
+const userProps = lazyValues(user); //=> future array
+```
+```javascript
+import { filter } from 'ramda'
+import { createArrayType, fmapArr } from 'react-futures'
+const FutrFriends = createArrayType(...);
+const FutrCircles = createArrayType(...);
+
+const lazyFilter = fmapArr(filter);
+const friends = new FutrFriends();
+
+const highSchoolFriends = lazyFilter(({age}) => age > 28, friends); //=> future array
+```
+<hr />
+
+#### fmapObj
+
+fmapObj converts an immutable, object returning function into a lazy callback that returns a future object. 
+
+```javascript
+fmapObj(objectReturningImmutableFunction) // => lazyObjectReturningImmutableFunction
+```
+###### ARGUMENTS
+
+objectReturningImmutableFunction ((...any[]) => object): Functon to defer. Return value must be an object.  
+
+###### RETURNS
+
+lazyObjectReturningImmutableFunction ((...any) => future object): lazy version of the passed in callback, returns a future object
+
+##### Basic usage
+```javascript
+// `invertObj` swaps the key and value of an object
+import { invertObj } from 'ramda'
+import { createObjectType, fmapObj } from 'react-futures'
+
+const FutrUser = createObjectType(...);
+const user = new FutrUser();
+const lazyInvertObj = fmapObj(invertObj);
+
+
+const invertedUser = lazyInverObj(user) //=> future object
+```
