@@ -136,7 +136,86 @@ React Futures tries to provide work arounds for these restrictions. For mutable 
 
 There are also operations that are globally prohibited like `array.push` and `array.shift`, click below for a list of all cases
 
-## ADD CHART HERE
+<details><summary>Complete restriction reference</summary>
+<p>
+    <i>FutureObjectConstructor represents the class returned by `createObjectType`</i>
+<ul>
+  <h3>Suspend methods: suspend inside render, errors outside render</h3>
+  futureArray.indexOf()<br />
+  futureArray.includes()<br />
+  futureArray.join()<br />
+  futureArray.lastIndexOf()<br />
+  futureArray.toString()<br />
+  futureArray.toLocaleString()<br />
+  futureArray.forEach()<br />
+  futureArray.find()<br />
+  futureArray.every()<br />
+  futureArray.some()<br />
+  futureArray.findIndex()<br />
+  Object.assign(object, futureObject)<br />
+  Object.getOwnPropertyDescriptors(future, ...rest)<br />
+  Object.getOwnPropertyNames(future)<br />
+  Object.getOwnPropertySymbols(future)<br />
+  Object.isExtensible(future)<br />
+  Object.isFrozen(future)<br />
+  Object.isSealed(future)<br />
+  Object.keys(future)<br />
+  Object.entries(future)<br />
+  Object.values(future)<br />
+  Object.getPrototypeOf(future)<br />
+  FutureObjectConstructor.isExtensible(future)<br />
+  FutureObjectConstructor.isFrozen(future)<br />
+  FutureObjectConstructor.isSealed(future)<br />
+</ul>
+<ul>
+  <h3>Mutable methods: defers outside render, errors inside render</h3>
+  futureArray.splice()<br />
+  futureArray.copyWithin()<br />
+  futureArray.sort()<br />
+  futureArray.unshift()<br />
+  futureArray.reverse()<br />
+  futureArray.fill()<br />
+  Object.preventExtensions(future)<br />
+  Object.defineProperties(future)<br />
+  Object.defineProperty(future)<br />
+  Object.setPrototypeOf(future)<br />
+  FurtureObjectConstructor.assign(future, ...reset)<br />
+  FurtureObjectConstructor.seal(future)<br />
+  FurtureObjectConstructor.preventExtensions(future)<br />
+  FurtureObjectConstructor.defineProperties(future, descriptors)<br />
+  FurtureObjectConstructor.defineProperty(future, prop, descriptor)<br />
+  FurtureObjectConstructor.freeze(future)<br />
+  FurtureObjectConstructor.setPrototypeOf(future)<br />
+</ul>
+<ul>
+  <h3>
+    Immutable methods: defers inside and outside render
+  </h3>
+  futureArray.concat()<br />
+  futureArray.filter()<br />
+  futureArray.slice()<br />
+  futureArray.map()<br />
+  futureArray.reduce()<br />
+  futureArray.reduceRight()<br />
+  futureArray.flat()<br />
+  futureArray.flatMap()<br />
+  futureArray.immReverse()<br />
+  futureArray.immCopyWithin()<br />
+  futureArray.immSort()<br />
+  futureArray.immFill()<br />
+  futureArray.immSplice()<br />
+  FutueObjectConstructor.getOwnPropertyDescriptor(future)<br />
+  FutueObjectConstructor.getOwnPropertyDescriptors(future)<br />
+  FutueObjectConstructor.getOwnPropertyNames(future)<br />
+  FutueObjectConstructor.getOwnPropertySymbols(future)<br />
+  FutueObjectConstructor.getPrototypeOf(future)<br />
+  FutueObjectConstructor.keys(future)<br />
+  FutueObjectConstructor.entries(future)<br />
+  FutueObjectConstructor.values(future)<br />
+
+</ul>
+</p>
+</details>
 
 ## Example snippets
 
@@ -271,7 +350,7 @@ const App = () => {
 
 ### Using with third party libraries (ramda, lodash, etc.)
 
-Third party libraries that examine the inner contents of input parameters will suspend if passed in a future. To prevent this use the `fmapArr`, `fmapObj` and `ftap` functons: `fmapArr` and `fmapObj` for array and object returning immutable operations respectively and `ftap` for mutable operations.
+Third party libraries that examine the inner contents of input parameters will suspend if passed in a future. To prevent this use the `fmapArr`, `fmapObj` and `ftap` functons. `fmapArr` and `fmapObj` convert immutable functions into lazy operations. `fmapArr` is used for array returning immutable operations while `fmapObj` is for object returning immutable functions. `ftap` creates a deferred operation from a mutable function.
 
 Lets take lodash's `_.cloneDeep` function for example. If you pass a future in the function, it would suspend since `_.cloneDeep` iterates through the properties of the future.
 
@@ -294,8 +373,6 @@ const lazyCloneDeep = fmapObj(_.cloneDeep)
 
 const daveTwin = lazyCloneDeep(dave) // => future object
 ```
-
-`fmapObj` are for object returning operations and `fmapArr` are for array returning operations.
 
 For mutable operations, like `_.assign`, use `ftap`. `ftap` takes a function as a first parameter and a future as a curried parameter. It returns the passed in future.
 
@@ -336,10 +413,16 @@ const internationalFriendsSortedByGrade = lazyGetInternationalFriendsSortedByGra
 ### Using with graphql
 
 Coming soon...
+<br />
+<br />
+
 
 ## API Reference
 
+
 ## Future Array
+
+<hr>
 
 ### createArrayType
 
@@ -366,10 +449,14 @@ const fetchBlogs = count =>
   fetch(`/blogs?count=${count}`).then(res => res.json());
 const FutrBlogs = createArrayType(fetchBlogs);
 ```
+<hr />
 
 ### FutureArrayCache
 
 A `FutureArrayCache` constructor is returned from `createArrayType` and is used to instantiate future arrays. It consumes the promise from the promiseReturningFunction and caches the resultes using LRU.
+<br />
+<br />
+
 
 #### constructor
 
@@ -384,6 +471,8 @@ new FutureArrayCache(...argumentsOfPromiseReturningFunction); // => future array
 ###### RETURNS
 
 future array (intanceof `FutureArrayCache`): a future with the same interface as an array, except for added variants `immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`
+<br />
+<br />
 
 #### Instance methods
 
@@ -453,8 +542,10 @@ instantiantes a future array with the same arguments as the constructor
 ```javascript
 FutureArrayCache.of(...argumentsOfPromiseReturningFunction); // => future array instance
 ```
+<br />
 
 ## Future Object
+<hr />
 
 ### createObjectType
 
@@ -480,6 +571,8 @@ import { createObjectType } from 'react-future';
 const fetchUser = name => fetch(`/user?=${name}`).then(res => res.json());
 const futureUser = createArrayType(fetchUser);
 ```
+
+<hr />
 
 ### FutureObjectCache
 
@@ -549,7 +642,7 @@ These methods mutate and return the future object passed in. These operations ar
 These methods require examining the contents of the object and therefore suspend. They can be used inside render but not out.
 
 <details><summary>List of immutable static</summary>
-- isExtensible<br />
+###### - isExtensible<br />
 - isFrozen<br />
 - isSealed<br />
 </details>
@@ -558,7 +651,7 @@ These methods require examining the contents of the object and therefore suspend
 
 These methods are invalid globally because their use cases are currently not well understood. We will enable these once we understand how these methods are used, for now please use the methods on the Object constructor.
 
-<details><summary>List of immutable static</summary>
+<details><summary>List of invalid static</summary>
 - is<br />
 - create<br />
 </details>
@@ -571,20 +664,3 @@ futureObj (instanceof FutureObjectCache): future object to apply the deferred ca
 ###### RETURNS
 
 future instance with deferred callback (instanceof FutureObjectCache): returns a future object instance with the deferred callback store
-
-#### tap
-
-Takes a mutable function and a future object instance. The mutable function must mutate the object and return it. The operation is deferred until after the promise has been resolved. Can be performed outside render but not in.
-
-```javascript
-FutureObjectCache.tap(fn, futureObj); // => future instance with deferred callback
-```
-
-###### ARGUMENTS
-
-fn ((arr: any[]) => any[]): Deferred callback. Accepts the resolved future object as a parameter. Return value must be the same reference to the object that was passed in.  
-futureObj (instanceof FutureObjectCache): future object to apply the deferred callback to
-
-###### RETURNS
-
-future instance with deferred callback (instanceof FutureObjectCache): returns the futureObj that was passed in with the deferred callback stored

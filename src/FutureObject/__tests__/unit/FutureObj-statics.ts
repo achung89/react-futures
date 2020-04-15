@@ -10,6 +10,7 @@ const defineProperty = obj =>
 const defineProperties = obj =>
   Object.defineProperties(obj, { foo: { writable: false } });
 const setPrototypeOf = obj => Object.setPrototypeOf(obj, FutureArray);
+const assign_firstParam = obj => Object.assign(obj, { bar: 'bar' });
 
 const getOwnPropertyDescriptorFuture = obj =>
   FutureObject.getOwnPropertyDescriptor(obj, 'foo');
@@ -99,4 +100,5 @@ export const invalidObjectStaticEach = test.each`
   staticMethod
   ${'seal'}
   ${'freeze'}
+  ${assign_firstParam}
 `;
