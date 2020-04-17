@@ -1,5 +1,5 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { createArrayType } from '../../../index';
+import { arrayType } from '../../../index';
 
 import React from 'react';
 import {
@@ -12,7 +12,7 @@ jest.useFakeTimers();
 let StubFutureArray;
 
 beforeEach(() => {
-  StubFutureArray = createArrayType(
+  StubFutureArray = arrayType(
     val =>
       new Promise((res, rej) => {
         setTimeout(() => {
