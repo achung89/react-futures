@@ -52,33 +52,7 @@ export const first = (fn: Function) => {
     return memo;
   };
 };
-// TODO: Write tests for fmap
-export const fmapObj = fn => {
-  const lazyFn = (...args) => new LazyObject(() => fn(...args));
-  lazyFn.name = `lazyFn ${fn.name}`;
-  lazyFn.displayName = `lazyFn ${fn.displayName}`;
-  return lazyFn;
-};
 
-export const fmapArr = (fn, ...rest) => {
-  const lazyFn = (...args) => new LazyArray(() => fn(...args));
-  lazyFn.name = `lazyFn ${fn.name}`;
-  lazyFn.displayName = `lazyFn ${fn.displayName}`;
-  if (rest.length > 0) {
-    return lazyFn(...rest);
-  }
-  return lazyFn;
-};
+export const lazyArray = fn =>  new LazyArray(fn)
 
-export const ftap = (fn, futr) => {
-  if (isRendering()) {
-    throw new Error('cannot tap in render');
-  }
-  const lazyFn = futr => (fn(futr), futr);
-  lazyFn.name = `lazyFn ${fn.name}`;
-  lazyFn.displayName = `lazyFn ${fn.displayName}`;
-  if (typeof futr !== 'undefined') {
-    return lazyFn(futr);
-  }
-  return lazyFn;
-};
+export const lazyObject = fn => new LazyObject(fn);

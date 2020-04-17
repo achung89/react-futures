@@ -2,7 +2,7 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
 import React, { Suspense } from 'react';
-import { createObjectType } from '../../../index';
+import { objectType } from '../../../index';
 import {
   getterFutureObjectStaticEach,
   noopFutureObjectStaticEach,
@@ -78,7 +78,7 @@ beforeEach(() => {
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
-  FutureObj = createObjectType(fetchJson);
+  FutureObj = objectType(fetchJson);
 });
 
 afterEach(() => {
