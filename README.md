@@ -42,13 +42,7 @@ When the requirements for data-fetching increases, the benefits of React Futures
 
 
 ```javascript
-
 // With React Futures
-
-// fetch-data.js
-
-// With React Futures
-
 import { arrayType, objectType } from 'react-futures';
 
 const FutrUser = objectType(fetchUser)
@@ -90,8 +84,17 @@ const ActiveGroups = () => {
   return <div> { groups.map(group => <div>{group.name}</div>) } </div>
 }
 
-// With async await
 
+
+
+
+
+
+
+
+
+
+// With async await
 const App = () => {
   const [user, setUser] = useState({})
 
