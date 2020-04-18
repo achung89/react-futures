@@ -6,7 +6,7 @@ export class FutureObject<T extends object> extends LazyObject<T> {
   constructor(promise) {
     super(() => {
       let meta = promiseStatusStore.get(promise);
-
+      console.log({meta})
       if (typeof meta !== 'undefined') {
         var { status, value } = meta;
       } else {
@@ -21,6 +21,7 @@ export class FutureObject<T extends object> extends LazyObject<T> {
         return value;
       }
       if (status === 'pending') {
+        //TODO: do this even if completed
         if (!isRendering()) {
           // TODO: add custom error message per method
           throw new Error('cannot suspend outside render');

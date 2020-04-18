@@ -407,7 +407,7 @@ describe('Array operations', () => {
     expect(created).not.toBeInstanceOf(FutureArr);
     expect(created).toEqual([2, 3, 4, 5]);
 
-    expect(unwrapProxy(FutureArr.of([2, 3, 4]))).toBeInstanceOf(LazyArray);
+    expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(LazyArray);
   });
   // it('has immutable static @@species', () => {
   //   let clss = ArrayResource[Symbol.species];

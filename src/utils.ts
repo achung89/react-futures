@@ -21,13 +21,7 @@ export const isFuture = proxy => {
 //TODO: do
 export const isComplete = futr => {};
 export const unwrapProxy = proxy => thisMap.get(proxy);
-//TODO: don't lookup if completed
-export const suspend = futr => {
-  const internalProp = Symbol('internalProp');
-  // trigger suspend
-  futr[internalProp];
-  return futr;
-};
+
 export const isRendering = () => {
   var dispatcher =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -56,3 +50,11 @@ export const first = (fn: Function) => {
 export const lazyArray = fn =>  new LazyArray(fn)
 
 export const lazyObject = fn => new LazyObject(fn);
+
+export const getRaw = future => {
+  if ( !thisMap.has(future) ) {
+    return future;
+  }
+  const instance = thisMap.get(future) 
+  return instance.constructor.run(id => id, future);
+}

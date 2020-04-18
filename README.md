@@ -24,7 +24,7 @@ import { arrayType } from 'react-futures';
 const FutureBlogs = arrayType(user => fetch(`/blogs?user=${user}`).then(res => res.json()))
 
 const Blogs = ({ user }) => {
-  const blogs =  new FutureBlogs(user)// prefetches here
+  const blogs =  new FutureBlogs(user)// fetch here
                   .filter( blog => blog.tags.includes('sports')) // lazy
                   .slice(0,10) // lazy
 
@@ -40,136 +40,128 @@ When the requirements for data-fetching increases, the benefits of React Futures
 
 ### Separating fetching and construction from render
 
-
 ```javascript
 // With React Futures
-import { arrayType, objectType } from 'react-futures';
+import { arrayType, objectType, lazyArray } from "react-futures";
 
-const FutrUser = objectType(fetchUser)
-const FutrFriends = arrayType(fetchFriendsOfUser)
-const FutrGroups = arrayType(fetchGroupsBelongingToUser)
+const FutrUser = objectType(fetchUser);
+const FutrGroups = arrayType(fetchGroupsBelongingToUser);
 const FutrPosts = arrayType(fetchGroupPosts);
 
-const user = new FutrUser('Tom');
-const closeFriends = new FutrFriends(user)
-                      .map( friend => new FutrUser(friend) ) // use FutrUser to get complete profile of friend
-                      .filter( friend => friend.age === user.age )
+const user = new FutrUser("Tom");
 
-const activeGroups = new FutrGroups(user)
-                        .filter( group => {
-                          const groupPosts = new FutrPosts(group); 
-                          return groupPosts.some(post => post.daysAgoPosted < 3)
-                        });
-
+// Example of a complex data-fetching requirement. We are getting active groups by
+// fetching the posts of each group and seeing if there are posts in the last three days
+const activeGroups = new FutrGroups(user).filter(group => {
+  const groupPosts = new FutrPosts(group); //fetch posts
+  return groupPosts.some(post => post.daysAgoPosted < 3);
+});
 
 const App = () => {
-  return <>
-            <h3>{user.firstName} {user.lastName}</h3>
-            <CloseFriends />
-            <ActiveGroups  />
-          </>
-}
-const CloseFriends = () => {
-  const [closeFriendsState, setCloseFriends] = useState(closeFriends)
-
-  return <>
-    <ul>
-      {closeFriendsState.map(({name}) => <li>{name}</li>))}
-    </ul>
-    <AddFriend onClick={name => setCloseFriends([{name}, ...closeFriendsState])}> AddFriend </AddFriend>
-  </>
-}
+  return (
+    <>
+      <h3>
+        {user.firstName} {user.lastName}
+      </h3>
+      <ActiveGroups />
+    </>
+  );
+};
 
 const ActiveGroups = () => {
-  return <div> { groups.map(group => <div>{group.name}</div>) } </div>
-}
-
-
-
-
-
-
-
-
-
-
+  const [groups, setGroups] = useState(activeGroups);
+  return (
+    <>
+      <ul>
+        {groups.map(group => (
+          <li>{group.name}</liu>
+        ))}
+      </ul>
+      <AddGroup
+        onClick={name => {
+          // spread operator is a getter, so it'll suspend future. To avoid this use `lazyArray`
+          const newGroups = lazyArray(() => [{ name }, ...groups]); 
+          setCloseFriends(newGroups);
+        }}
+      >
+        Add Group
+      </AddGroup>
+    </>
+  );
+};
 
 // With async await
 const App = () => {
-  const [user, setUser] = useState({})
+  const [user, setUser] = useState({});
 
   useEffect(() => {
     const getUser = async () => {
-      const user = await fetchUser('Tom');
+      const user = await fetchUser("Tom");
+      setUser(user);
+    };
+    getUser();
+  }, []);
 
-      setUser(user)
-    }
-    getUser()
-  }, [])
-
-  return JSON.stringify(user) === '{}' 
-          ? <div>Loading...</div>
-          : <>
-              <h3>{user.firstName} {user.lastName}</h3>
-              <CloseFriends user={user} />
-              <ActiveGroups user={user} />
-            </>;
-};
-
-const CloseFriends = ({ user }) => {
-  const [closeFriendsState, setCloseFriends] = useState([])
-
-  useEffect(() => {
-    const getCloseFriends = async () => {
-      let friends = await fetchFriends(user);
-      let closeFriends = await Promise.all(friends.map(fetchUser))
-      closeFriends = closeFriends.filter(friend => friend.age === user.age)
-
-      setCloseFriends(closeFriends)
-    }
-    getCloseFriends()
-  });
-
-  return closeFriends.length > 0
-          ? <>
-              <ul>
-                {closeFriendsState.map(({name}) => <li>{name}</li>))}
-              </ul>
-              <AddFriend onClick={name => setCloseFriends([{name}, ...friends])}> AddFriend </AddFriend>
-            </>
-          : <div>Loading...</div>;
+  return JSON.stringify(user) === "{}" ? (
+    <div>Loading...</div>
+  ) : (
+    <>
+      <h3>
+        {user.firstName} {user.lastName}
+      </h3>
+      <CloseFriends user={user} />
+      <ActiveGroups user={user} />
+    </>
+  );
 };
 
 const ActiveGroups = ({ user }) => {
   const [activeGroups, setActiveGroups] = useState([]);
   useEffect(() => {
     const getActiveGroups = async () => {
-
       let groups = await fetchGroupsBelongingToUser(user);
-      let groupPosts = await Promise.all(groups.map( fetchGroupPosts )
-      groups = groups.filter( (group, index) => {
-        const wasPostedOnRecently = groupPosts[index].some(post => post.daysAgoPosted < 3)
+      const groupPosts = await Promise.all(groups.map(fetchGroupPosts));
+      groups = groups.filter((group, index) => {
+        const wasPostedOnRecently = groupPosts[index].some(
+          post => post.daysAgoPosted < 3
+        );
         return wasPostedOnRecently;
-      })
+      });
 
-      setActiveGroups(groups)
-    }
-    getActiveGroups
-  })
-  return groups.length > 0
-          ? <div> { groups.map(group => <div>{group.name}</div>) } </div>
-          : <div>Loading...</div>
-}
+      setActiveGroups(groups);
+    };
+    getActiveGroups();
+  });
+  return groups.length > 0 ? (
+    <>
+      <div>
+        {groups.map(group => (
+          <div>{group.name}</div>
+        ))}
+      </div>
+      <AddGroup
+        onClick={name => {
+          const newGroups = [{ name }, ...groups];
+          setCloseFriends(newGroups);
+        }}
+      >
+        Add Group
+      </AddGroup>
+    </>
+  ) : (
+    <div>Loading...</div>
+  );
+};
 ```
 
 This example demonstrates several benefits of React Futures:
 
-- With React Futures asynchronicity is transparent; you can use a future as you would a normal object or an array. We can even use React Futures as values in other future operations. For example in the snippet above, `FutrUser` can be used within the `map` callback in constructing `closeFriends` and `FutrPosts` can be used within the `filter` callback in constructing `activeGroups`. In the async/await example we need to wait for the data to fetch before we can use them for these operations. 
-- With React Futures the manipulation and construction of asynchronous data can be done completely **outside render** if needed. None of the construction code needs to be located inside the component, clearing up the component code. 
+- With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can even be used in other future operations, see how the code for collecting `activeGroups` using react futures is so much cleaner than that of async/await because asynchronous values can be used synchronously.
+- With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component, clearing up the code.
 
 ## Restrictions
 
-To achieve transparency, React Futures places restrictions on certain type of operations: mutable operations are not allowed inside of render and suspend operations are not allowed outside of render.
+To achieve transparency, React Futures places restrictions on certain operations: mutable operations are disallowed inside render and suspend operations are disallowed outside render.
 
 Ex.
 
@@ -188,7 +180,7 @@ const App = () => {
 
 ```
 
-React Futures tries to provide work arounds for these restrictions. For mutable methods like `array.sort` and `array.reverse`, immutable variants that can be used in render like `array.immSort` and `array.immReverse` are provided. For suspense operations, React Futures provides utilities that can defer suspense operations (see [Using with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc))
+To accomodate these use cases, React Futures provides helper functions. For mutable methods like `array.sort` and `array.reverse`, immutable variants like `array.immSort` and `array.immReverse` are provided on futures. For suspense operations, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render))
 
 There are also operations that are globally prohibited like `array.push` and `array.shift`, click below for a full list of restrictions
 
@@ -197,7 +189,7 @@ There are also operations that are globally prohibited like `array.push` and `ar
 <br />
     <i>FutureObjectConstructor represents the class returned by `objectType`</i>
 <ul>
-  <h3>Suspend methods: suspend inside render, errors outside render</h3>
+  <h3>Suspend methods: disallowed outside render</h3>
   futureArray.indexOf()<br />
   futureArray.includes()<br />
   futureArray.join()<br />
@@ -225,7 +217,7 @@ There are also operations that are globally prohibited like `array.push` and `ar
   FutureObjectConstructor.isSealed(future)<br />
 </ul>
 <ul>
-  <h3>Mutable methods: defers outside render, errors inside render</h3>
+  <h3>Mutable methods: disallowed inside render</h3>
   futureArray.splice()<br />
   futureArray.copyWithin()<br />
   futureArray.sort()<br />
@@ -246,7 +238,7 @@ There are also operations that are globally prohibited like `array.push` and `ar
 </ul>
 <ul>
   <h3>
-    Immutable methods: defers inside and outside render
+    Immutable methods: allowed anywhere
   </h3>
   futureArray.concat()<br />
   futureArray.filter()<br />
@@ -271,6 +263,20 @@ There are also operations that are globally prohibited like `array.push` and `ar
   FutueObjectConstructor.values(future)<br />
 
 </ul>
+
+<ul>
+  <h3>
+    Invalid methods: disallowed globally (if you feel strongly that these shouldn't error, please submit an issue explaining your use case)
+  </h3> 
+  FutureObjectConstructor.create 
+  FutureObjectConstructor.is
+  futureArray.push
+  futureArray.pop
+  futureArray.shift
+  futureArray.immUnshift
+  delete futureObject
+</ul>
+
 </p>
 </details>
 
@@ -278,23 +284,165 @@ There are also operations that are globally prohibited like `array.push` and `ar
 
 ### Object iteration
 
-Object iteration with native types is typically done using `Object.entries` and `Object.fromEntries`, but `Object.entries` with a future will suspend, making iteration outside of render impossible. To allow this type of iteration React Futures puts a deferred version of `entries` and `fromEntries` on the future object constructors.
+Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, but `Object.entries` with a future will suspend, making iteration outside render impossible. To allow this, React Futures puts a deferred version of `entries` and `fromEntries` on the future object constructors.
 
 ```javascript
-import { objectType } from 'react-futures';
-const FutrUser = objectType(() =>
-  fetch('/user').then(res => res.json())
-);
+import { objectType } from "react-futures";
+const FutrUser = objectType(() => fetch("/user").then(res => res.json()));
 
 const user = new FutrUser();
 
 const uppercaseUserEntries = FutrUser.entries(user) //lazy
-                              .map(([key, value]) => ({
-                                // lazy
+                              .map(([key, value]) => ({ // lazy
                                 [key]: value.toUpperCase(),
                               }));
 
 const uppercaseUser = FutrUser.fromEntries(uppercaseUserEntries); // lazy
+```
+
+### Suspense operations outside render
+
+Sometimes it's useful to access properties on a future or perform a suspense operation outside of render. An example of this is transforming properties on a future. However, accessing a property will throw an error if done outside render.
+
+```javascript
+const dave = new FutrUser("Dave");
+
+dave.props = dave.props // Error: suspense operations not allowed outside render
+              .sort((a, b) => a - b);
+```
+
+To achieve this, use the `lazyArray` or `lazyObject` to suspend evaluation.
+
+```javascript
+import { objectType, lazyArray } from "react-futures";
+
+const FutrUser = objectType(fetchUser);
+const dave = new FutrUser("Dave");
+
+dave.props = lazyArray(() => dave.props) //=> future array
+              .sort((a, b) => a - b); // lazy
+```
+
+The above snippet suspends evaluation of the `dave.props` getter until a suspense operation is performed on `dave.props` inside render. `lazyArray` returns a future array and an `lazyObject` returns a future object.
+
+Sometimes performing a suspense operation is inside an `on` handler is desired, but suspense operations are illegal in `on` handlers as well.
+
+```javascript
+const dave = new FutrUser("Dave");
+
+const App = () => {
+  const [user, setUser] = useState(dave);
+  return (
+    <>
+      <input
+        type="text"
+        onChange={e => {
+          setUser({ ...user, name: e.target.value }); // spread operator on `user` errors since spreading is a suspense operation
+        }}
+      />
+    </>
+  );
+};
+```
+
+To accomplish this, we can use the `lazyObject` from above, or we can use the `getRaw` function.
+
+```javascript
+// Using `lazyObject`
+const dave = new FutrUser('Dave');
+
+const App = () => {
+  const [user, setUser] = useState(dave)
+
+  return <>
+  <input type="text" onChange={e => {
+    const newUser = lazyObject(() => ({...user, name: e.target.value}))) //=> future object
+    setUser(newUser)
+  }} />
+  </>
+}
+
+
+
+// Using `getRaw`
+import {getRaw} from 'react-futures';
+const dave = new FutrUser('Dave');
+
+const App = () => {
+  const [user, setUser] = useState(getRaw(dave)) // suspends here and gets raw value
+
+  return <>
+  <input type="text" onChange={e => {
+    const newUser = {...user, name: e.target.value} // can spread, since it's just a normal object
+    setUser(newUser)
+  }} />
+  </>
+}
+
+```
+
+### Using with third party libraries (ramda, lodash, etc.)
+
+Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArr` and `lazyObj`. These methods lazyily evaluate array and object returning functions respectively.
+
+Lets take a look at an example using lodash's `_.cloneDeep`. If you pass a future in the function, it would suspend since `_.cloneDeep` iterates through the properties of the future.
+
+```javascript
+const dave = new FutureUser("Dave");
+
+const daveTwin = _.cloneDeep(dave); // Error: can not suspend outside render
+```
+
+To allow this, use the `lazyObj` to defer evaluation of `_.cloneDeep`
+
+```javascript
+import _ from 'lodash'
+import {lazyObject, objectType} from 'react-futures'
+
+const FutrUser = objectType(...);
+
+const dave = new FutureUser('Dave');
+
+const daveTwin = lazyObject(() => _.cloneDeep(dave)) //=> future object
+
+// continue iterating as you would a future
+const result = FutrUser.entries(daveTwin) 
+                       .map(...)
+```
+
+`lazyObject` defers the evaluation of the object returning operation until a suspense operation takes place.
+
+`lazyArray` works the same way for arrays
+
+```javascript
+import { lazyArray, arrayType } from 'react-futures'
+import { zip } from 'lamda'
+
+const FutrFriends = arrayType(...)
+const FutrGroups = arrayType(...)
+
+const [friends, groups] = [new FutrFriends, new FutrGroups];
+
+const friendsAndGroups = lazyArray(() => zip(friends, groups)) //=> future array
+```
+
+To defer function composition, you can use ramda's pipeWith or composeWith to wrap callbacks in `lazyObject` and `lazyArray`
+
+```javascript
+import { pipeWith, filter, sort } from 'ramda';
+import { createArrayType, lazyArray } from 'react-futures';
+
+const FutrFriends = createArrayType(() => fetch(...))
+
+const pipeFuture = pipeWith((fn, futr) => lazyArray(() => fn(futr)))
+
+const lazyInternationalFriendsByGrade = pipeFuture(
+  filter(friend => friend.nationality !== 'USA'),
+  sort(function(a, b) { return a.grade - b.grade; })
+)
+
+const internationalFriendsByGrade = lazyInternationalFriendsByGrade( new FutrFriends() ) // => future array
+
 ```
 
 ### Cache invalidation
@@ -302,13 +450,13 @@ const uppercaseUser = FutrUser.fromEntries(uppercaseUserEntries); // lazy
 React Futures use values passed into a future constructor as keys for an in-memory cache, so multiple instantiations with the same constructor will pull from the cache
 
 ```javascript
-const dave = new FutureUser('Dave'); // fetches
-const jen = new FutureUser('Jen'); // fetches
+const dave = new FutureUser("Dave"); // fetches
+const jen = new FutureUser("Jen"); // fetches
 
 const App = () => {
-  const dave = new Future('Dave'); // pulls from cache
-  const jen = new Future('Jen'); // pulls from cache
-  const harold = new Future('Harold'); // fetches
+  const dave = new Future("Dave"); // pulls from cache
+  const jen = new Future("Jen"); // pulls from cache
+  const harold = new Future("Harold"); // fetches
 };
 ```
 
@@ -317,23 +465,23 @@ Since caching is performed using LRU, invalidation is done automatically after t
 To manually invalidate a key, you can use the static method `invalidate` on the future constructor.
 
 ```javascript
-const dave = new FutrUser('Dave'); // fetches;
+const dave = new FutrUser("Dave"); // fetches;
 
 const App = () => {
-  let dave = new FutrUser('Dave'); // pulls from cache
+  let dave = new FutrUser("Dave"); // pulls from cache
 
-  FutureUser.invalidate('Dave'); // deletes 'Dave' from cache
+  FutureUser.invalidate("Dave"); // deletes 'Dave' from cache
 
-  dave = new FutrUser('Dave'); // fetches
+  dave = new FutrUser("Dave"); // fetches
 };
 ```
 
 Sometimes it's useful to clear the entire cache, like on a page refresh. This can be accomplished using the static method `reset` on the future constructor
 
 ```javascript
-const dave = new FutrUser('Dave');
-const jen = new FutrUser('Jen');
-const harold = new FutrUser('Harold');
+const dave = new FutrUser("Dave");
+const jen = new FutrUser("Jen");
+const harold = new FutrUser("Harold");
 const App = () => {
   useEffect(() => {
     return () => FutrUser.reset(); // clears 'Harold', 'Jen', and 'Dave' from cache
@@ -405,79 +553,13 @@ const App = () => {
 }
 ```
 
-### Using with third party libraries (ramda, lodash, etc.)
-
-Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArr` and `lazyObj`. These methods lazyily evaluate array and object returning functions respectively.
-
-Lets take a look at an example using lodash's `_.cloneDeep`. If you pass a future in the function, it would suspend since `_.cloneDeep` iterates through the properties of the future.
-
-```javascript
-const dave = new FutureUser('Dave');
-
-const daveTwin = _.cloneDeep(dave); // Error: can not suspend outside render
-```
-
-To allow this, use the `lazyObj` to defer evaluation of `_.cloneDeep`
-
-```javascript
-import _ from 'lodash'
-import {lazyObject, objectType} from 'react-futures'
-
-const FutrUser = objectType(...);
-
-const dave = new FutureUser('Dave');
-
-const daveTwin = lazyObj(() => _.cloneDeep(dave)) //=> future object
-
-const result = FutrUser.entries(daveTwin)
-                       .map(...)
-```
-`lazyObject` defers the evaluation of the object returning operation until a suspense operation takes place. 
-
-`lazyArray` works the same way for array returning operations
-
-```javascript
-import { lazyArray, arrayType } from 'react-futures'
-import { zip } from 'lamda'
-
-const FutrFriends = arrayType(...)
-const FutrGroups = arrayType(...)
-
-const [friends, groups] = [new FutrFriends, new FutrGroups];
-
-const friendsAndGroups = lazyArray(() => zip(friends, groups)) //=> future array
-
-```
-
-To defer function composition, you can use ramda's pipeWith or composeWith to wrap callbacks in `lazyObject` and `lazyArray`
-
-
-
-```javascript
-import { pipeWith, filter, sort } from 'ramda';
-import { createArrayType, fmapArr } from 'react-futures';
-
-const FutrFriends = createArrayType(() => fetch(...))
-
-const pipeFuture = pipeWith((fn, futr) => lazyArray(() => fn(futr)))
-
-const lazyGetInternationalFriendsSortedByGrade = pipeFuture(
-  filter(friend => friend.nationality !== 'USA'),
-  sort(function(a, b) { return a.grade - b.grade; })
-)
-
-const internationalFriendsSortedByGrade = lazyGetInternationalFriendsSortedByGrade( new FutrFriends() ) // => future array
-
-```
 ### Using with graphql
 
 Coming soon...
 <br />
 <br />
 
-
 ## API Reference
-
 
 ## Future Array
 
@@ -502,12 +584,13 @@ future array constructor (class FutureArrayCache): future array constructor
 ##### Basic Usage
 
 ```javascript
-import { arrayType } from 'react-future';
+import { arrayType } from "react-future";
 
 const fetchBlogs = count =>
   fetch(`/blogs?count=${count}`).then(res => res.json());
 const FutrBlogs = arrayType(fetchBlogs);
 ```
+
 <hr />
 
 ### FutureArrayCache
@@ -515,7 +598,6 @@ const FutrBlogs = arrayType(fetchBlogs);
 A `FutureArrayCache` constructor is returned from `arrayType` and is used to instantiate future arrays. It consumes the promise from the promiseReturningFunction and caches the resultes using LRU.
 <br />
 <br />
-
 
 #### constructor
 
@@ -601,9 +683,11 @@ instantiantes a future array with the same arguments as the constructor
 ```javascript
 FutureArrayCache.of(...argumentsOfPromiseReturningFunction); // => future array instance
 ```
+
 <br />
 
 ## Future Object
+
 <hr />
 
 ### objectType
@@ -625,7 +709,7 @@ future array constructor (class FutureArrayCache): future array constructor
 ##### Basic Usage
 
 ```javascript
-import { objectType } from 'react-future';
+import { objectType } from "react-future";
 
 const fetchUser = name => fetch(`/user?=${name}`).then(res => res.json());
 const futureUser = arrayType(fetchUser);
@@ -718,35 +802,38 @@ These methods are invalid globally because their use cases are currently not wel
 <br />
 
 ### Utility functions
+
 <hr />
 
-#### fmapArr
+#### lazyArray
 
-fmapArr converts an immutable, array returning function into a lazy callback that returns a future array. 
+`lazyArray` converts an array returning function into a lazy future returning function.
 
 ```javascript
-fmapArr(arrayReturningImmutableFunction) // => lazyArrayReturningImmutableFunction
+fmapArr(arrayReturningFunction); // => lazyArrayReturningImmutableFunction
 ```
+
 ###### ARGUMENTS
 
-arrayReturningImmutableFunction ((...any[]) => any[]): Functon to defer. Return value must be an array.  
+arrayReturningFunction ((...any[]) => any[]): lazy callback, requires array as return value
 
 ###### RETURNS
 
-lazyArrayReturningImmutableFunction ((...any) => future array): lazy version of the passed in callback, returns a future array
+future array (insanceof LazyArray): future array result of callback
 
 ##### Basic usage
+
 ```javascript
-// `values` takes an object and returns an array of all property values.
+// `values` takes an object and returns an array of property values.
 import { values } from 'ramda'
-import { objectType, fmapArr } from 'react-futures'
+import { objectType, lazyArray } from 'react-futures'
 
 const FutrUser = objectType(...);
-const lazyValues = fmapArr(values);
-const user = new FutureUser();
+const user = new FutrUser();
 
-const userProps = lazyValues(user); //=> future array
+const userProps = lazyValues(() => values(user)); //=> future array
 ```
+
 ```javascript
 import { filter } from 'ramda'
 import { arrayType, fmapArr } from 'react-futures'
@@ -758,33 +845,66 @@ const friends = new FutrFriends();
 
 const highSchoolFriends = lazyFilter(({age}) => age > 28, friends); //=> future array
 ```
+
 <hr />
 
-#### fmapObj
+#### lazyObject
 
-fmapObj converts an immutable, object returning function into a lazy callback that returns a future object. 
+`lazyObject` converts an object returning function into a lazy future object returning function.
 
 ```javascript
-fmapObj(objectReturningImmutableFunction) // => lazyObjectReturningImmutableFunction
+lazyObject(objectReturningFunction); // => future object
 ```
+
 ###### ARGUMENTS
 
-objectReturningImmutableFunction ((...any[]) => object): Functon to defer. Return value must be an object.  
+objectReturningFunction ((...any[]) => object): lazy callback, requires object as return value
 
 ###### RETURNS
 
-lazyObjectReturningImmutableFunction ((...any) => future object): lazy version of the passed in callback, returns a future object
+future object (instanceof LazyObject): future object result of callback
 
 ##### Basic usage
+
 ```javascript
 // `invertObj` swaps the key and value of an object
 import { invertObj } from 'ramda'
-import { objectType, fmapObj } from 'react-futures'
+import { objectType, lazyObject } from 'react-futures'
 
 const FutrUser = objectType(...);
 const user = new FutrUser();
-const lazyInvertObj = fmapObj(invertObj);
 
 
-const invertedUser = lazyInverObj(user) //=> future object
+const invertedUser = lazyObject(() => inverObj(user)) //=> future object
+```
+
+#### getRaw
+
+`getRaw` takes a future as a parameter and suspends with raw value.
+
+```javascript
+getRaw(future) // => raw value of future
+```
+
+###### ARGUMENTS
+
+future (instanceof Effect): any future
+
+###### RETURNS
+
+raw value of future (instanceof object|array): raw valueof future
+
+##### Basic usage
+```javascript
+import {getRaw} from 'react-futures';
+const dave = new FutrUser('Dave');
+
+const App = () => {
+  const rawDave = getRaw(dave) // suspends here and gets raw value
+
+  return <>
+    {rawDave.name}
+  </>
+}
+
 ```

@@ -2,7 +2,7 @@ import { isRendering } from './internal';
 import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
-import * as LRU from 'lru-cache';
+import LRU from 'lru-cache';
 import { LazyArray } from './internal';
 import { LazyObject, isFuture } from './internal';
 
