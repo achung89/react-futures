@@ -14,7 +14,7 @@ yarn add react-futures
 
 ## Explainer
 
-React Futures is a collection of datatypes that allow syncronous-looking data manipulation of asynchronous data by suspending only when needed and deferring data manipulation until after the promise resolves.
+React Futures is a collection of types that allow syncronous-looking data manipulation of asynchronous data by suspending only when needed and deferring data manipulation until after the promise resolves.
 
 Ex.
 
@@ -34,7 +34,7 @@ const Blogs = ({ user }) => {
 }
 ```
 
-React Futures follows the "wait-by-necessity" principle, meaning it defers suspension until the code examines the content of the data. Only after the suspense is resolved are operations like `map`, `slice`, and `filter` applied. This simplifies data construction by hiding data fetching implementation.
+React Futures follows the "wait-by-necessity" principle; it defers suspension until the code examines the content of the data. Only after suspense resolves are operations like `map`, `slice`, and `filter` applied. This simplifies data construction by hiding data fetching implementation.
 
 When the requirements for data-fetching increases, the benefits of React Futures become clearer. With React Futures the construction and consumption of the data is decoupled from the fetching of it, allowing for clear separation of concerns.
 
@@ -132,6 +132,7 @@ const ActiveGroups = ({ user }) => {
     };
     getActiveGroups();
   });
+
   return groups.length > 0 ? (
     <>
       <div>
@@ -156,7 +157,7 @@ const ActiveGroups = ({ user }) => {
 
 This example demonstrates several benefits of React Futures:
 
-- With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can even be used in other future operations, see how the code for collecting `activeGroups` using react futures is so much cleaner than that of async/await because asynchronous values can be used synchronously.
+- With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can also be used in other future operations, see how `FutrPosts` is used in `filter` in collecting `activeGroups`.
 - With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component, clearing up the code.
 
 ## Restrictions
@@ -538,7 +539,7 @@ There is no explicit "prefetch" api in React Futures, fetching occurs whenever a
 
 ```javascript
 
-const user = new FutrUser('Dave') // instantiating outside of render will prefetch 'user' as js file parses
+const user = new FutrUser('Dave') // instantiating outside of render will prefetch 'user' as file parses
 
 const App = () => {
   const friends = new FutrFriends('Dave') // prefetch in parent component
