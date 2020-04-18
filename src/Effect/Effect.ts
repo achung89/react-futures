@@ -1,6 +1,5 @@
 import { pipe, tap, first, isRendering } from '../internal';
 import { LazyArray } from '../internal';
-import { LazyObject } from '../FutureObject/LazyObject';
 import { isFuture, suspend } from '../utils';
 export const thisMap = new WeakMap();
 // implements IO

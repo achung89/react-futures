@@ -27,6 +27,7 @@ export class FutureArray<T> extends LazyArray<T> {
       }
 
       if (status === 'pending') {
+        //TODO: do this even if completed
         if (!isRendering()) {
           // TODO: add custom error message per method
           throw new Error(`cannot suspend outside render`);
