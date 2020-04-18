@@ -159,7 +159,7 @@ const ActiveGroups = ({ user }) => {
 This example demonstrates several benefits of React Futures:
 
 - With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can also be used in other future operations, see how `FutrPosts` is used in `filter` in collecting `activeGroups`.
-- With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component, clearing up the code.
+- With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component.
 
 ## Restrictions
 
