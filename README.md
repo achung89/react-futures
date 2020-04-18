@@ -4,6 +4,14 @@ Manipulate asynchronous data synchronously
 
 ## Install
 
+This requires you to have React's experimental build installed:
+
+```
+npm install react@experimental react-dom@experimental
+```
+
+To install this library:
+
 ```
 #npm
 npm i react-futures
@@ -14,9 +22,7 @@ yarn add react-futures
 
 ## Explainer
 
-React Futures is a collection of types that allow syncronous-looking data manipulation of asynchronous data by suspending only when needed and deferring data manipulation until after the promise resolves.
-
-Ex.
+React Futures is a collection of types that allow manipulation of asynchronous data in a synchronous manner. This happens by deferring the actual data processing until after the promise resolves and suspending only when necessary.
 
 ```javascript
 import { arrayType } from 'react-futures';
@@ -34,65 +40,15 @@ const Blogs = ({ user }) => {
 }
 ```
 
-React Futures follows the "wait-by-necessity" principle; it defers suspension until the code examines the content of the data. Only after suspense resolves are operations like `map`, `slice`, and `filter` applied. This simplifies data construction by hiding data fetching implementation.
+React Futures follows the "wait-by-necessity" principle; it defers suspension until the code examines the content of the data. Only after suspense resolves are operations like `map`, `slice`, and `filter` applied. This simplifies data construction by hiding the data fetching logic.
 
-When the requirements for data-fetching increases, the benefits of React Futures become clearer. With React Futures the construction and consumption of the data is decoupled from the fetching of it, allowing for clear separation of concerns.
+When the requirements for data fetching increases, the benefits of React Futures become clearer. With React Futures the construction and consumption of the data is decoupled from the fetching of it, allowing for clearer separation of concerns.
 
-### Separating fetching and construction from render
+### Async/Await vs React Futures
 
-```javascript
-// With React Futures
-import { arrayType, objectType, lazyArray } from "react-futures";
+Here's an example of using async/await to display a list of active groups for a user:
 
-const FutrUser = objectType(fetchUser);
-const FutrGroups = arrayType(fetchGroupsBelongingToUser);
-const FutrPosts = arrayType(fetchGroupPosts);
-
-const user = new FutrUser("Tom");
-
-// Example of a complex data-fetching requirement. We are getting active groups by
-// fetching the posts of each group and seeing if there are posts in the last three days
-const activeGroups = new FutrGroups(user).filter(group => {
-  const groupPosts = new FutrPosts(group); //fetch posts
-  return groupPosts.some(post => post.daysAgoPosted < 3);
-});
-
-const App = () => {
-  return (
-    <>
-      <h3>
-        {user.firstName} {user.lastName}
-      </h3>
-      <ActiveGroups />
-    </>
-  );
-};
-
-const ActiveGroups = () => {
-  const [groups, setGroups] = useState(activeGroups);
-  return (
-    <>
-      <ul>
-        {groups.map(group => (
-          <li>{group.name}</liu>
-        ))}
-      </ul>
-      <AddGroup
-        onClick={name => {
-          // spread operator is a getter, so it'll suspend a future. To avoid this use `lazyArray`
-          const newGroups = lazyArray(() => [{ name }, ...groups]); 
-          setCloseFriends(newGroups);
-        }}
-      >
-        Add Group
-      </AddGroup>
-    </>
-  );
-};
-
-
-
-// With async await
+```
 const App = () => {
   const [user, setUser] = useState({});
 
@@ -156,9 +112,61 @@ const ActiveGroups = ({ user }) => {
 };
 ```
 
+ And here is the same example using React Futures:
+ 
+```javascript
+import { arrayType, objectType, lazyArray } from "react-futures";
+
+const FutureUser = objectType(fetchUser);
+const FutureGroups = arrayType(fetchGroupsBelongingToUser);
+const FuturePosts = arrayType(fetchGroupPosts);
+
+const user = new FutureUser("Tom");
+
+// Example of a complex data-fetching requirement. We are getting active groups by
+// fetching the posts of each group and seeing if there are posts in the last three days
+const activeGroups = new FutureGroups(user).filter(group => {
+  const groupPosts = new FuturePosts(group); //fetch posts
+  return groupPosts.some(post => post.daysAgoPosted < 3);
+});
+
+const App = () => {
+  return (
+    <>
+      <h3>
+        {user.firstName} {user.lastName}
+      </h3>
+      <ActiveGroups />
+    </>
+  );
+};
+
+const ActiveGroups = () => {
+  const [groups, setGroups] = useState(activeGroups);
+  return (
+    <>
+      <ul>
+        {groups.map(group => (
+          <li>{group.name}</liu>
+        ))}
+      </ul>
+      <AddGroup
+        onClick={name => {
+          // spread operator is a getter, so it'll suspend a future. To avoid this use `lazyArray`
+          const newGroups = lazyArray(() => [{ name }, ...groups]); 
+          setCloseFriends(newGroups);
+        }}
+      >
+        Add Group
+      </AddGroup>
+    </>
+  );
+};
+```
+
 This example demonstrates several benefits of React Futures:
 
-- With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can also be used in other future operations, see how `FutrPosts` is used in `filter` in collecting `activeGroups`.
+- With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can also be used in other future operations, see how `FuturePosts` is used in `filter` to collect `activeGroups`.
 - With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component.
 
 ## Restrictions
@@ -168,7 +176,7 @@ To achieve transparency, React Futures places restrictions on certain operations
 Ex.
 
 ```javascript
-const blogs = FutrBlogs()
+const blogs = FutureBlogs()
 
 const first = blogs[0] // Error: suspense not allowed outside render
 const sorted = blogs.sort((a, b) => a.timestamp - b.timestamp)
@@ -290,16 +298,16 @@ Object iteration with native types is normally done with `Object.entries` and `O
 
 ```javascript
 import { objectType } from "react-futures";
-const FutrUser = objectType(() => fetch("/user").then(res => res.json()));
+const FutureUser = objectType(() => fetch("/user").then(res => res.json()));
 
-const user = new FutrUser();
+const user = new FutureUser();
 
-const uppercaseUserEntries = FutrUser.entries(user) //lazy
+const uppercaseUserEntries = FutureUser.entries(user) //lazy
                               .map(([key, value]) => ({ // lazy
                                 [key]: value.toUpperCase(),
                               }));
 
-const uppercaseUser = FutrUser.fromEntries(uppercaseUserEntries); // lazy
+const uppercaseUser = FutureUser.fromEntries(uppercaseUserEntries); // lazy
 ```
 
 ### Suspense operations outside render
@@ -307,7 +315,7 @@ const uppercaseUser = FutrUser.fromEntries(uppercaseUserEntries); // lazy
 Sometimes it's useful to access properties on a future or perform a suspense operation outside of render. An example of this is transforming properties on a future. However, accessing a property will throw an error if done outside render.
 
 ```javascript
-const dave = new FutrUser("Dave");
+const dave = new FutureUser("Dave");
 
 dave.props = dave.props // Error: suspense operations not allowed outside render
               .sort((a, b) => a - b);
@@ -318,8 +326,8 @@ To achieve this, use the `lazyArray` or `lazyObject` to suspend evaluation.
 ```javascript
 import { objectType, lazyArray } from "react-futures";
 
-const FutrUser = objectType(fetchUser);
-const dave = new FutrUser("Dave");
+const FutureUser = objectType(fetchUser);
+const dave = new FutureUser("Dave");
 
 dave.props = lazyArray(() => dave.props) //=> future array
               .sort((a, b) => a - b); // lazy
@@ -330,7 +338,7 @@ The above snippet suspends evaluation of the `dave.props` getter until a suspens
 Sometimes performing a suspense operation is inside an `on` handler is desired, but suspense operations are illegal in `on` handlers as well.
 
 ```javascript
-const dave = new FutrUser("Dave");
+const dave = new FutureUser("Dave");
 
 const App = () => {
   const [user, setUser] = useState(dave);
@@ -351,7 +359,7 @@ To accomplish this, we can use the `lazyObject` from above, or we can use the `g
 
 ```javascript
 // Using `lazyObject`
-const dave = new FutrUser('Dave');
+const dave = new FutureUser('Dave');
 
 const App = () => {
   const [user, setUser] = useState(dave)
@@ -368,7 +376,7 @@ const App = () => {
 
 // Using `getRaw`
 import {getRaw} from 'react-futures';
-const dave = new FutrUser('Dave');
+const dave = new FutureUser('Dave');
 
 const App = () => {
   const [user, setUser] = useState(getRaw(dave)) // suspends here and gets raw value
@@ -401,14 +409,14 @@ To allow this, use the `lazyObj` to defer evaluation of `_.cloneDeep`
 import _ from 'lodash'
 import {lazyObject, objectType} from 'react-futures'
 
-const FutrUser = objectType(...);
+const FutureUser = objectType(...);
 
 const dave = new FutureUser('Dave');
 
 const daveTwin = lazyObject(() => _.cloneDeep(dave)) //=> future object
 
 // continue iterating as you would a future
-const result = FutrUser.entries(daveTwin) 
+const result = FutureUser.entries(daveTwin) 
                        .map(...)
 ```
 
@@ -420,10 +428,10 @@ const result = FutrUser.entries(daveTwin)
 import { lazyArray, arrayType } from 'react-futures'
 import { zip } from 'lamda'
 
-const FutrFriends = arrayType(...)
-const FutrGroups = arrayType(...)
+const FutureFriends = arrayType(...)
+const FutureGroups = arrayType(...)
 
-const [friends, groups] = [new FutrFriends, new FutrGroups];
+const [friends, groups] = [new FutureFriends, new FutureGroups];
 
 const friendsAndGroups = lazyArray(() => zip(friends, groups)) //=> future array
 ```
@@ -434,7 +442,7 @@ To defer function composition, you can use ramda's pipeWith or composeWith to wr
 import { pipeWith, filter, sort } from 'ramda';
 import { createArrayType, lazyArray } from 'react-futures';
 
-const FutrFriends = createArrayType(() => fetch(...))
+const FutureFriends = createArrayType(() => fetch(...))
 
 const pipeFuture = pipeWith((fn, futr) => lazyArray(() => fn(futr)))
 
@@ -443,7 +451,7 @@ const lazyInternationalFriendsByGrade = pipeFuture(
   sort(function(a, b) { return a.grade - b.grade; })
 )
 
-const internationalFriendsByGrade = lazyInternationalFriendsByGrade( new FutrFriends() ) // => future array
+const internationalFriendsByGrade = lazyInternationalFriendsByGrade( new FutureFriends() ) // => future array
 
 ```
 
@@ -467,26 +475,26 @@ Since caching is performed using LRU, invalidation is done automatically after t
 To manually invalidate a key, you can use the static method `invalidate` on the future constructor.
 
 ```javascript
-const dave = new FutrUser("Dave"); // fetches;
+const dave = new FutureUser("Dave"); // fetches;
 
 const App = () => {
-  let dave = new FutrUser("Dave"); // pulls from cache
+  let dave = new FutureUser("Dave"); // pulls from cache
 
   FutureUser.invalidate("Dave"); // deletes 'Dave' from cache
 
-  dave = new FutrUser("Dave"); // fetches
+  dave = new FutureUser("Dave"); // fetches
 };
 ```
 
 Sometimes it's useful to clear the entire cache, like on a page refresh. This can be accomplished using the static method `reset` on the future constructor
 
 ```javascript
-const dave = new FutrUser("Dave");
-const jen = new FutrUser("Jen");
-const harold = new FutrUser("Harold");
+const dave = new FutureUser("Dave");
+const jen = new FutureUser("Jen");
+const harold = new FutureUser("Harold");
 const App = () => {
   useEffect(() => {
-    return () => FutrUser.reset(); // clears 'Harold', 'Jen', and 'Dave' from cache
+    return () => FutureUser.reset(); // clears 'Harold', 'Jen', and 'Dave' from cache
   }, []);
 };
 ```
@@ -497,9 +505,9 @@ Sometimes it's desirable to fetch whenever a component is mounted, similar to ho
 
 ```javascript
 const useUser = name => {
-  const user = new FutrUser(name); // fetches on first render
+  const user = new FutureUser(name); // fetches on first render
   useEffect(() => {
-    return () => FutrUser.invalidate(name) // invalidates fetch
+    return () => FutureUser.invalidate(name) // invalidates fetch
   }, [])
 
   return user
@@ -540,11 +548,11 @@ There is no explicit "prefetch" api in React Futures, fetching occurs whenever a
 
 ```javascript
 
-const user = new FutrUser('Dave') // instantiating outside of render will prefetch 'user' as file parses
+const user = new FutureUser('Dave') // instantiating outside of render will prefetch 'user' as file parses
 
 const App = () => {
-  const friends = new FutrFriends('Dave') // prefetch in parent component
-  const family = new FutrFamily('Dave') // prefetch in parent component
+  const friends = new FutureFriends('Dave') // prefetch in parent component
+  const family = new FutureFamily('Dave') // prefetch in parent component
   const currentPage = usePageNavigation()
   return <>
     {
@@ -590,7 +598,7 @@ import { arrayType } from "react-future";
 
 const fetchBlogs = count =>
   fetch(`/blogs?count=${count}`).then(res => res.json());
-const FutrBlogs = arrayType(fetchBlogs);
+const FutureBlogs = arrayType(fetchBlogs);
 ```
 
 <hr />
@@ -830,8 +838,8 @@ future array (insanceof LazyArray): future array result of callback
 import { values } from 'ramda'
 import { objectType, lazyArray } from 'react-futures'
 
-const FutrUser = objectType(...);
-const user = new FutrUser();
+const FutureUser = objectType(...);
+const user = new FutureUser();
 
 const userProps = lazyValues(() => values(user)); //=> future array
 ```
@@ -839,11 +847,11 @@ const userProps = lazyValues(() => values(user)); //=> future array
 ```javascript
 import { filter } from 'ramda'
 import { arrayType, fmapArr } from 'react-futures'
-const FutrFriends = arrayType(...);
-const FutrCircles = arrayType(...);
+const FutureFriends = arrayType(...);
+const FutureCircles = arrayType(...);
 
 const lazyFilter = fmapArr(filter);
-const friends = new FutrFriends();
+const friends = new FutureFriends();
 
 const highSchoolFriends = lazyFilter(({age}) => age > 28, friends); //=> future array
 ```
@@ -873,8 +881,8 @@ future object (instanceof LazyObject): future object result of callback
 import { invertObj } from 'ramda'
 import { objectType, lazyObject } from 'react-futures'
 
-const FutrUser = objectType(...);
-const user = new FutrUser();
+const FutureUser = objectType(...);
+const user = new FutureUser();
 
 
 const invertedUser = lazyObject(() => inverObj(user)) //=> future object
@@ -899,7 +907,7 @@ raw value of future (instanceof object|array): raw valueof future
 ##### Basic usage
 ```javascript
 import {getRaw} from 'react-futures';
-const dave = new FutrUser('Dave');
+const dave = new FutureUser('Dave');
 
 const App = () => {
   const rawDave = getRaw(dave) // suspends here and gets raw value
