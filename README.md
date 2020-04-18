@@ -79,7 +79,7 @@ const ActiveGroups = () => {
       </ul>
       <AddGroup
         onClick={name => {
-          // spread operator is a getter, so it'll suspend future. To avoid this use `lazyArray`
+          // spread operator is a getter, so it'll suspend a future. To avoid this use `lazyArray`
           const newGroups = lazyArray(() => [{ name }, ...groups]); 
           setCloseFriends(newGroups);
         }}
@@ -89,6 +89,8 @@ const ActiveGroups = () => {
     </>
   );
 };
+
+
 
 // With async await
 const App = () => {
