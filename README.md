@@ -24,6 +24,8 @@ yarn add react-futures
 
 React Futures is a collection of types that allow manipulation of asynchronous data in a synchronous manner. This happens by deferring the actual data processing until after the promise resolves and suspending only when necessary.
 
+For example:
+
 ```javascript
 import { arrayType } from 'react-futures';
 
