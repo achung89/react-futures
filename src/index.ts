@@ -6,7 +6,7 @@ import LRU from 'lru-cache';
 import { LazyArray } from './internal';
 import { LazyObject, isFuture } from './internal';
 
-export const objectType = <T extends object>(promiseCb) => {
+export const futureObject = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
 
   if (isRendering()) {
@@ -52,7 +52,7 @@ export const objectType = <T extends object>(promiseCb) => {
   };
 };
 
-export const arrayType = <T>(promiseCb) => {
+export const futureArray = <T>(promiseCb) => {
   const cache = new LRU(500);
 
   if (isRendering()) {

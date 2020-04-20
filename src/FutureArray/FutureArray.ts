@@ -22,7 +22,7 @@ export class FutureArray<T> extends LazyArray<T> {
             'TypeError: FutureArray received non-array value from promise'
           );
         }
-
+        
         return value;
       }
 

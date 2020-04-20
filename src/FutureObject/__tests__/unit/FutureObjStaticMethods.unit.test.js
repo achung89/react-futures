@@ -2,14 +2,9 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
 import React, { Suspense } from 'react';
-import { objectType } from '../../../index';
-import {
-  getterFutureObjectStaticEach,
-  noopFutureObjectStaticEach,
-  immutableDeferredFutureObjectEach,
-  mutableFutureObjectStaticEach,
-  invalidFutureObjectStaticEach,
-} from './FutureObj-statics';
+import { futureObject } from '../../../index';
+import { FutureObject } from '../../FutureObject';
+import { FutureArray } from '../../../FutureArray/FutureArray';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
@@ -17,7 +12,29 @@ import { waitFor } from '@testing-library/dom';
 import { LazyObject, isEffect } from '../../../internal';
 import { unwrapProxy, suspend } from '../../../internal';
 import { LazyArray } from '../../../internal';
+import { getRaw } from '../../../utils';
+
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
+
+const getOwnPropertyDescriptorFuture = obj =>
+  FutureObject.getOwnPropertyDescriptor(obj, 'foo');
+const assign_secondParamFuture = obj => FutureObject.assign({}, obj);
+const assign_firstParamFuture = obj => FutureObject.assign(obj, { bar: 'bar' });
+const definePropertyFuture = obj =>
+  FutureObject.defineProperty(obj, 'foo', { writable: false });
+const definePropertiesFuture = obj =>
+  FutureObject.defineProperties(obj, { foo: { writable: false } });
+const setPrototypeOfFuture = obj =>
+  FutureObject.setPrototypeOf(obj, FutureArray);
+
+const mutableAssign_firstParamFuture = obj => FutureObject.mutableAssign(obj, { bar: 'bar' });
+const mutableSetPrototypeOfFuture = obj =>
+  FutureObject.mutableSetPrototypeOf(obj, FutureArray);
+const mutableAssign_secondParamFuture = obj => FutureObject.mutableAssign({}, obj);
+const mutableDefinePropertiesFuture = obj =>
+  FutureObject.mutableDefineProperties(obj, { foo: { writable: false } });
+const mutableDefinePropertyFuture = obj =>
+  FutureObject.mutableDefineProperty(obj, 'foo', { writable: false });
 
 // TODO: test error handling
 const expectedJSON = value => ({
@@ -57,7 +74,7 @@ const LogSuspense = ({ action }) => {
     const val = action();
     Scheduler.unstable_yieldValue('No Suspense');
     if (isEffect(val)) {
-      suspend(val);
+      getRaw(val);
     }
     if (typeof val !== 'undefined') {
       resolved = val;
@@ -78,7 +95,7 @@ beforeEach(() => {
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
-  FutureObj = objectType(fetchJson);
+  FutureObj = futureObject(fetchJson);
 });
 
 afterEach(() => {
@@ -92,7 +109,12 @@ afterEach(() => {
 });
 
 describe('FutureObject static methods', () => {
-  getterFutureObjectStaticEach(
+  test.each`
+  staticMethod     
+  ${'isExtensible'}
+  ${'isFrozen'}    
+  ${'isSealed'}    
+`(
     'Expect static getter $staticMethod to suspend in render and throw outside render',
     async ({ staticMethod }) => {
       const futureObj = new FutureObj(1);
@@ -127,8 +149,25 @@ describe('FutureObject static methods', () => {
       expect(resolved).toEqual(expected);
     }
   );
-  immutableDeferredFutureObjectEach(
-    'Expect immutable method $staticMethod to defer inside and outside render',
+  test.each`
+    staticMethod                      | returnType
+    ${getOwnPropertyDescriptorFuture} | ${'object'}
+    ${'getOwnPropertyDescriptors'}    | ${'object'}
+    ${'getOwnPropertyNames'}          | ${'array'}
+    ${'getOwnPropertySymbols'}        | ${'array'}
+    ${'getPrototypeOf'}               | ${'object'}
+    ${'keys'}                         | ${'array'}
+    ${'entries'}                      | ${'array'}
+    ${'values'}                       | ${'array'}
+    ${assign_firstParamFuture}        | ${'object'}
+    ${'preventExtensions'}            | ${'object'}
+    ${setPrototypeOfFuture}           | ${'object'}
+    ${'seal'}                         | ${'object'}
+    ${assign_secondParamFuture}       | ${'object'}
+    ${definePropertiesFuture}         | ${'object'}
+    ${definePropertyFuture}           | ${'object'}
+    ${'freeze'}                       | ${'object'}
+  `('Expect immutable method $staticMethod to defer inside and outside render',
     async ({ staticMethod, returnType }) => {
       const futureObj = new FutureObj(1);
       const method =
@@ -170,7 +209,7 @@ describe('FutureObject static methods', () => {
       expect(Scheduler).toHaveYielded(['Promise Resolved']);
       await waitForSuspense(0);
       await waitFor(() => getByText('foo'));
-
+      
       expect(resolved).toEqual(method(expectedJSON(1)));
       expect(Object.getOwnPropertyDescriptors(resolved)).toEqual(
         Object.getOwnPropertyDescriptors(method(expectedJSON(1)))
@@ -178,40 +217,18 @@ describe('FutureObject static methods', () => {
     }
   );
 
-  noopFutureObjectStaticEach(
-    'Expect method $staticMethod to do nothing',
-    async ({ staticMethod }) => {
-      const futureObj = new FutureObj(1);
-      const method =
-        typeof staticMethod === 'string'
-          ? FutureObj[staticMethod]
-          : staticMethod;
 
-      const inRender = () => {
-        expect(() => method(futureObj)).not.toThrow(Promise);
-        //TODO: add more error types
-        expect(() => method(futureObj)).not.toThrow(Error);
-
-        expect(unwrapProxy(method(futureObj))).toBe(undefined);
-        expect(unwrapProxy(method(futureObj))).toBe(undefined);
-      };
-      const outsideRender = inRender;
-
-      act(outsideRender);
-
-      let renderer;
-      act(() => {
-        renderer = render(<App inRender={inRender} />, container);
-      });
-      const { getByText } = renderer;
-
-      expect(Scheduler).toHaveYielded(['No Suspense']);
-      await waitForSuspense(150);
-      await waitFor(() => getByText('foo'));
-      expect(Scheduler).toHaveYielded(['Promise Resolved']);
-    }
-  );
-  mutableFutureObjectStaticEach(
+  test.each`
+    staticMethod                       | returnType
+    ${mutableAssign_firstParamFuture}  | ${'object'}
+    ${'mutablePreventExtensions'}      | ${'object'}
+    ${mutableSetPrototypeOfFuture}     | ${'object'}
+    ${'mutableSeal'}                   | ${'object'}
+    ${mutableAssign_secondParamFuture} | ${'object'}
+    ${mutableDefinePropertiesFuture}   | ${'object'}
+    ${mutableDefinePropertyFuture}     | ${'object'}
+    ${'mutableFreeze'}                 | ${'object'}
+  `(
     'Expect mutable method $staticMethod to throw in render and defer outside render',
     async ({ staticMethod, returnType }) => {
       const futureObj = new FutureObj(1);
@@ -245,8 +262,12 @@ describe('FutureObject static methods', () => {
       jest.runTimersToTime(150);
     }
   );
-  invalidFutureObjectStaticEach(
-    'Expect method $staticMethod to error both in and out of render',
+  test.each`
+    staticMethod
+    ${'create'} 
+    ${'is'}
+  `(
+    'Expect invalid method $staticMethod to error both in and out of render',
     ({ staticMethod }) => {
       const futureObj = new FutureObj(1);
       const method =

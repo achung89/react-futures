@@ -5,8 +5,8 @@ import { isRendering } from '../internal';
 export class FutureObject<T extends object> extends LazyObject<T> {
   constructor(promise) {
     super(() => {
+
       let meta = promiseStatusStore.get(promise);
-      console.log({meta})
       if (typeof meta !== 'undefined') {
         var { status, value } = meta;
       } else {

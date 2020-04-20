@@ -1,5 +1,5 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { arrayType } from '../../../index';
+import { futureArray } from '../../../index';
 
 import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
@@ -32,7 +32,7 @@ const DeepPassThrough = ({ children, level }) => {
 };
 
 beforeEach(() => {
-  StubFutureArray = arrayType(
+  StubFutureArray = futureArray(
     val =>
       new Promise((res, rej) => {
         setTimeout(() => {
@@ -61,7 +61,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
 
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
 
@@ -81,7 +81,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
       const nums = nestedFuture
         ? createNestedFuture(numbers) /**[9,9]*/
         : numbers;
@@ -107,7 +107,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
 
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
 
@@ -151,7 +151,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
 
       const nums = nestedFuture
         ? createNestedFuture(numbers) /** [9,9] */
@@ -193,7 +193,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
 
       return (
         <DeepPassThrough level={level}>
@@ -236,7 +236,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
-      .immReverse(); // [8,6,4,2]
+      .reverse(); // [8,6,4,2]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -257,7 +257,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
-      .immReverse(); // [8,6,4,2]
+      .reverse(); // [8,6,4,2]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -288,7 +288,7 @@ describe('Instantiate outside render, deep render scenario', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
     let numbers = getNumbers();
 
     const AppVeryDeep = ({ nestedFuture = false, level }) => {
@@ -340,7 +340,7 @@ describe('Instantiate outside render, deep render scenario', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
     let numbers = getNumbers();
     const App = ({ level, nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -378,7 +378,7 @@ describe('Instantiate outside render, deep render scenario', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
 
     let numbers = getNumbers();
 

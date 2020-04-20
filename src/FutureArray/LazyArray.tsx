@@ -34,39 +34,44 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   flatMap(...args) {
     return map(target => target.flatMap(...args), this);
   }
-  immReverse(...args) {
-    return map(target => target.slice().reverse(...args), this);
-  }
-  immCopyWithin(...args) {
-    return map(target => target.slice().copyWithin(...args), this);
-  }
-  immSort(...args) {
-    return map(target => target.slice().sort(...args), this);
-  }
-  immFill(...args) {
-    return map(target => target.slice().fill(...args), this);
-  }
-  immSplice(...args) {
+  
+  // mutable methods made immutable
+  splice(...args) {
     return map(target => target.slice().splice(...args), this);
   }
-
-  // mutableMethods
-  splice(...args) {
-    return tap(target => target.splice(...args), 'splice', this);
-  }
   copyWithin(...args) {
-    return tap(target => target.copyWithin(...args), 'copyWithin', this);
+    return map(target => target.slice().copyWithin(...args), this);
   }
   sort(...args) {
-    return tap(target => target.sort(...args), 'sort', this);
+    return map(target => target.slice().sort(...args), this);
   }
   unshift(...args) {
-    return tap(target => target.unshift(...args), 'unshift', this);
+    return map(target => target.slice().unshift(...args), this);
   }
   reverse(...args) {
-    return tap(target => target.reverse(...args), 'reverse', this);
+    return map(target => target.slice().reverse(...args), this);
   }
   fill(...args) {
+    return map(target => target.slice().fill(...args), this);
+  }
+  
+  // mutable methods
+  mutableSplice(...args) {
+    return tap(target => target.splice(...args), 'splice', this);
+  }
+  mutableCopyWithin(...args) {
+    return tap(target => target.copyWithin(...args), 'copyWithin', this);
+  }
+  mutableSort(...args) {
+    return tap(target => target.sort(...args), 'sort', this);
+  }
+  mutableUnshift(...args) {
+    return tap(target => target.unshift(...args), 'unshift', this);
+  }
+  mutableReverse(...args) {
+    return tap(target => target.reverse(...args), 'reverse', this);
+  }
+  mutableFill(...args) {
     return tap(target => target.fill(...args), 'fill', this);
   }
 
@@ -116,11 +121,9 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   shift(): never {
     throw new Error('Invalid method');
   }
-  immUnshift(): never {
-    throw new Error('Invalid method');
-  }
-  static of(x) {
-    return new LazyArray(() => x);
+
+  static of(arrayReturningCb) {
+    return new LazyArray(arrayReturningCb);
   }
 
   // suspend on iterator access

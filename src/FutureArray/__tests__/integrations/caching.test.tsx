@@ -1,5 +1,5 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { arrayType } from '../../../index';
+import { futureArray } from '../../../index';
 
 import React from 'react';
 import {
@@ -12,7 +12,7 @@ jest.useFakeTimers();
 let StubFutureArray;
 
 beforeEach(() => {
-  StubFutureArray = arrayType(
+  StubFutureArray = futureArray(
     val =>
       new Promise((res, rej) => {
         setTimeout(() => {
@@ -39,7 +39,7 @@ describe('Caching arrays instantiated in render', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .immReverse(); // [8,6,4,2]
+        .reverse(); // [8,6,4,2]
 
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
 
