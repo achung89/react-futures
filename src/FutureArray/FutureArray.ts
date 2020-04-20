@@ -9,6 +9,11 @@ export class FutureArray<T> extends LazyArray<T> {
 
   constructor(promise) {
     super(() => {
+      if (!isRendering()) {
+        // TODO: add custom error message per method
+        throw new Error(`cannot suspend outside render`);
+      }
+      
       let meta = promiseStatusStore.get(promise);
 
       if (typeof meta !== 'undefined') {
@@ -27,11 +32,7 @@ export class FutureArray<T> extends LazyArray<T> {
       }
 
       if (status === 'pending') {
-        //TODO: do this even if completed
-        if (!isRendering()) {
-          // TODO: add custom error message per method
-          throw new Error(`cannot suspend outside render`);
-        }
+
 
         throw promise;
       }
