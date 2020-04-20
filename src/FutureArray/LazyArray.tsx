@@ -1,5 +1,6 @@
 import { ArrayEffect } from '../internal';
 import { ObjectEffect } from '../internal';
+import { isRendering } from '../utils';
 
 const { map, run, tap } = ArrayEffect;
 
@@ -45,9 +46,7 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   sort(...args) {
     return map(target => target.slice().sort(...args), this);
   }
-  unshift(...args) {
-    return map(target => target.slice().unshift(...args), this);
-  }
+
   reverse(...args) {
     return map(target => target.slice().reverse(...args), this);
   }
@@ -57,22 +56,29 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   
   // mutable methods
   mutableSplice(...args) {
-    return tap(target => target.splice(...args), 'splice', this);
+    if (isRendering()) {
+      // TODO: implement custom error message per method
+      throw new Error(
+        'Cannot invoke mutable operation ' +
+          'mutableSplice' +
+          ' in render. Consider using a immutable variant or performing the operation outside render.'
+      );
+    }
+    // we use map because return futr is not the same as passed in futr for splice
+    return map(target => target.splice(...args), this);
   }
   mutableCopyWithin(...args) {
-    return tap(target => target.copyWithin(...args), 'copyWithin', this);
+    return tap(target => target.copyWithin(...args), 'mutableCopyWithin', this);
   }
   mutableSort(...args) {
-    return tap(target => target.sort(...args), 'sort', this);
+    return tap(target => target.sort(...args), 'mutableSort', this);
   }
-  mutableUnshift(...args) {
-    return tap(target => target.unshift(...args), 'unshift', this);
-  }
+
   mutableReverse(...args) {
-    return tap(target => target.reverse(...args), 'reverse', this);
+    return tap(target => target.reverse(...args), 'mutableReverse', this);
   }
   mutableFill(...args) {
-    return tap(target => target.fill(...args), 'fill', this);
+    return tap(target => target.fill(...args), 'mutableFill', this);
   }
 
   //suspend methods
@@ -121,7 +127,9 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   shift(): never {
     throw new Error('Invalid method');
   }
-
+  unshift(...args): never {
+    throw new Error('Invalid method');
+  }
   static of(arrayReturningCb) {
     return new LazyArray(arrayReturningCb);
   }

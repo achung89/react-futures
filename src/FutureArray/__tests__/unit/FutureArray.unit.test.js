@@ -11,6 +11,7 @@ import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
 import { unwrapProxy } from '../../../utils';
+import extractValue from '../../../test-utils/extractValue';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 // TODO: setter should not suspend
@@ -163,7 +164,6 @@ describe('Array operations', () => {
     name                   | expected                                      |  method        
     ${'mutableFill'}       | ${arr => arr.fill(1)}                         |  ${arr => arr.mutableFill(1)}                       
     ${'mutableReverse'}    | ${arr => arr.reverse()}                       |  ${arr => arr.mutableReverse()}
-    ${'mutableUnshift'}    | ${arr => arr.unshift(4)}                      |  ${arr => arr.mutableUnshift(4)}
     ${'mutableSort'}       | ${arr => arr.sort((a, b) => b - a)}           |  ${arr => arr.mutableSort((a, b) => b - a)}              
     ${'mutableSplice'}     | ${arr => arr.splice(2)}                       |    ${arr => arr.mutableSplice(2)}
     ${'mutableCopyWithin'} | ${arr => arr.copyWithin(0, 2)}                |  ${arr => arr.mutableCopyWithin(0, 2)}   
@@ -174,11 +174,12 @@ describe('Array operations', () => {
       const inRender = () => expect(() => {
         method(futArr)
       }).toThrowError();
+
       let created;
       const outsideRender = () => {
-         created = method(futArr)
+        created = method(futArr)
         expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
-
+        
       };
       act(() => {
         outsideRender();
@@ -192,7 +193,11 @@ describe('Array operations', () => {
           container
         );
       });
+      const {getByText} = renderer;
+      await waitForSuspense(150);
+      const result = await extractValue(created);
 
+      expect(result).toEqual(expected([2,3,4,5]))
     }
   );
 
@@ -238,9 +243,12 @@ describe('Array operations', () => {
       expect(Scheduler).toHaveYielded(['No Suspense']);
 
       await waitForSuspense(150);
+      expect(Scheduler).toHaveYielded(['Promise Resolved']);
       await waitFor(() => getByText('foo'));
+
       expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
-      expect(created).toEqual(method([2, 3, 4, 5]));
+      const result = await extractValue(created)
+      expect(result).toEqual(method([2, 3, 4, 5]));
     }
   );
   test.each`
@@ -276,10 +284,12 @@ describe('Array operations', () => {
       expect(Scheduler).toHaveYielded(['No Suspense']);
     
       await waitForSuspense(150);
+      expect(Scheduler).toHaveYielded(['Promise Resolved']);
+
       await waitFor(() => getByText('foo'));
       expect(unwrapProxy(created)).toBeInstanceOf(LazyIterator);
-
-      expect([...created]).toEqual([...method([2, 3, 4, 5])]);
+      const result = await extractValue(created)
+      expect([...result]).toEqual([...method([2, 3, 4, 5])]);
     }
   );
 

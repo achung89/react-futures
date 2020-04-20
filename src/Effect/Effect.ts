@@ -120,7 +120,6 @@ const createEffect = Type =>
       return proxy;
     }
     #map = function map(nextFn: Function, Klass) {
-
       return new Klass(pipe(this.#deferredFn, nextFn));
     };
 
@@ -133,6 +132,7 @@ const createEffect = Type =>
             ' in render. Consider using a immutable variant or performing the operation outside render.'
         );
       }
+
       const newNextFn = (...args) => {
         let result = fn(...args);
 

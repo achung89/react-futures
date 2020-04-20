@@ -13,17 +13,18 @@ import { unwrapProxy } from '../../../internal';
 import { LazyArray } from '../../../internal';
 import { getRaw } from '../../../utils';
 import { FutureArray } from '../../../FutureArray/FutureArray';
+import extractValue from '../../../test-utils/extractValue';
 
 // TODO: test assign with array as first argument
-const getOwnPropertyDescriptor = obj =>
+export const getOwnPropertyDescriptor = obj =>
   Object.getOwnPropertyDescriptor(obj, 'foo');
-const assign_secondParam = obj => Object.assign({}, obj);
-const defineProperty = obj =>
+export const assign_secondParam = obj => Object.assign({}, obj);
+export const defineProperty = obj =>
   Object.defineProperty(obj, 'foo', { writable: false });
-const defineProperties = obj =>
+export const defineProperties = obj =>
   Object.defineProperties(obj, { foo: { writable: false } });
-const setPrototypeOf = obj => Object.setPrototypeOf(obj, FutureArray);
-const assign_firstParam = obj => Object.assign(obj, { bar: 'bar' });
+export const setPrototypeOf = obj => Object.setPrototypeOf(obj, FutureArray);
+export const assign_firstParam = obj => Object.assign(obj, { bar: 'bar' });
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
@@ -36,7 +37,6 @@ const expectedJSON = value => ({
 });
 // TODO: test obj instance methods
 // TODO: assert return values of Object/FutureObj static methods
-let resolved = undefined;
 const fetchJson = val =>
   new Promise((res, rej) => {
     setTimeout(() => {
@@ -62,14 +62,9 @@ const App = ({ inRender }) => {
 
 const LogSuspense = ({ action }) => {
   try {
-    const val = action();
+    action();
     Scheduler.unstable_yieldValue('No Suspense');
-    if (isEffect(val)) {
-       getRaw(val);
-    }
-    if (typeof val !== 'undefined') {
-      resolved = val;
-    }
+
     return 'foo';
   } catch (promise) {
     if (typeof promise.then === 'function') {
@@ -96,7 +91,6 @@ afterEach(() => {
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
-  resolved = null;
 });
 
 describe('Object static methods', () => {
@@ -116,8 +110,10 @@ describe('Object static methods', () => {
       const futureObj = new FutureObj(1);
       const method =
         typeof staticMethod === 'string' ? Object[staticMethod] : staticMethod;
-
-      const inRender = () => method(futureObj);
+      let created;
+      const inRender = () => {
+        created = getRaw(method(futureObj));
+      }
       const outsideRender = () =>
         expect(() =>
           method(futureObj)
@@ -140,7 +136,8 @@ describe('Object static methods', () => {
       await waitFor(() => getByText('foo'));
       expect(Scheduler).toHaveYielded(['No Suspense']);
       const expected = method(expectedJSON(1));
-      expect(resolved).toEqual(expected);
+      
+      expect(created).toEqual(expected);
     }
   );
 
@@ -194,7 +191,7 @@ describe('Object static methods', () => {
         typeof staticMethod === 'string' ? Object[staticMethod] : staticMethod;
       // TODO: specify error
       const inRender = () => expect(() => method(futureObj)).toThrowError();
-
+      let created;
       const outsideRender = () => {
         let Constructor;
         if (returnType === 'object') {
@@ -203,8 +200,8 @@ describe('Object static methods', () => {
         if (returnType === 'array') {
           Constructor = LazyArray;
         }
-
-        expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor);
+        created = method(futureObj)
+        expect(unwrapProxy(created)).toBeInstanceOf(Constructor);
       };
 
       act(() => {
@@ -215,8 +212,13 @@ describe('Object static methods', () => {
       act(() => {
         renderer = render(<App inRender={inRender} />, container);
       });
-      jest.runTimersToTime(150);
-    }
+      await waitForSuspense(150);
+
+      const result = await extractValue(created);
+      expect(result).toEqual(method(expectedJSON(1)))
+      expect(Object.getOwnPropertyDescriptors(result)).toEqual(
+        Object.getOwnPropertyDescriptors(method(expectedJSON(1)))
+      );    }
   );
   test.each`
     staticMethod               
