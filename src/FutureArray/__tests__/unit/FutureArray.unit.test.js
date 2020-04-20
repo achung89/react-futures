@@ -3,7 +3,7 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import { arrayType } from '../../../index';
+import { futureArray } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';
@@ -35,7 +35,7 @@ let container;
 let FutureArr;
 beforeEach(() => {
   jest.resetModules();
-  FutureArr = arrayType(fetchArray);
+  FutureArr = futureArray(fetchArray);
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -87,7 +87,7 @@ describe('In only render context', () => {
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-
+    jest.runOnlyPendingTimers();
     await waitFor(() => getByText('Loading...'));
 
     jest.runTimersToTime(150);
@@ -115,7 +115,7 @@ describe('In only render context', () => {
         renderer = render(<App />, container);
       });
       const { getByText } = renderer;
-
+      jest.runTimersToTime(0);
       await waitFor(() => getByText('Loading...'));
       expect(Scheduler).toHaveYielded(['Suspend!']);
       jest.runTimersToTime(150);
@@ -145,7 +145,7 @@ describe('In only render context', () => {
         renderer = render(<App />, container);
       });
       const { getByText } = renderer;
-
+      jest.runTimersToTime(0)
       await waitFor(() => getByText('Loading...'));
       expect(Scheduler).toHaveYielded(['Suspend!']);
       jest.runTimersToTime(150);
@@ -160,22 +160,25 @@ describe('In only render context', () => {
 
 describe('Array operations', () => {
   test.each`
-    name            | method
-    ${'fill'}       | ${arr => (arr.fill(1), arr)}
-    ${'reverse'}    | ${arr => (arr.reverse(), arr)}
-    ${'unshift'}    | ${arr => (arr.unshift(4), arr)}
-    ${'sort'}       | ${arr => (arr.sort((a, b) => b - a), arr)}
-    ${'splice'}     | ${arr => (arr.splice(2), arr)}
-    ${'copyWithin'} | ${arr => arr.copyWithin(0, 2)}
+    name                   | expected                                      |  method        
+    ${'mutableFill'}       | ${arr => arr.fill(1)}                         |  ${arr => arr.mutableFill(1)}                       
+    ${'mutableReverse'}    | ${arr => arr.reverse()}                       |  ${arr => arr.mutableReverse()}
+    ${'mutableUnshift'}    | ${arr => arr.unshift(4)}                      |  ${arr => arr.mutableUnshift(4)}
+    ${'mutableSort'}       | ${arr => arr.sort((a, b) => b - a)}           |  ${arr => arr.mutableSort((a, b) => b - a)}              
+    ${'mutableSplice'}     | ${arr => arr.splice(2)}                       |    ${arr => arr.mutableSplice(2)}
+    ${'mutableCopyWithin'} | ${arr => arr.copyWithin(0, 2)}                |  ${arr => arr.mutableCopyWithin(0, 2)}   
   `(
     `Mutator method $name should defer outside render and throw in render`,
-    async ({ method }) => {
+    async ({ method, expected }) => {
       const futArr = new FutureArr(5);
-
-      const inRender = () => expect(() => method(futArr)).toThrowError();
-
+      const inRender = () => expect(() => {
+        method(futArr)
+      }).toThrowError();
+      let created;
       const outsideRender = () => {
-        expect(unwrapProxy(method(futArr))).toBeInstanceOf(LazyArray);
+         created = method(futArr)
+        expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
+
       };
       act(() => {
         outsideRender();
@@ -189,7 +192,7 @@ describe('Array operations', () => {
           container
         );
       });
-      await waitForSuspense(150);
+
     }
   );
 
@@ -203,6 +206,10 @@ describe('Array operations', () => {
     ${'reduceRight'} | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}
     ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
     ${'flatMap'}     | ${arr => arr.flatMap(i => [i + 3])}
+    ${'splice'}      | ${arr => arr.splice()}
+    ${'copyWithin'} | ${arr => arr.copyWithin(1, 2, 3)}
+    ${'sort'}       | ${arr => arr.sort((a, b) => b - a)}
+    ${'fill'}       | ${arr => arr.fill(1)}
   `(
     `Applies defers native immutable method $name both in and outside render `,
     async ({ method }) => {
@@ -227,6 +234,7 @@ describe('Array operations', () => {
         );
       });
       const { getByText } = renderer;
+
       expect(Scheduler).toHaveYielded(['No Suspense']);
 
       await waitForSuspense(150);
@@ -264,8 +272,9 @@ describe('Array operations', () => {
         );
       });
       const { getByText } = renderer;
-      expect(Scheduler).toHaveYielded(['No Suspense']);
 
+      expect(Scheduler).toHaveYielded(['No Suspense']);
+    
       await waitForSuspense(150);
       await waitFor(() => getByText('foo'));
       expect(unwrapProxy(created)).toBeInstanceOf(LazyIterator);
@@ -274,44 +283,6 @@ describe('Array operations', () => {
     }
   );
 
-  test.each`
-    name               | expected                                    | method
-    ${'immReverse'}    | ${arr => arr.slice().reverse()}             | ${arr => arr.immReverse()}
-    ${'immCopywithin'} | ${arr => arr.slice().copyWithin(1, 2, 3)}   | ${arr => arr.immCopyWithin(1, 2, 3)}
-    ${'immSort'}       | ${arr => arr.slice().sort((a, b) => b - a)} | ${arr => arr.immSort((a, b) => b - a)}
-    ${'immFill'}       | ${arr => arr.slice().fill(1)}               | ${arr => arr.immFill(1)}
-  `(
-    `Applies defers non-native immutable method $name both in and outside render `,
-    async ({ method, expected }) => {
-      let created;
-      const futrArr = new FutureArr(5);
-      expect(() => {
-        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray);
-      }).not.toThrow();
-      let renderer;
-      act(() => {
-        renderer = render(
-          <Suspense fallback={<div>Loading...</div>}>
-            <LogSuspense
-              action={() => {
-                created = method(futrArr);
-              }}
-            >
-              foo
-            </LogSuspense>
-          </Suspense>,
-          container
-        );
-      });
-      const { getByText } = renderer;
-      expect(Scheduler).toHaveYielded(['No Suspense']);
-
-      await waitForSuspense(150);
-      await waitFor(() => getByText('foo'));
-      expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
-      expect(created).toEqual(expected([2, 3, 4, 5]));
-    }
-  );
   //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
 
   test.each`

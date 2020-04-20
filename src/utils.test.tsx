@@ -4,7 +4,7 @@ jest.useFakeTimers();
 import {lazyObject, lazyArray} from 'react-futures';
 
 import React, { Suspense } from 'react';
-import { objectType } from './index';
+import { futureObject } from './index';
 import {isEffect, LazyArray, LazyObject} from './internal'
 import waitForSuspense from './test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
@@ -67,7 +67,7 @@ beforeEach(() => {
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
-  FutureObj = objectType(fetchJson);
+  FutureObj = futureObject(fetchJson);
 });
 
 afterEach(() => {
@@ -90,12 +90,11 @@ test('getRaw', async () => {
     renderer = render(<App inRender={inRender} />, container);
   });
   const { getByText } = renderer;
-  jest.runTimersToTime(150);
+  await waitForSuspense(150);
   await waitFor(() => getByText('foo'))
-  expect(Scheduler).toHaveYielded(['No Suspense', 'No Suspense', 'Promise Resolved'])
+  expect(Scheduler).toHaveYielded(['No Suspense', 'Promise Resolved'])
   expect(unwrapProxy(futureObj)).toBeInstanceOf(LazyObject);
   const result = await extractValue(futureObj);
-  console.log('RAWW')
   expect(result).toEqual(expectedJSON(3))
 })
 
