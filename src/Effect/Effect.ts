@@ -2,8 +2,8 @@ import { pipe, tap, first, isRendering } from '../internal';
 import { LazyArray } from '../internal';
 import { isFuture, getRaw } from '../utils';
 export const thisMap = new WeakMap();
+export const species = Symbol('species');
 // implements IO
-
 class InvalidObjectStaticMethod extends Error {
   constructor(methodName) {
     // TODO: provide link
@@ -16,7 +16,8 @@ class InvalidObjectStaticMethod extends Error {
     super(`Invalid static method ${objMethods} on future detected. Please use ${futureObjMethods} instead`);
     
   }
-}
+};
+
 const createEffect = Type =>
   class Effect<T extends object = object> extends Type {
     static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
@@ -34,7 +35,7 @@ const createEffect = Type =>
     static map(
       fn: Function,
       futr: Effect,
-      ReturnClass = thisMap.get(futr).constructor[Symbol.species]
+      ReturnClass = thisMap.get(futr).constructor[species]
     ) {
       if (!thisMap.has(futr)) {
         // TODO: change
@@ -70,7 +71,7 @@ const createEffect = Type =>
             target => {
               if (isFuture(value)) {
                 const newVal = getRaw(value);
-                const Class = thisMap.get(value).constructor[Symbol.species];
+                const Class = thisMap.get(value).constructor[species];
                 value = new Class(() => newVal);
               }
               Reflect.set(target, key, value);
@@ -119,6 +120,7 @@ const createEffect = Type =>
         ...childProxy,
       });
       thisMap.set(proxy, this);
+
       return proxy;
     }
     #map = function map(nextFn: Function, Klass) {

@@ -2,8 +2,12 @@ import { promiseStatusStore } from '../shared-properties';
 import { LazyObject } from '../internal';
 import { isRendering } from '../internal';
 import { __internal } from '../utils';
+import { species } from '../internal';
 
 export class FutureObject<T extends object> extends LazyObject<T> {
+  static get [species]() {
+    return LazyObject;
+  }
   constructor(promise) {
     super(() => {
       if ( !isRendering() && !__internal.allowSuspenseOutsideRender ) {

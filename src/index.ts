@@ -3,7 +3,7 @@ import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import LRU from 'lru-cache';
-import { LazyArray } from './internal';
+import { LazyArray, species } from './internal';
 import { LazyObject, isFuture } from './internal';
 
 export const futureObject = <T extends object>(promiseCb) => {
@@ -28,10 +28,12 @@ export const futureObject = <T extends object>(promiseCb) => {
     return promise;
   };
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
-    static get [Symbol.species]() {
+    static get [species]() {
       return LazyObject;
     }
-
+    static map = undefined;
+    static tap = undefined;
+    static run = undefined;
     static invalidate(key) {
       cache.del(key);
     }
@@ -74,10 +76,12 @@ export const futureArray = <T>(promiseCb) => {
     return promise;
   };
   return class FutureArrayCache<A = T> extends FutureArray<A> {
-    static get [Symbol.species]() {
+    static get [species]() {
       return LazyArray;
     }
-
+    static map = undefined;
+    static tap = undefined;
+    static run = undefined;
     static reset() {
       cache.reset();
     }

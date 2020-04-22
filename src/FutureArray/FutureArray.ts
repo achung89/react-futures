@@ -1,10 +1,10 @@
 import { promiseStatusStore } from '../shared-properties';
 import { LazyArray } from '../internal';
-import { isRendering } from '../internal';
+import { isRendering, species } from '../internal';
 import React from 'react';
-import { __internal } from '../utils';
+import { __internal } from '../internal';
 export class FutureArray<T> extends LazyArray<T> {
-  static get [Symbol.species]() {
+  static get [species]() {
     return LazyArray;
   }
 

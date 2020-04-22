@@ -1,12 +1,11 @@
 import React from 'react';
 import {
-  ObjectEffect,
-  ArrayEffect,
   thisMap,
   LazyObject,
   LazyArray,
+  species
 } from './internal';
-
+const speciesMap = new WeakMap()
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
   fns.reduce((val, fn) => fn(val), val);
 
@@ -55,7 +54,7 @@ export const getRaw = future => {
     return future;
   }
   const instance = thisMap.get(future) 
-  return instance.constructor.run(id => id, future);
+  return instance.constructor[species].run(id => id, future);
 }
 
 export const toPromise = async future => {
