@@ -54,7 +54,7 @@ export const getRaw = future => {
     return future;
   }
   const instance = thisMap.get(future) 
-  return instance.constructor[species].run(id => id, future);
+  return instance.constructor[species].run(getRaw, future);
 }
 
 export const toPromise = async future => {
