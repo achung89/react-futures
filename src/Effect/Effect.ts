@@ -17,7 +17,7 @@ class InvalidObjectStaticMethod extends Error {
     
   }
 };
-
+const rhsMap = new WeakMap();
 const createEffect = Type =>
   class Effect<T extends object = object> extends Type {
     static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
@@ -69,10 +69,14 @@ const createEffect = Type =>
         set: (_target, key, value) => {
           this.#tap(
             target => {
-              if (isFuture(value)) {
-                const newVal = getRaw(value);
-                const Class = thisMap.get(value).constructor[species];
-                value = new Class(() => newVal);
+
+              if(isFuture(value)) {
+                try {
+                  rhsMap.set(this, target);
+                  value = thisMap.get(value).constructor[species].run(id => id, value) 
+                } finally {
+                  rhsMap.delete(this);
+                }
               }
               Reflect.set(target, key, value);
             },
@@ -88,28 +92,28 @@ const createEffect = Type =>
           if (typeof this[key] === 'function') {
             return Reflect.get(target, key, receiver);
           }
-          return Reflect.get(this.#deferredFn(), key, this.#deferredFn());
+          return this.#run(target => Reflect.get(target, key, target));
         },
         getOwnPropertyDescriptor: (_target, prop) => {
-          const result = this.#deferredFn();
           // this is to not violate invariants for non-configurable properties
-          Object.defineProperty(_target, prop, Object.getOwnPropertyDescriptor(result, prop) || {})
-          return Reflect.getOwnPropertyDescriptor(result, prop);
+          return this.#run(target => {
+            Object.defineProperty(_target, prop, Object.getOwnPropertyDescriptor(target, prop) || {})
+
+            return Reflect.getOwnPropertyDescriptor(target, prop);
+          })
         },
         getPrototypeOf: _target => {
-          return Reflect.getPrototypeOf(this.#deferredFn());
+          return this.#run(target => Reflect.getPrototypeOf(target))
         },
         has: (_target, key) => {
-          return Reflect.has(this.#deferredFn(), key);
+          return this.#run(target => Reflect.has(target, key));
         },
         isExtensible: _target => {
-          // return Reflect.isExtensible(this.#deferredFn());
           throw new InvalidObjectStaticMethod(['isExtensible','isFrozen', 'isSealed']);
         },
         ownKeys: _target => {
           // TODO: is this right?
-          // return new LazyArray(() => Reflect.ownKeys(this.#deferredFn()));
-          return new LazyArray(() => Reflect.ownKeys(this.#deferredFn()));
+          return new LazyArray(() => this.#run(target => Reflect.ownKeys(target)));
         },
         preventExtensions: _target => {
           throw new InvalidObjectStaticMethod(['preventExtensions', 'seal'])
@@ -146,8 +150,11 @@ const createEffect = Type =>
       return futr;
     };
     #run = function run(fn: Function) {
-      // getRaw will recursively unwrap futures
-      return pipe(this.#deferredFn, fn, getRaw)();
+      let getVal = this.#deferredFn
+      if(rhsMap.has(this)) {
+        getVal = () => rhsMap.get(this);
+      }
+      return pipe(getVal, fn)();
     };
   };
 
