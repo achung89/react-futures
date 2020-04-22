@@ -98,4 +98,4 @@ describe('rhs', () => {
 
     expect(await result).toEqual(expectedJSON([6,7,8,9]));
   });
-})
+});
