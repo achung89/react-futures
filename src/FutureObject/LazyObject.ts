@@ -1,6 +1,7 @@
 import { isRendering, thisMap } from '../internal';
 import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
+import { species } from '../internal';
 
 type Object = object | any[];
 const memoize = fn => {
@@ -32,7 +33,7 @@ class SuspendOperationOutsideRenderError extends Error {
 }
 const staticMutableOperation = (target, cb, methodName) => {
   if (isEffect(target)) {
-    const klass = target.constructor[Symbol.species];
+    const klass = target.constructor[species];
     return klass.tap(cb, methodName, target);
   } else {
     if (isRendering()) {
@@ -55,7 +56,7 @@ const staticMutableToImmutableOperation = (target, cb) => {
 }
 const staticSuspendOperation = (target, cb, methodName) => {
   if (isEffect(target)) {
-    const Klass = target.constructor[Symbol.species];
+    const Klass = target.constructor[species];
     return Klass.run(cb, target);
   } else {
     if (!isRendering())
@@ -65,7 +66,7 @@ const staticSuspendOperation = (target, cb, methodName) => {
 };
 const staticImmutableOperation = (target, cb, constructor = undefined) => {
   if (isEffect(target)) {
-    const klass = constructor || target.constructor[Symbol.species];
+    const klass = constructor || target.constructor[species];
     return klass.map(cb, target);
   } else {
     if (Array.isArray(target)) {
@@ -77,7 +78,7 @@ const staticImmutableOperation = (target, cb, constructor = undefined) => {
 }
 // TODO test non future params
 export class LazyObject<T extends object> extends ObjectEffect<T> {
-  static get [Symbol.species]() {
+  static get [species]() {
     return LazyObject;
   }
 

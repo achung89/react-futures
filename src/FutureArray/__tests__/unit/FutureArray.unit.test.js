@@ -211,7 +211,6 @@ describe('Array operations', () => {
     ${'reduceRight'} | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}
     ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
     ${'flatMap'}     | ${arr => arr.flatMap(i => [i + 3])}
-    ${'splice'}      | ${arr => arr.splice()}
     ${'copyWithin'} | ${arr => arr.copyWithin(1, 2, 3)}
     ${'sort'}       | ${arr => arr.sort((a, b) => b - a)}
     ${'fill'}       | ${arr => arr.fill(1)}

@@ -1,5 +1,5 @@
 import { ArrayEffect } from '../internal';
-import { ObjectEffect } from '../internal';
+import { ObjectEffect,species } from '../internal';
 import { isRendering } from '../utils';
 
 const { map, run, tap } = ArrayEffect;
@@ -8,7 +8,9 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(deferredFn) {
     super(deferredFn);
   }
-
+  static get [species]() {
+    return LazyArray;
+  }
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args) {
@@ -37,9 +39,6 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   }
   
   // mutable methods made immutable
-  splice(...args) {
-    return map(target => target.slice().splice(...args), this);
-  }
   copyWithin(...args) {
     return map(target => target.slice().copyWithin(...args), this);
   }
@@ -130,6 +129,9 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   unshift(...args): never {
     throw new Error('Invalid method');
   }
+  splice(): never {
+    throw new Error('Operation `splice` not permitted on react futures. Please use `slice` instead')
+  }
   static of(arrayReturningCb) {
     return new LazyArray(arrayReturningCb);
   }
@@ -150,7 +152,7 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
 }
 
 export class LazyIterator extends ObjectEffect {
-  static get [Symbol.species]() {
+  static get [species]() {
     return LazyIterator;
   }
   next(...args) {
