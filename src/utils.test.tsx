@@ -198,6 +198,31 @@ test('lazyObject should defer ', async () => {
   await waitForSuspense(150);
   expect(await value2).toEqual(invert(expectedJSON(2)));
 });
+
+test.each([
+  1,
+  '3',
+  null,
+  undefined
+])('lazyObject should throw if given %s', async val => {
+  const obj = lazyObject(() => val)
+  expect((async () => {
+    await toPromise(obj);
+  })()).rejects.toBeInstanceOf(Error)
+})
+
+test.each([
+  {},
+  1,
+  '3',
+  null,
+  undefined
+])('lazyObject should throw if given %s', async val => {
+  const obj = lazyArray(() => val)
+  expect((async () => {
+    await toPromise(obj);
+  })()).rejects.toBeInstanceOf(Error)
+})
 test('lazyArray should defer ', async () => {
 
   const futureArr = new FutureArr(2);

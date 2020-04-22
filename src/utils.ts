@@ -45,9 +45,20 @@ export const first = (fn: Function) => {
   };
 };
 
-export const lazyArray = fn =>  new LazyArray(fn)
+export const lazyArray = fn =>  new LazyArray(() => {
+  const result = fn()
+  if(!Array.isArray(result)) throw new Error('Type Error: expected result of lazyArray to be of type array');
+  return result;
+});
 
-export const lazyObject = fn => new LazyObject(fn);
+export const lazyObject = fn => new LazyObject(() => {
+
+  const result = fn()
+  if(typeof result !== 'object' || result === null) {
+    throw new Error('Type Error: expected result of lazyObject to be of type object');
+  }
+  return result
+});
 
 export const getRaw = future => {
   if ( !isFuture(future) ) {
