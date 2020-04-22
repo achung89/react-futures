@@ -6,23 +6,22 @@ import {
   LazyObject,
   LazyArray,
 } from './internal';
+
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
   fns.reduce((val, fn) => fn(val), val);
+
 export const tap = (fn: Function) => (val: any) => {
   fn(val);
   return val;
 };
-export const isFuture = proxy => {
-  return (
-    thisMap.get(proxy) instanceof ObjectEffect ||
-    thisMap.get(proxy) instanceof ArrayEffect
-  );
-};
-//TODO: do
-export const isComplete = futr => {};
+
+export const isFuture = proxy =>  thisMap.has(proxy);
+
 export const unwrapProxy = proxy => thisMap.get(proxy);
 
+export const __internal = { allowSuspenseOutsideRender: false };
 export const isRendering = () => {
+
   var dispatcher =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
       .ReactCurrentDispatcher.current;
@@ -52,9 +51,28 @@ export const lazyArray = fn =>  new LazyArray(fn)
 export const lazyObject = fn => new LazyObject(fn);
 
 export const getRaw = future => {
-  if ( !thisMap.has(future) ) {
+  if ( !isFuture(future) ) {
     return future;
   }
   const instance = thisMap.get(future) 
   return instance.constructor.run(id => id, future);
+}
+
+export const toPromise = async future => {
+  if(!isFuture(future)) {
+    return Promise.resolve(future);
+  }
+  try {
+    __internal.allowSuspenseOutsideRender = true;
+    const val = getRaw(future);
+    __internal.allowSuspenseOutsideRender = false;
+    return val;
+  } catch (errOrProm) {
+    __internal.allowSuspenseOutsideRender = false;
+    if(typeof errOrProm.then === 'function') {
+      await errOrProm;
+      return toPromise(future);
+    }
+    throw errOrProm;
+  }
 }

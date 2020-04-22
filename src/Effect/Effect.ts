@@ -69,7 +69,9 @@ const createEffect = Type =>
           this.#tap(
             target => {
               if (isFuture(value)) {
-                getRaw(value);
+                const newVal = getRaw(value);
+                const Class = thisMap.get(value).constructor[Symbol.species];
+                value = new Class(() => newVal);
               }
               Reflect.set(target, key, value);
             },
@@ -142,7 +144,8 @@ const createEffect = Type =>
       return futr;
     };
     #run = function run(fn: Function) {
-      return pipe(this.#deferredFn, fn)();
+      // getRaw will recursively unwrap futures
+      return pipe(this.#deferredFn, fn, getRaw)();
     };
   };
 

@@ -1,16 +1,15 @@
 
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
-import {lazyObject, lazyArray} from 'react-futures';
 
 import React, { Suspense } from 'react';
-import { futureObject } from './index';
+import { futureObject, futureArray } from './index';
 import {isEffect, LazyArray, LazyObject} from './internal'
 import waitForSuspense from './test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from './test-utils/rtl-renderer';
 import { waitFor, wait } from '@testing-library/dom';
-import { unwrapProxy } from './utils';
+import { unwrapProxy, toPromise, lazyObject, lazyArray } from './utils';
 import extractValue from './test-utils/extractValue';
 expect.extend(require('./test-utils/renderer-extended-expect'));
 
@@ -36,6 +35,14 @@ const fetchJson = val =>
   }).catch(err => {
     throw err;
   });
+const fetchArray = val =>
+  new Promise((res, rej) => {
+    setTimeout(() => {
+      Scheduler.unstable_yieldValue('Promise Resolved');
+      res([2, 3, 4, val]);
+    }, 100);
+  });
+
 const App = ({ inRender }) => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -46,12 +53,12 @@ const App = ({ inRender }) => {
   );
 };
 
-const LogSuspense = ({ action }) => {
+const LogSuspense = ({ action, children }) => {
   try {
     action();
     Scheduler.unstable_yieldValue('No Suspense');
 
-    return 'foo';
+    return children;
   } catch (promise) {
     if (typeof promise.then === 'function') {
       Scheduler.unstable_yieldValue(`Suspend!`);
@@ -62,12 +69,15 @@ const LogSuspense = ({ action }) => {
 let FutureObj;
 let container;
 let Scheduler;
+let FutureArr
 beforeEach(() => {
   jest.resetModules();
+  jest.useFakeTimers();
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
   FutureObj = futureObject(fetchJson);
+  FutureArr = futureArray(fetchArray)
 });
 
 afterEach(() => {
@@ -77,59 +87,128 @@ afterEach(() => {
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
+  FutureArr = null;
 });
 
 
-test('getRaw', async () => {
-  let futureObj
-  const inRender = () => {
-    futureObj = new FutureObj(3);
-  }
-  let renderer;
-  act(() => {
-    renderer = render(<App inRender={inRender} />, container);
-  });
-  const { getByText } = renderer;
-  await waitForSuspense(150);
-  await waitFor(() => getByText('foo'))
-  expect(Scheduler).toHaveYielded(['No Suspense', 'Promise Resolved'])
-  expect(unwrapProxy(futureObj)).toBeInstanceOf(LazyObject);
-  const result = await extractValue(futureObj);
-  expect(result).toEqual(expectedJSON(3))
+describe('getRaw',  () => {
+  test('extractValue', async () => {
+    let futureObj
+    const inRender = () => {
+      futureObj = new FutureObj(3);
+    }
+    let renderer;
+    act(() => {
+      renderer = render(<App inRender={inRender} />, container);
+    });
+    const { getByText } = renderer;
+    await waitForSuspense(150);
+    await waitFor(() => getByText('foo'))
+    expect(Scheduler).toHaveYielded(['No Suspense', 'Promise Resolved'])
+    expect(unwrapProxy(futureObj)).toBeInstanceOf(LazyObject);
+    const result = await extractValue(futureObj);
+    expect(result).toEqual(expectedJSON(3))
+  })
+
+})
+const invert = obj => Object.fromEntries(Object.entries(obj).map(([key, value]) => [value, key]));
+
+describe('toPromise', () => {
+  test('outside render', async () => {
+    jest.useRealTimers();
+    const makeFuture = val => new FutureObj(val);
+
+    const futureObj = makeFuture(4)
+    const expected = expectedJSON(4)
+    const result = await toPromise(futureObj);
+    expect(result).toEqual(expected);
+    //test that it returns same result 
+    const secondTime = await toPromise(futureObj);
+    expect(secondTime).toEqual(expected);
+    const transformed = FutureObj.entries(makeFuture(5))
+    const transformedExpected = Object.entries(expectedJSON(5));
+    
+    const transformedResult = await toPromise(transformed);
+
+    expect(transformedResult).toEqual(transformedExpected);
+
+  })
+
+  test('outside render multiple', async () => {
+    jest.useRealTimers();
+    const makeFuture = val => new FutureObj(val);
+
+
+    const transformed = FutureObj.assign(makeFuture(5), lazyObject(() => invert(makeFuture(4))));
+                          
+    const transformedExpected = Object.assign(expectedJSON(5), invert(expectedJSON(4)))
+    const transformedResult = await toPromise(transformed);
+
+    expect(transformedResult).toEqual(transformedExpected);
+  })
+  
+  test('inside render', async () => {
+    expect.assertions(1)    
+    const inRender = async () => {
+      const futureObj = new FutureObj(3);
+      const result = await toPromise(futureObj);
+      expect(result).toEqual(expectedJSON(3));
+    }
+    let renderer;
+    act(() => {
+      renderer = render(<App inRender={inRender} />, container);
+    });
+    const {getByText} = renderer;
+    await waitForSuspense(150);
+    await waitFor(() => getByText('foo'))
+  })  
+  test('inside render multiple', async () => {
+    expect.assertions(1)    
+    const inRender = async () => {
+      const makeFuture = val => new FutureObj(val);
+
+
+      const transformed = FutureObj.assign(makeFuture(5), lazyObject(() => invert(makeFuture(4))));
+                            
+      const transformedExpected = Object.assign(expectedJSON(5), invert(expectedJSON(4)))
+      const transformedResult = await toPromise(transformed);
+
+      expect(transformedResult).toEqual(transformedExpected);
+    }
+    let renderer;
+    act(() => {
+      renderer = render(<App inRender={inRender} />, container);
+    });
+    const {getByText} = renderer;
+    await waitForSuspense(150);
+    await waitFor(() => getByText('foo'))
+  })
 })
 
-// test('lazyObject should defer ', async () => {
-//   const futureObj = new FutureObj(1);
-//   const method = 
+test('lazyObject should defer ', async () => {
+  const futureObj = new FutureObj(1);
+  const lazified = lazyObject(() => invert(futureObj))
+  const value = extractValue(lazified);
+  await waitForSuspense(150);
+  expect(await value).toEqual(invert(expectedJSON(1)));
 
-//   const outsideRender = () => {
+  const lazified2 = lazyObject(() => invert(expectedJSON(2)));
 
-//     expect(unwrapProxy(method(futureObj))).toBeInstanceOf(LazyArray);
-//   };
-//   const inRender = () => {
+  const value2 = extractValue(lazified2);
+  await waitForSuspense(150);
+  expect(await value2).toEqual(invert(expectedJSON(2)));
+});
+test('lazyArray should defer ', async () => {
 
-//     const val = method(futureObj);
-//     expect(unwrapProxy(val)).toBeInstanceOf(LazyArray);
-//     return val;
-//   };
-//   act(outsideRender);
+  const futureArr = new FutureArr(2);
+  const lazified = lazyArray(() => futureArr.reverse());  
+  const value = extractValue(lazified);
 
-//   let renderer;
-//   act(() => {
-//     renderer = render(<App inRender={inRender} />, container);
-//   });
-//   const { getByText } = renderer;
-//   expect(Scheduler).toHaveYielded(['No Suspense', 'Suspend!']);
-//   jest.runTimersToTime(150);
-//   expect(Scheduler).toHaveYielded(['Promise Resolved']);
-//   await waitForSuspense(0);
-//   await waitFor(() => getByText('foo'));
+  await waitForSuspense(150)
+  expect(await value).toEqual([2,3,4,2].reverse());
+  const lazified2 = lazyArray(() => [2,3,4,2].reverse());
+  const value2 = extractValue(lazified2);
+  await waitForSuspense(150);
 
-//   expect(resolved).toEqual(method(expectedJSON(1)));
-//   expect(Object.getOwnPropertyDescriptors(resolved)).toEqual(
-//     Object.getOwnPropertyDescriptors(method(expectedJSON(1)))
-//   );
-// });
-// test('lazyArray should defer ', async () => {
-  
-// });
+  expect(await value2).toEqual([2,3,4,2].reverse());
+});

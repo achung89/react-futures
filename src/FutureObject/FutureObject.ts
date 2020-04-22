@@ -1,11 +1,12 @@
 import { promiseStatusStore } from '../shared-properties';
 import { LazyObject } from '../internal';
 import { isRendering } from '../internal';
+import { __internal } from '../utils';
 
 export class FutureObject<T extends object> extends LazyObject<T> {
   constructor(promise) {
     super(() => {
-      if (!isRendering()) {
+      if ( !isRendering() && !__internal.allowSuspenseOutsideRender ) {
         throw new Error('cannot suspend outside render');
       }
       let meta = promiseStatusStore.get(promise);

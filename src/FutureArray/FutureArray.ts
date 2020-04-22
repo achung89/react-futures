@@ -2,6 +2,7 @@ import { promiseStatusStore } from '../shared-properties';
 import { LazyArray } from '../internal';
 import { isRendering } from '../internal';
 import React from 'react';
+import { __internal } from '../utils';
 export class FutureArray<T> extends LazyArray<T> {
   static get [Symbol.species]() {
     return LazyArray;
@@ -9,11 +10,11 @@ export class FutureArray<T> extends LazyArray<T> {
 
   constructor(promise) {
     super(() => {
-      if (!isRendering()) {
+      if (!isRendering() && !__internal.allowSuspenseOutsideRender) {
         // TODO: add custom error message per method
         throw new Error(`cannot suspend outside render`);
       }
-      
+
       let meta = promiseStatusStore.get(promise);
 
       if (typeof meta !== 'undefined') {
