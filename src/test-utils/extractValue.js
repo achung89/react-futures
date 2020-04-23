@@ -4,7 +4,7 @@ import React, {Suspense} from 'react';
 import { act } from 'react-dom/test-utils';
 
 const extractValue = future => {
-  return new Promise((res, rej) => {
+return new Promise((res, rej) => {
     try {
       const div = document.createElement('div');
 
@@ -21,7 +21,6 @@ const extractValue = future => {
       rej(err)
     }
 
-    
   })
 }
 export default extractValue;

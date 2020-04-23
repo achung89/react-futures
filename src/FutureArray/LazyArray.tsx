@@ -38,46 +38,26 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
     return map(target => target.flatMap(...args), this);
   }
   
-  // mutable methods made immutable
+
+  
+  // mutable methods
+  splice(...args) {
+    // we use map because return futr is not the same as passed in futr for splice
+    return tap(target => target.splice(...args), 'splice', this);
+  }
   copyWithin(...args) {
-    return map(target => target.slice().copyWithin(...args), this);
+    return tap(target => target.copyWithin(...args), 'copyWithin', this);
   }
   sort(...args) {
-    return map(target => target.slice().sort(...args), this);
+    return tap(target => target.sort(...args), 'sort', this);
   }
 
   reverse(...args) {
-    return map(target => target.slice().reverse(...args), this);
-  }
-  fill(...args) {
-    return map(target => target.slice().fill(...args), this);
-  }
-  
-  // mutable methods
-  mutableSplice(...args) {
-    if (isRendering()) {
-      // TODO: implement custom error message per method
-      throw new Error(
-        'Cannot invoke mutable operation ' +
-          'mutableSplice' +
-          ' in render. Consider using a immutable variant or performing the operation outside render.'
-      );
-    }
-    // we use map because return futr is not the same as passed in futr for splice
-    return map(target => target.splice(...args), this);
-  }
-  mutableCopyWithin(...args) {
-    return tap(target => target.copyWithin(...args), 'mutableCopyWithin', this);
-  }
-  mutableSort(...args) {
-    return tap(target => target.sort(...args), 'mutableSort', this);
+    return tap(target => target.reverse(...args), 'reverse', this);
   }
 
-  mutableReverse(...args) {
-    return tap(target => target.reverse(...args), 'mutableReverse', this);
-  }
-  mutableFill(...args) {
-    return tap(target => target.fill(...args), 'mutableFill', this);
+  fill(...args) {
+    return tap(target => target.fill(...args), 'fill', this);
   }
 
   //suspend methods
@@ -129,9 +109,7 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   unshift(...args): never {
     throw new Error('Invalid method');
   }
-  splice(): never {
-    throw new Error('Operation `splice` not permitted on react futures. Please use `slice` instead')
-  }
+
   static of(arrayReturningCb) {
     return new LazyArray(arrayReturningCb);
   }

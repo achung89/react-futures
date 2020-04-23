@@ -161,15 +161,15 @@ describe('In only render context', () => {
 
 describe('Array operations', () => {
   test.each`
-    name                   | expected                                      |  method        
-    ${'mutableFill'}       | ${arr => arr.fill(1)}                         |  ${arr => arr.mutableFill(1)}                       
-    ${'mutableReverse'}    | ${arr => arr.reverse()}                       |  ${arr => arr.mutableReverse()}
-    ${'mutableSort'}       | ${arr => arr.sort((a, b) => b - a)}           |  ${arr => arr.mutableSort((a, b) => b - a)}              
-    ${'mutableSplice'}     | ${arr => arr.splice(2)}                       |    ${arr => arr.mutableSplice(2)}
-    ${'mutableCopyWithin'} | ${arr => arr.copyWithin(0, 2)}                |  ${arr => arr.mutableCopyWithin(0, 2)}   
+    name                   | method                         
+    ${'fill'}       | ${arr => arr.fill(1)}                             
+    ${'reverse'}    | ${arr => arr.reverse()}                   
+    ${'sort'}       | ${arr => arr.sort((a, b) => b - a)}                    
+    ${'splice'}     | ${arr => arr.splice(2)}                   
+    ${'copyWithin'} | ${arr => arr.copyWithin(0, 2)}            
   `(
     `Mutator method $name should defer outside render and throw in render`,
-    async ({ method, expected }) => {
+    async ({ method }) => {
       const futArr = new FutureArr(5);
       const inRender = () => expect(() => {
         method(futArr)
@@ -195,9 +195,12 @@ describe('Array operations', () => {
       });
       const {getByText} = renderer;
       await waitForSuspense(150);
-      const result = await extractValue(created);
 
-      expect(result).toEqual(expected([2,3,4,5]))
+      const result = await extractValue(created);
+      const orig = await extractValue(futArr);
+      const expected = [2,3,4,5];
+      expect(result).toEqual(method(expected))
+      expect(orig).toEqual(expected)
     }
   );
 
@@ -211,9 +214,6 @@ describe('Array operations', () => {
     ${'reduceRight'} | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}
     ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
     ${'flatMap'}     | ${arr => arr.flatMap(i => [i + 3])}
-    ${'copyWithin'} | ${arr => arr.copyWithin(1, 2, 3)}
-    ${'sort'}       | ${arr => arr.sort((a, b) => b - a)}
-    ${'fill'}       | ${arr => arr.fill(1)}
   `(
     `Applies defers native immutable method $name both in and outside render `,
     async ({ method }) => {

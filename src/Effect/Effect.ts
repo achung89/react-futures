@@ -130,8 +130,13 @@ const createEffect = Type =>
     #map = function map(nextFn: Function, Klass) {
       return new Klass(pipe(this.#deferredFn, nextFn));
     };
-
+    #splice = function spliceTap(fn) {
+      const result = new LazyArray(pipe(this.#deferredFn,first(fn)));
+      this.#deferredFn = pipe(this.#deferredFn, first(tap(fn)));
+      return result;
+    }
     #tap = function tapper(fn: Function, name: string, futr: Effect) {
+      
       if (isRendering()) {
         // TODO: implement custom error message per method
         throw new Error(
@@ -140,21 +145,21 @@ const createEffect = Type =>
             ' in render. Consider using a immutable variant or performing the operation outside render.'
         );
       }
+      if(name === 'splice') {
+        return this.#splice(fn)
+      }
 
-      const newNextFn = (...args) => {
-        let result = fn(...args);
+      this.#deferredFn = pipe(this.#deferredFn, first(tap(fn)));
 
-        return result;
-      };
-      this.#deferredFn = pipe(this.#deferredFn, tap(newNextFn));
       return futr;
     };
     #run = function run(fn: Function) {
+      
       let getVal = this.#deferredFn
       if(rhsMap.has(this)) {
         getVal = () => rhsMap.get(this);
       }
-      return pipe(getVal, fn)();
+      return pipe(getVal, first(fn))();
     };
   };
 
