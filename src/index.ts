@@ -4,7 +4,7 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import LRU from 'lru-cache';
 import { LazyArray, species } from './internal';
-import { LazyObject, isFuture } from './internal';
+import { LazyObject, isFuture, getRaw } from './internal';
 
 export const futureObject = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
@@ -17,7 +17,9 @@ export const futureObject = <T extends object>(promiseCb) => {
     if (cache.has(key)) {
       return cache.get(key);
     }
-    cache.set(key, promiseCb(key));
+    const param = isFuture(key) ? getRaw(key) : key
+
+    cache.set(key, promiseCb(param));
 
     const promise = cache.get(key);
     promise.then(res => {
@@ -27,6 +29,7 @@ export const futureObject = <T extends object>(promiseCb) => {
 
     return promise;
   };
+
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
     static get [species]() {
       return LazyObject;
@@ -41,15 +44,10 @@ export const futureObject = <T extends object>(promiseCb) => {
       cache.reset();
     }
     constructor(key) {
-      // TODO: defer suspension if key is future
-      // if(isFuture(key)) {
-      //   return new LazyObject(() => {
-      //     const promise = getCachedPromise(key);
-      //     return new FutureObject(promise);
-      //   });
-      // }
-      const promise = getCachedPromise(key);
-      super(promise);
+      if(typeof key === 'object' && key !== null && isRendering()) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined, received ${Array.isArray(key) ? 'array' : 'object'}`)
+      }
+      super(getCachedPromise(key));
     }
   };
 };
@@ -65,7 +63,10 @@ export const futureArray = <T>(promiseCb) => {
     if (cache.has(key)) {
       return cache.get(key);
     }
-    cache.set(key, promiseCb(key));
+
+    const param = isFuture(key) ? getRaw(key) : key
+
+    cache.set(key, promiseCb(param));
 
     const promise = cache.get(key);
     promise.then(res => {
@@ -75,6 +76,7 @@ export const futureArray = <T>(promiseCb) => {
 
     return promise;
   };
+
   return class FutureArrayCache<A = T> extends FutureArray<A> {
     static get [species]() {
       return LazyArray;
@@ -89,15 +91,10 @@ export const futureArray = <T>(promiseCb) => {
       cache.del(key);
     }
     constructor(key) {
-      // TODO: defer suspension if key is future
-      // if(isFuture(key)) {
-      //   return new LazyArray(() => {
-      //     const promise = getCachedPromise(key);
-      //     return new FutureArray(promise);
-      //   });
-      // }
-      const promise = getCachedPromise(key);
-      super(promise);
+      if(typeof key === 'object' && key !== null && isRendering()) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined in render, received ${Array.isArray(key) ? 'array' : 'object'}`)
+      };
+      super(getCachedPromise(key));
     }
   };
 };

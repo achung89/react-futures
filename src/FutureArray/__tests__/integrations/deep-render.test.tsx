@@ -3,6 +3,7 @@ import { futureArray } from '../../../index';
 
 import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
+import { getRaw, lazyArray } from '../../../utils';
 
 jest.useFakeTimers();
 
@@ -13,6 +14,15 @@ jest.useFakeTimers();
 // testing iterating in parent and in child and accessing in child or subchild
 
 let StubFutureArray;
+export let reverseImm = arr => {
+  return lazyArray(() => {
+    let a = [];
+    for (let i = arr.length - 1; i >= 0; i--) {
+      a.push(arr[i]);
+    }
+    return a;
+  })
+}
 const PassThrough = ({ children }) => {
   return <div>{children}</div>;
 };
@@ -57,11 +67,11 @@ let Deep = ({ numbers }) => <div>{numbers}</div>;
 describe('Instantiate in render, deep render scenarios', () => {
   test('should render ', async () => {
     let App = ({ nestedFuture = false }) => {
-      let numbers = new StubFutureArray(4)
+      let numbers = reverseImm(new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
 
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
 
@@ -77,11 +87,11 @@ describe('Instantiate in render, deep render scenarios', () => {
 
   test('should render deeply', async () => {
     let App = ({ nestedFuture = false }) => {
-      const numbers = new StubFutureArray(4)
+      const numbers = reverseImm(new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
       const nums = nestedFuture
         ? createNestedFuture(numbers) /**[9,9]*/
         : numbers;
@@ -103,11 +113,11 @@ describe('Instantiate in render, deep render scenarios', () => {
 
   test('should render very deeply', async () => {
     let AppVeryDeep = ({ nestedFuture = false, level }) => {
-      const numbers = new StubFutureArray(4)
+      const numbers = reverseImm( new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
 
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
 
@@ -147,11 +157,11 @@ describe('Instantiate in render, deep render scenarios', () => {
   });
   test('should render with prop drilling', async () => {
     const App = ({ level, nestedFuture = false }) => {
-      let numbers = new StubFutureArray(4)
+      let numbers = reverseImm(new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
 
       const nums = nestedFuture
         ? createNestedFuture(numbers) /** [9,9] */
@@ -189,11 +199,11 @@ describe('Instantiate in render, deep render scenarios', () => {
       return <PropDrill prop={nums} level={level} />;
     };
     const App = ({ level, nestedFuture = false }) => {
-      const numbers = new StubFutureArray(4)
+      const numbers = reverseImm(new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
 
       return (
         <DeepPassThrough level={level}>
@@ -232,11 +242,11 @@ describe('Instantiate in render, deep render scenarios', () => {
 
 describe('Instantiate outside render, deep render scenario', () => {
   test('should render ', async () => {
-    const numbers = new StubFutureArray(4)
+    const numbers = reverseImm(new StubFutureArray(4)
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
-      .reverse(); // [8,6,4,2]
+      ) // [8,6,4,2]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -253,11 +263,11 @@ describe('Instantiate outside render, deep render scenario', () => {
   });
 
   test('should render deeply', async () => {
-    let numbers = new StubFutureArray(4)
+    let numbers = reverseImm(new StubFutureArray(4)
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
-      .reverse(); // [8,6,4,2]
+      )// [8,6,4,2]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -283,12 +293,12 @@ describe('Instantiate outside render, deep render scenario', () => {
   });
 
   test('should render very deeply', async () => {
-    const getNumbers = () =>
+    const getNumbers = () =>reverseImm(
       new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
     let numbers = getNumbers();
 
     const AppVeryDeep = ({ nestedFuture = false, level }) => {
@@ -335,12 +345,12 @@ describe('Instantiate outside render, deep render scenario', () => {
   });
 
   test('should render with prop drilling', async () => {
-    const getNumbers = () =>
+    const getNumbers = () => reverseImm(
       new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+        ) // [8,6,4,2]
     let numbers = getNumbers();
     const App = ({ level, nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -373,12 +383,12 @@ describe('Instantiate outside render, deep render scenario', () => {
   });
 
   test('should render intermediate transformations', async () => {
-    const getNumbers = () =>
+    const getNumbers = () => reverseImm(
       new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+      ) // [8,6,4,2]
 
     let numbers = getNumbers();
 

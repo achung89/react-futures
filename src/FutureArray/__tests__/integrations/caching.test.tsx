@@ -6,6 +6,7 @@ import {
   testSuspenseWithLoader,
   testRenderWithoutSuspense,
 } from '../../../test-utils/testSuspense';
+import { reverseImm } from './deep-render.test';
 
 jest.useFakeTimers();
 
@@ -35,11 +36,11 @@ afterEach(() => {
 describe('Caching arrays instantiated in render', () => {
   test('should cache shallow renders', async () => {
     const App = ({ nestedFuture = false }) => {
-      let numbers = new StubFutureArray(4)
+      let numbers = reverseImm(new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        .reverse(); // [8,6,4,2]
+      ); // [8,6,4,2]
 
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
 
