@@ -13,7 +13,7 @@ const memoize = fn => {
   return cached;
 };
 
-const cloneFuture = memoize(target => {
+export const cloneFuture = memoize(target => {
   const descriptors = Object.getOwnPropertyDescriptors(getRaw(target));
   return Object.defineProperties(Array.isArray(target) ? [] : {}, descriptors);
 })

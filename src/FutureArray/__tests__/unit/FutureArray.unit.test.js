@@ -196,8 +196,8 @@ describe('Array operations', () => {
       const {getByText} = renderer;
       await waitForSuspense(150);
 
-      const result = await extractValue(created);
       const orig = await extractValue(futArr);
+      const result = await extractValue(created);
       const expected = [2,3,4,5];
       expect(result).toEqual(method(expected))
       expect(orig).toEqual(expected)

@@ -1,6 +1,6 @@
 import { pipe, tap, first, isRendering } from '../internal';
-import { LazyArray } from '../internal';
-import { isFuture, getRaw } from '../utils';
+import { LazyArray, cloneFuture } from '../internal';
+import { isFuture, getRaw, lazyArray } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 // implements IO
@@ -115,7 +115,7 @@ const createEffect = Type =>
           // TODO: is this right?
           return new LazyArray(() => this.#run(target => Reflect.ownKeys(target)));
         },
-        preventExtensions: _target => {
+      preventExtensions: _target => {
           throw new InvalidObjectStaticMethod(['preventExtensions', 'seal'])
         },
         setPrototypeOf: (_target, proto) => {
@@ -131,8 +131,16 @@ const createEffect = Type =>
       return new Klass(pipe(this.#deferredFn, nextFn));
     };
     #splice = function spliceTap(fn) {
-      const result = new LazyArray(pipe(this.#deferredFn,first(fn)));
-      this.#deferredFn = pipe(this.#deferredFn, first(tap(fn)));
+      let spliced;
+      let mutated;
+      const performSplice = first(arr => {
+        spliced = fn(arr);
+      })
+      const result = lazyArray(() => {
+        performSplice();
+        return spliced
+      })
+      this.#deferredFn = pipe(this.#deferredFn, tap(performSplice));
       return result;
     }
     #tap = function tapper(fn: Function, name: string, futr: Effect) {
