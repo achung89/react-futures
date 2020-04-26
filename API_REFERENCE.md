@@ -11,11 +11,11 @@
 futureArray(promiseReturningFunction); // => FutureArrayConstructor
 ```
 
-Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.
+Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor during instantiation.
 
 ###### ARGUMENTS
 
-promiseReturningFunction ((...any[]) => Promise<any[]>): function that returns a promise that resolves to an array.
+promiseReturningFunction ((...Array<string | number | undefined | null>) => Promise<any[]>): function that returns a promise that resolves to an array.
 
 ###### RETURNS
 
@@ -47,21 +47,21 @@ new FutureArrayCache(...argumentsOfPromiseReturningFunction); // => future array
 
 ###### ARGUMENTS
 
-...argumentsOfPromiseReturningFunction (...any[]): arguments of the promiseReturningFunction which is passed into `futureArray`
+...argumentsOfPromiseReturningFunction (...Array<string | number | undefined | null>): arguments of the promiseReturningFunction which is passed into `futureArray`. Must be primitive values, arrays and objects are not allowed.
 
 ###### RETURNS
 
-future array (intanceof `FutureArrayCache`): a future with the same interface as an array, except for added variants `immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`
+future array (intanceof `FutureArrayCache`): a future with the same interface as an array
 <br />
 <br />
 
 #### Instance methods
 
-Future arrays share the same methods as host arrays, with the exception of added immutable variants of methods
+Future arrays share the same methods as host arrays
 
 ##### Immutable instance methods
 
-Immutable methods will defer operations both inside and outside render. The methods include all immutable methods of array and include additional immutable variants of methods (`immReverse`, `immCopyWithin`, `immSort`, `immFill`, and `immSplice`)
+Immutable methods will defer operations both inside and outside render. The methods include all immutable methods of array.
 
 <details><summary>List of immutable methods</summary>
 <p>
@@ -98,7 +98,7 @@ Mutable instance methods will defer operations outside render and throw a `Mutab
 
 ##### Suspend instance methods
 
-Suspend methods are opearations that require examining the contents of the array. These methods throw an error outside render and suspend inside render.
+Suspend methods are operations examine the contents of the array. These methods throw an error outside render and suspend inside render.
 
 <details><summary>List of suspend methods</summary>
 - indexOf<br />
@@ -118,7 +118,7 @@ Suspend methods are opearations that require examining the contents of the array
 
 ##### of
 
-instantiantes a future array with the same arguments as the constructor
+instantiates a future array with the same arguments as the constructor
 
 ```javascript
 FutureArrayCache.of(...argumentsOfPromiseReturningFunction); // => future array instance
@@ -140,7 +140,7 @@ Produces a future object constructor. The parameters for the promiseReturningFun
 
 ###### ARGUMENTS
 
-promiseReturningFunction ((...any[]) => Promise\<object>): function that returns a promise that resolves to an object
+promiseReturningFunction ((...Array<string | number | undefined | null>) => Promise\<object>): function that returns a promise that resolves to an object
 
 ###### RETURNS
 
@@ -181,7 +181,7 @@ Future objects share the same methods as host objects. All property lookups will
 
 #### Static methods
 
-Future objects share the same static methods as the host Object constructor. Most have been repurposed to defer when possible.
+Future objects share the same static methods as the host Object constructor. All static methods, even mutable methods, have been implemented to be immutable and defer.
 
 ##### of
 
@@ -204,13 +204,6 @@ These methods return a future object or a future array and can be used both in a
 - entries<br />
 - fromEntries<br />
 - values<br />
-</details>
-
-##### Mutable static methods
-
-These methods mutate and return the future object passed in. These operations are allowed outside render but prohibited inside render.
-
-<details><summary>List of immutable static</summary>
 - assign<br />
 - seal<br />
 - preventExtensions<br />
@@ -220,14 +213,16 @@ These methods mutate and return the future object passed in. These operations ar
 - setPrototypeOf<br />
 </details>
 
+
 ##### Suspend static methods
 
 These methods require examining the contents of the object and therefore suspend. They can be used inside render but not out.
 
-<details><summary>List of immutable static</summary>
+<details><summary>List of suspend static</summary>
 - isExtensible<br />
 - isFrozen<br />
 - isSealed<br />
+
 </details>
 
 ##### Invalid method
@@ -255,11 +250,11 @@ lazyArray(arrayReturningFunction); // => lazyArrayReturningImmutableFunction
 
 ###### ARGUMENTS
 
-arrayReturningFunction ((...any[]) => any[]): lazy callback, requires array as return value
+arrayReturningFunction (() => any[]): lazy callback, requires array as return value
 
 ###### RETURNS
 
-future array (insanceof LazyArray): future array result of callback
+future array (instanceof LazyArray): future array result of callback
 
 ##### Basic usage
 
@@ -296,7 +291,7 @@ lazyObject(objectReturningFunction); // => future object
 
 ###### ARGUMENTS
 
-objectReturningFunction ((...any[]) => object): lazy callback, requires object as return value
+objectReturningFunction (() => object): lazy callback, requires object as return value
 
 ###### RETURNS
 
@@ -330,7 +325,7 @@ future (instanceof Effect): any future
 
 ###### RETURNS
 
-raw value of future (instanceof object|array): raw valueof future
+raw value of future (instanceof object|array): raw value of future
 
 ##### Basic usage
 ```javascript
