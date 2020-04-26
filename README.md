@@ -67,7 +67,7 @@ Manipulate asynchronous data synchronously
 
 ## Install
 
-This requires you to have React's experimental build installed:
+This requires you to have React's experimental build installed to enable Concurrent Mode:
 
 ```
 #yarn
@@ -89,7 +89,7 @@ yarn add react-futures
 
 ## Explainer
 
-React Futures is a collection of types that allow manipulation of asynchronous data in a synchronous manner. This happens by deferring the actual data processing until after the promise resolves and suspending only when necessary.
+React Futures is a collection of types that allow manipulation of asynchronous data in a synchronous manner. This happens by deferring the actual data processing until after the promise resolves and suspending only when necessary. This means you don't have to worry about waiting for your fetches, just perform your usual array and object operations on the React Futures object!
 
 For example:
 
@@ -115,7 +115,7 @@ When the requirements for data fetching increases, the benefits of React Futures
 
 ### Async/Await vs React Futures
 
-Here's an example of using async/await to display a list of active groups for a user:
+Let's compare between using async/await and React Futures for a simple scenario where we want to display a list of active groups for a user. Here's the async/await version:
 
 ```javascript
 const ActiveGroups = () => {
@@ -177,8 +177,11 @@ This example demonstrates several benefits of React Futures:
 
 ## Usage constraints
 
-Certain operations are constrained inside or outside render. For example, suspense operations are allowed only in render.
-Ex. 
+There are 3 constraints that you should be aware of, with their respective workarounds.
+
+### 1. Getters are only allowed in render
+
+Due to the way that Concurrent Mode in React works, suspense operations (i.e. getters) are only allowed in the render function. For example: 
 
 ```javascript
 const blogs = FutureBlogs()
@@ -194,18 +197,26 @@ const App = () => {
 
 ```
 
-To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render))
+Keep in mind that `on` handlers are not considered a part of the render function. <More stuff here>
 
-There are also constraints on mutable operations and certain operations are globally prohibited like `array.push` and `array.unshift`. To alleviate this, all future object constructor static methods have been made immutable. In v1 we will show descriptive error messages for these cases describing workarounds. 
+To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render)). In brief you usually just need to wrap the getter with either `lazyArray` or `lazyObject`, no problem.
 
-For a complete overview of these constraints, see the Caveats section (TODO)
+### 2. No mutable calls inside of render
+
+< NEED TO FILL IN >
+
+### 3. Global ban on specific mutable functions
+
+Certain operations are globally prohibited like `array.push` and `array.unshift`. To alleviate this, all future object constructor static methods have been made immutable. In v1 we will show descriptive error messages for these cases describing workarounds. 
+
+For a complete overview of these constraints, see the [Caveats section](#caveats).
 
 ## Example snippets
 
 
 ### Object iteration
 
-Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, but `Object.entries` with a future will suspend, making iteration outside render impossible. To allow this, React Futures puts a deferred version of `entries` and `fromEntries` on the future object constructors.
+Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, which is a blocking operation. You should instead use the new `<Future Class>.entries` and `<Future Class>.fromEntries`, which will defer evaluation until necessary. For example:
 
 ```javascript
 import { futureObject } from "react-futures";
@@ -222,7 +233,7 @@ const uppercaseUser = FutureUser.fromEntries(uppercaseUserEntries); // lazy
 ```
 <br/>
 
-All future object static methods are deferred, immutable variants of `Object` static methods, so they can used both in and out of render
+All future object static methods are deferred, immutable variants of `Object` static methods, so they can used both in and out of render.
 
 ### Suspense operations outside render
 
@@ -232,10 +243,10 @@ Sometimes it's useful to access properties on a future or perform a suspense ope
 const dave = new FutureUser("Dave");
 
 dave.props = dave.props // Error: suspense operations not allowed outside render
-              .sort((a, b) => a - b);
+               .sort((a, b) => a - b);
 ```
 
-To achieve this, use the `lazyArray` or `lazyObject` to suspend evaluation.
+To achieve this, use `lazyArray` or `lazyObject` to suspend evaluation.
 
 ```javascript
 import { futureObject, lazyArray } from "react-futures";
@@ -244,7 +255,7 @@ const FutureUser = futureObject(fetchUser);
 const dave = new FutureUser("Dave");
 
 dave.props = lazyArray(() => dave.props) //=> future array
-              .sort((a, b) => a - b); // lazy
+               .sort((a, b) => a - b); // lazy
 ```
 
 The above snippet suspends evaluation of the `dave.props` getter until a suspense operation is performed on `dave.props` inside render. `lazyArray` returns a future array and an `lazyObject` returns a future object.
@@ -261,7 +272,8 @@ const App = () => {
       <input
         type="text"
         onChange={e => {
-          setUser({ ...user, name: e.target.value }); // spread operator on `user` errors since spreading is a suspense operation
+          // spread operator on `user` errors since spreading is a suspense operation
+          setUser({ ...user, name: e.target.value });
         }}
       />
     </>
