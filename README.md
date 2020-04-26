@@ -115,7 +115,7 @@ When the requirements for data fetching increases, the benefits of React Futures
 
 ### Async/Await vs React Futures
 
-Let's compare between using async/await and React Futures for a simple scenario where we want to display a list of active groups for a user. Here's the async/await version:
+Let's compare between using async/await and React Futures for a scenario where we want to display a list of active groups for a user. Here's the async/await version:
 
 ```javascript
 const ActiveGroups = () => {
@@ -520,10 +520,10 @@ const App = () => {
 
 ```
 
-If future has any nested futures, those will not be visible with `toPromise` or `getRaw`. In this case use the following snippets for `getRawDeep`
+If future has any nested futures, those will not be visible with `toPromise` or `getRaw`. Here is an example of how you could implement getRawDeep for deep logging.
 
 ```javascript
-import { isFuture, getRaw, getRawDeep } from 'react-futures';
+import { isFuture, getRaw } from 'react-futures';
 
 const getRawDeep = future => {
   if(isFuture(future)) {
