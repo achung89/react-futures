@@ -5,7 +5,7 @@ import {
   LazyArray,
   species
 } from './internal';
-const speciesMap = new WeakMap()
+
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
   fns.reduce((val, fn) => fn(val), val);
 

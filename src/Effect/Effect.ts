@@ -1,6 +1,6 @@
 import { pipe, tap, first, isRendering } from '../internal';
 import { LazyArray, cloneFuture } from '../internal';
-import { isFuture, getRaw, lazyArray } from '../utils';
+import { isFuture, getRaw, lazyArray } from '../internal';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 // implements IO
