@@ -210,9 +210,7 @@ describe('Array operations', () => {
     ${'filter'}      | ${arr => arr.filter(num => num % 2)}
     ${'slice'}       | ${arr => arr.slice(0, 1)}
     ${'map'}         | ${arr => arr.map(i => i + 3)}
-    ${'reduce'}      | ${arr => arr.reduce((coll, i) => [...coll, i + 3], [])}
-    ${'reduceRight'} | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}
-    ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
+       ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
     ${'flatMap'}     | ${arr => arr.flatMap(i => [i + 3])}
   `(
     `Applies defers native immutable method $name both in and outside render `,
@@ -295,19 +293,21 @@ describe('Array operations', () => {
   //indexOf, includes, join, lastIndexOf, toString, toSource, toLocaleString, pop, shift, every, find, findIndex, forEach, some, Symbol.iterator
 
   test.each`
-    name                | method                                | expected
-    ${'indexOf'}        | ${arr => arr.indexOf(2)}              | ${0}
-    ${'includes'}       | ${arr => arr.includes(3)}             | ${true}
-    ${'join'}           | ${arr => arr.join(' ')}               | ${'2 3 4 5'}
-    ${'lastIndexOf'}    | ${arr => arr.lastIndexOf(4)}          | ${2}
-    ${'toString'}       | ${arr => arr.toString()}              | ${'2,3,4,5'}
-    ${'toLocaleString'} | ${arr => arr.toLocaleString()}        | ${'2,3,4,5'}
-    ${'every'}          | ${arr => arr.every(a => a % 2 === 0)} | ${false}
-    ${'find'}           | ${arr => arr.find(a => a === 5)}      | ${5}
-    ${'findIndex'}      | ${arr => arr.findIndex(a => a === 5)} | ${3}
-    ${'forEach'}        | ${arr => arr.forEach(a => a)}         | ${undefined}
-    ${'some'}           | ${arr => arr.some(a => a % 2 === 0)}  | ${true}
-    ${Symbol.iterator}  | ${arr => [...arr, ...arr]}            | ${[2, 3, 4, 5, 2, 3, 4, 5]}
+    name                | method                                                      | expected
+    ${'indexOf'}        | ${arr => arr.indexOf(2)}                                    | ${0}
+    ${'reduce'}         | ${arr => arr.reduce((coll, i) => [...coll, i + 3], [])}     | ${[ 5, 6, 7, 8 ]}
+    ${'reduceRight'}    | ${arr => arr.reduceRight((coll, i) => [...coll, i + 3], [])}| ${[ 8, 7, 6, 5 ]}
+    ${'includes'}       | ${arr => arr.includes(3)}                                   | ${true}
+    ${'join'}           | ${arr => arr.join(' ')}                                     | ${'2 3 4 5'}
+    ${'lastIndexOf'}    | ${arr => arr.lastIndexOf(4)}                                | ${2}
+    ${'toString'}       | ${arr => arr.toString()}                                    | ${'2,3,4,5'}
+    ${'toLocaleString'} | ${arr => arr.toLocaleString()}                              | ${'2,3,4,5'}
+    ${'every'}          | ${arr => arr.every(a => a % 2 === 0)}                       | ${false}
+    ${'find'}           | ${arr => arr.find(a => a === 5)}                            | ${5}
+    ${'findIndex'}      | ${arr => arr.findIndex(a => a === 5)}                       | ${3}
+    ${'forEach'}        | ${arr => arr.forEach(a => a)}                               | ${undefined}
+    ${'some'}           | ${arr => arr.some(a => a % 2 === 0)}                        | ${true}
+    ${Symbol.iterator}  | ${arr => [...arr, ...arr]}                                  | ${[2, 3, 4, 5, 2, 3, 4, 5]}
   `(
     `suspends on $name inside render and throws outside render`,
     async ({ method, expected }) => {
@@ -395,5 +395,4 @@ describe('Array operations', () => {
   //   expect(Object.is(clss, ArrayResource[Symbol.species])).toEqual(true);
   // });
   test.skip('should have debug method', () => {});
-  test.skip('should have suspend method', () => {});
 });

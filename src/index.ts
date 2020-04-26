@@ -4,7 +4,7 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import LRU from 'lru-cache';
 import { LazyArray, species } from './internal';
-import { LazyObject, isFuture, getRaw } from './internal';
+import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
 
 export const futureObject = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
@@ -13,13 +13,12 @@ export const futureObject = <T extends object>(promiseCb) => {
     // TODO: add custom error message per method
     throw new Error('cannot create future outside render');
   }
-  const getCachedPromise = key => {
+  const getCachedPromise = keys => {
+    const key = JSON.stringify(keys);
     if (cache.has(key)) {
       return cache.get(key);
     }
-    const param = isFuture(key) ? getRaw(key) : key
-
-    cache.set(key, promiseCb(param));
+    cache.set(key, promiseCb(...keys));
 
     const promise = cache.get(key);
     promise.then(res => {
@@ -37,17 +36,17 @@ export const futureObject = <T extends object>(promiseCb) => {
     static map = undefined;
     static tap = undefined;
     static run = undefined;
-    static invalidate(key) {
-      cache.del(key);
+    static invalidate(...keys) {
+      cache.del(JSON.stringify(keys));
     }
     static reset() {
       cache.reset();
     }
-    constructor(key) {
-      if(typeof key === 'object' && key !== null && isRendering()) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined, received ${Array.isArray(key) ? 'array' : 'object'}`)
+    constructor(...keys) {
+      if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined, received array or object`)
       }
-      super(getCachedPromise(key));
+      super(getCachedPromise(keys));
     }
   };
 };
@@ -59,14 +58,14 @@ export const futureArray = <T>(promiseCb) => {
     // TODO: add custom error message per method
     throw new Error('cannot create cache in render');
   }
-  const getCachedPromise = key => {
+  const getCachedPromise = keys => {
+    const key = JSON.stringify(keys);
     if (cache.has(key)) {
       return cache.get(key);
     }
 
-    const param = isFuture(key) ? getRaw(key) : key
 
-    cache.set(key, promiseCb(param));
+    cache.set(key, promiseCb(...keys));
 
     const promise = cache.get(key);
     promise.then(res => {
@@ -87,14 +86,16 @@ export const futureArray = <T>(promiseCb) => {
     static reset() {
       cache.reset();
     }
-    static invalidate(key) {
-      cache.del(key);
+    static invalidate(...keys) {
+      cache.del(JSON.stringify(keys));
     }
-    constructor(key) {
-      if(typeof key === 'object' && key !== null && isRendering()) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined in render, received ${Array.isArray(key) ? 'array' : 'object'}`)
+    constructor(...keys) {
+      if(keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined in render, received array or object}`)
       };
-      super(getCachedPromise(key));
+      super(getCachedPromise(keys));
     }
   };
 };
+
+export { toPromise, lazyArray, lazyObject, getRaw, isFuture }

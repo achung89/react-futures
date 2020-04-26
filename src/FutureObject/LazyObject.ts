@@ -3,7 +3,6 @@ import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species } from '../internal';
 
-type Object = object | any[];
 const memoize = fn => {
   const cache = new WeakMap();
   const cached = function(val) {
@@ -86,47 +85,47 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
     super(fn);
   }
   // mutable methods
-  static mutableAssign(obj, ...rest) {
-    return staticMutableOperation(
-      obj,
-      obj => Object.assign(obj, ...rest),
-      'FutureObject.mutableAssign'
-    );
-  }
-  static mutableSeal(obj) {
-    return staticMutableOperation(obj, Object.seal, 'FutureObject.seal');
-  }
-  static mutablePreventExtensions(obj) {
-    return staticMutableOperation(
-      obj,
-      Object.preventExtensions,
-      'FutureObject.mutablePreventExtensions'
-    );
-  }
-  static mutableDefineProperties(obj, descs) {
-    return staticMutableOperation(
-      obj,
-      obj => Object.defineProperties(obj, descs),
-      'FutureOject.mutableDefineProperties'
-    );
-  }
-  static mutableDefineProperty(obj, prop, desc) {
-    return staticMutableOperation(
-      obj,
-      obj => Object.defineProperty(obj, prop, desc),
-      'FutureObject.mutableDefineProperty'
-    );
-  }
-  static mutableFreeze(obj) {
-    return staticMutableOperation(obj, Object.freeze, 'FutureObject.freeze');
-  }
-  static mutableSetPrototypeOf(obj, proto) {
-    return staticMutableOperation(
-      obj,
-      obj => Object.setPrototypeOf(obj, proto),
-      'FutureObject.mutableSetPrototypeOf'
-    );
-  }
+  // static mutableAssign(obj, ...rest) {
+  //   return staticMutableOperation(
+  //     obj,
+  //     obj => Object.assign(obj, ...rest),
+  //     'FutureObject.mutableAssign'
+  //   );
+  // }
+  // static mutableSeal(obj) {
+  //   return staticMutableOperation(obj, Object.seal, 'FutureObject.seal');
+  // }
+  // static mutablePreventExtensions(obj) {
+  //   return staticMutableOperation(
+  //     obj,
+  //     Object.preventExtensions,
+  //     'FutureObject.mutablePreventExtensions'
+  //   );
+  // }
+  // static mutableDefineProperties(obj, descs) {
+  //   return staticMutableOperation(
+  //     obj,
+  //     obj => Object.defineProperties(obj, descs),
+  //     'FutureObject.mutableDefineProperties'
+  //   );
+  // }
+  // static mutableDefineProperty(obj, prop, desc) {
+  //   return staticMutableOperation(
+  //     obj,
+  //     obj => Object.defineProperty(obj, prop, desc),
+  //     'FutureObject.mutableDefineProperty'
+  //   );
+  // }
+  // static mutableFreeze(obj) {
+  //   return staticMutableOperation(obj, Object.freeze, 'FutureObject.freeze');
+  // }
+  // static mutableSetPrototypeOf(obj, proto) {
+  //   return staticMutableOperation(
+  //     obj,
+  //     obj => Object.setPrototypeOf(obj, proto),
+  //     'FutureObject.mutableSetPrototypeOf'
+  //   );
+  // }
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {
