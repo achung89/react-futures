@@ -321,7 +321,7 @@ getRaw(future) // => raw value of future
 
 ###### ARGUMENTS
 
-future (instanceof Effect): any future
+future (instanceof Effect): future
 
 ###### RETURNS
 
@@ -353,7 +353,7 @@ toPromise(future) // => promise
 
 ###### ARGUMENTS
 
-future (instanceof Effect): any future
+future (instanceof Effect): future
 
 ###### RETURNS
 
@@ -368,3 +368,29 @@ toPromise(dave)
   .then(console.log) // logs: dave
 ```
 
+
+#### isFuture
+
+`isFuture` tells you whether parameter is future or not
+
+```javascript
+isFuture(future) // => boolean
+```
+
+###### ARGUMENTS
+
+future (instanceof Effect): future
+
+###### RETURNS
+
+boolean (instanceof Boolean): boolean of whether the parameter is a future
+
+##### Basic usage
+```javascript
+import {isFuture} from 'react-futures';
+const dave = new FutureUser('Dave');
+
+if ( isFuture(dave) ) {
+  //... 
+}
+```
