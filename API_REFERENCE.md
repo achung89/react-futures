@@ -341,3 +341,30 @@ const App = () => {
 }
 
 ```
+
+
+#### toPromise
+
+`toPromise` takes a future as a parameter and resolves with the raw value.
+
+```javascript
+toPromise(future) // => promise
+```
+
+###### ARGUMENTS
+
+future (instanceof Effect): any future
+
+###### RETURNS
+
+promise (Promise<object | array>): promise that resolves to value of future
+
+##### Basic usage
+```javascript
+import {toPromise} from 'react-futures';
+const dave = new FutureUser('Dave');
+
+toPromise(dave)
+  .then(console.log) // logs: dave
+```
+
