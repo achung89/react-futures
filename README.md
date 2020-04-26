@@ -67,7 +67,7 @@ Manipulate asynchronous data synchronously
 
 ## Install
 
-This requires you to have React's experimental build installed:
+This requires you to have React's experimental build installed to enable Concurrent Mode:
 
 ```
 #yarn
@@ -89,7 +89,7 @@ yarn add react-futures
 
 ## Explainer
 
-React Futures is a collection of types that allow manipulation of asynchronous data in a synchronous manner. This happens by deferring the actual data processing until after the promise resolves and suspending only when necessary.
+React Futures is a collection of types that allow manipulation of asynchronous data in a synchronous manner. This happens by deferring the actual data processing until after the promise resolves and suspending only when necessary. This means you don't have to worry about waiting for your fetches, just perform your usual array and object operations on the React Futures object!
 
 For example:
 
@@ -115,7 +115,7 @@ When the requirements for data fetching increases, the benefits of React Futures
 
 ### Async/Await vs React Futures
 
-Here's an example of using async/await to display a list of active groups for a user:
+Let's compare between using async/await and React Futures for a scenario where we want to display a list of active groups for a user. Here's the async/await version:
 
 ```javascript
 const ActiveGroups = () => {
@@ -177,8 +177,11 @@ This example demonstrates several benefits of React Futures:
 
 ## Usage constraints
 
-Certain operations are constrained inside or outside render. For example, suspense operations are allowed only in render.
-Ex. 
+There are 3 constraints that you should be aware of, with their respective workarounds.
+
+### 1. Getters are only allowed in render
+
+Due to the way that Concurrent Mode in React works, suspense operations (i.e. getters) are only allowed in the render function. For example: 
 
 ```javascript
 const blogs = FutureBlogs()
@@ -194,18 +197,27 @@ const App = () => {
 
 ```
 
-To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render))
+Keep in mind that `on` handlers are not considered a part of render, even though they may be located within the render function.
 
-There are also constraints on mutable operations and certain operations are globally prohibited like `array.push` and `array.unshift`. To alleviate this, all future object constructor static methods have been made immutable. In v1 we will show descriptive error messages for these cases describing workarounds. 
+To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render)). In brief you usually just need to wrap the getter with either `lazyArray` or `lazyObject` and you're good to go.
 
-For a complete overview of these constraints, see the Caveats section (TODO)
+### 2. No mutable calls inside of render
+
+Operations that mutate an array or object are not allowed within render, and should be replaced with their immutable equivalents. 
+
+### 3. Global ban on specific mutable functions
+
+Certain operations are globally prohibited like `array.push` and `array.unshift`. To alleviate this, all future object constructor static methods have been made immutable. In v1 we will show descriptive error messages for these cases describing workarounds. 
+
+For a complete overview of these constraints, see the [Caveats section](#caveats).
 
 ## Example snippets
 
+There are some additional examples you can reference in the `examples` folder, but for the most part other than the initial `futureArray` or `futureObject` initializer you should be able to proceed with standard javascript calls to manipulate your data. Here are a few examples that cover some of the edge cases in using the library.
 
 ### Object iteration
 
-Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, but `Object.entries` with a future will suspend, making iteration outside render impossible. To allow this, React Futures puts a deferred version of `entries` and `fromEntries` on the future object constructors.
+Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, which is a blocking operation when used with a React Futures object. You should instead use the new `<Future Class>.entries` and `<Future Class>.fromEntries`, which will defer evaluation until necessary. For example:
 
 ```javascript
 import { futureObject } from "react-futures";
@@ -222,7 +234,7 @@ const uppercaseUser = FutureUser.fromEntries(uppercaseUserEntries); // lazy
 ```
 <br/>
 
-All future object static methods are deferred, immutable variants of `Object` static methods, so they can used both in and out of render
+All future object static methods are deferred, immutable variants of `Object` static methods, so they can used both in and out of render.
 
 ### Suspense operations outside render
 
@@ -232,10 +244,10 @@ Sometimes it's useful to access properties on a future or perform a suspense ope
 const dave = new FutureUser("Dave");
 
 dave.props = dave.props // Error: suspense operations not allowed outside render
-              .sort((a, b) => a - b);
+               .sort((a, b) => a - b);
 ```
 
-To achieve this, use the `lazyArray` or `lazyObject` to suspend evaluation.
+To achieve this, use `lazyArray` or `lazyObject` to suspend evaluation.
 
 ```javascript
 import { futureObject, lazyArray } from "react-futures";
@@ -244,7 +256,7 @@ const FutureUser = futureObject(fetchUser);
 const dave = new FutureUser("Dave");
 
 dave.props = lazyArray(() => dave.props) //=> future array
-              .sort((a, b) => a - b); // lazy
+               .sort((a, b) => a - b); // lazy
 ```
 
 The above snippet suspends evaluation of the `dave.props` getter until a suspense operation is performed on `dave.props` inside render. `lazyArray` returns a future array and an `lazyObject` returns a future object.
@@ -261,7 +273,8 @@ const App = () => {
       <input
         type="text"
         onChange={e => {
-          setUser({ ...user, name: e.target.value }); // spread operator on `user` errors since spreading is a suspense operation
+          // spread operator on `user` errors since spreading is a suspense operation
+          setUser({ ...user, name: e.target.value });
         }}
       />
     </>
@@ -269,7 +282,7 @@ const App = () => {
 };
 ```
 
-To accomplish this, we can use the `lazyObject` from above, or we can use the `getRaw` function.
+To accomplish this, we can use the `lazyObject` from above.
 
 ```javascript
 // Using `lazyObject`
@@ -285,9 +298,11 @@ const App = () => {
   }} />
   </>
 }
+```
 
+Alternatively, we can use the `getRaw` function to force a suspend and get the raw object:
 
-
+```javascript
 // Using `getRaw`
 import { getRaw } from 'react-futures';
 
@@ -309,12 +324,16 @@ const App = () => {
 
 ### Using with third party libraries (ramda, lodash, etc.)
 
-Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArr` and `lazyObj`. These methods lazyily evaluate array and object returning functions respectively.
+Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArray` and `lazyObject`. These methods lazily evaluate array and object returning functions respectively.
 
 Lets take a look at an example using lodash's `_.cloneDeep`. If you pass a future in the function, it would suspend since `_.cloneDeep` iterates through the properties of the future.
 
 ```javascript
-const dave = new FutureUser("Dave");
+import _ from 'lodash'
+
+const FutureUser = futureObject(...);
+
+const dave = new FutureUser('Dave');
 
 const daveTwin = _.cloneDeep(dave); // Error: can not suspend outside render
 ```
@@ -338,7 +357,7 @@ const result = FutureUser.entries(daveTwin)
 
 `lazyObject` defers the evaluation of the object returning operation until a suspense operation takes place.
 
-`lazyArray` works the same way for arrays
+`lazyArray` works the same way for arrays. Here's an example using ramda's `zip` function:
 
 ```javascript
 import { lazyArray, futureArray } from 'react-futures'
@@ -352,7 +371,7 @@ const [friends, groups] = [new FutureFriends, new FutureGroups];
 const friendsAndGroups = lazyArray(() => zip(friends, groups)) //=> future array
 ```
 
-To defer function composition, you can use ramda's pipeWith or composeWith to wrap callbacks in `lazyObject` and `lazyArray`
+To defer function composition, you can use ramda's `pipeWith` or `composeWith` functions and wrap callbacks in `lazyObject` and `lazyArray`:
 
 ```javascript
 import { pipeWith, filter, sort } from 'ramda';
@@ -484,7 +503,7 @@ const App = () => {
 
 ### Logging
 
-`console.log` with a future will log a proxy, to log the contents of the future use either `toPromise` or `getRaw`.
+`console.log` with a future will log a proxy, which is probably not what you want. To log the contents of the future use either `toPromise` or `getRaw`.
 
 ```javascript
 import { getRaw, toPromise } from 'react-futures';
@@ -501,10 +520,10 @@ const App = () => {
 
 ```
 
-If future has any nested futures, those will not be visible with `toPromise` or `getRaw`. In this case use the following snippets for `getRawDeep`
+If future has any nested futures, those will not be visible with `toPromise` or `getRaw`. Here is an example of how you could implement getRawDeep for deep logging.
 
 ```javascript
-import {isFuture, getRaw} from 'react-futures';
+import { isFuture, getRaw } from 'react-futures';
 
 const getRawDeep = future => {
   if(isFuture(future)) {
@@ -530,6 +549,7 @@ Coming soon...
 ## Caveats
 
 ### Operation constraints
+
 As a rule of thumb, mutable operations are constrained to outside render and suspense operations are constrained to inside render. For suspense operation workarounds see [Suspense operations outside render](#suspense-operations-outside-render) and [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc). 
 
 Consider moving mutable operations outside render or using an immutable variant instead. All future object constructor static method have been converted to be immutable and lazy.  
@@ -644,11 +664,12 @@ for(const futureItem of items) {
 ```
 
 encapsulate the whole assignment in a block instead
+
 ```javascript
 let arr = lazyArray(() => {
   let temp = []
   for(const futureItem of items) {
-    temp = [...temp, ...futureItem] // leads to infinite getter loop on suspense
+    temp = [...temp, ...futureItem]
   }
   return temp;
 })
