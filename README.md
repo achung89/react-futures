@@ -197,13 +197,13 @@ const App = () => {
 
 ```
 
-Keep in mind that `on` handlers are not considered a part of the render function. <More stuff here>
+Keep in mind that `on` handlers are not considered a part of render, even though they may be located within the render function.
 
-To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render)). In brief you usually just need to wrap the getter with either `lazyArray` or `lazyObject`, no problem.
+To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render)). In brief you usually just need to wrap the getter with either `lazyArray` or `lazyObject` and you're good to go.
 
 ### 2. No mutable calls inside of render
 
-< NEED TO FILL IN >
+Operations that mutate an array or object are not allowed within render, and should be replaced with their immutable equivalents. 
 
 ### 3. Global ban on specific mutable functions
 
@@ -213,10 +213,11 @@ For a complete overview of these constraints, see the [Caveats section](#caveats
 
 ## Example snippets
 
+There are some additional examples you can reference in the `examples` folder, but for the most part other than the initial `futureArray` or `futureObject` initializer you should be able to proceed with standard javascript calls to manipulate your data. Here are a few examples that cover some of the edge cases in using the library.
 
 ### Object iteration
 
-Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, which is a blocking operation. You should instead use the new `<Future Class>.entries` and `<Future Class>.fromEntries`, which will defer evaluation until necessary. For example:
+Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, which is a blocking operation when used with a React Futures object. You should instead use the new `<Future Class>.entries` and `<Future Class>.fromEntries`, which will defer evaluation until necessary. For example:
 
 ```javascript
 import { futureObject } from "react-futures";
@@ -281,7 +282,7 @@ const App = () => {
 };
 ```
 
-To accomplish this, we can use the `lazyObject` from above, or we can use the `getRaw` function.
+To accomplish this, we can use the `lazyObject` from above.
 
 ```javascript
 // Using `lazyObject`
@@ -297,9 +298,11 @@ const App = () => {
   }} />
   </>
 }
+```
 
+Alternatively, we can use the `getRaw` function to force a suspend and get the raw object:
 
-
+```javascript
 // Using `getRaw`
 import { getRaw } from 'react-futures';
 
@@ -321,12 +324,16 @@ const App = () => {
 
 ### Using with third party libraries (ramda, lodash, etc.)
 
-Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArr` and `lazyObj`. These methods lazyily evaluate array and object returning functions respectively.
+Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArray` and `lazyObject`. These methods lazily evaluate array and object returning functions respectively.
 
 Lets take a look at an example using lodash's `_.cloneDeep`. If you pass a future in the function, it would suspend since `_.cloneDeep` iterates through the properties of the future.
 
 ```javascript
-const dave = new FutureUser("Dave");
+import _ from 'lodash'
+
+const FutureUser = futureObject(...);
+
+const dave = new FutureUser('Dave');
 
 const daveTwin = _.cloneDeep(dave); // Error: can not suspend outside render
 ```
@@ -350,7 +357,7 @@ const result = FutureUser.entries(daveTwin)
 
 `lazyObject` defers the evaluation of the object returning operation until a suspense operation takes place.
 
-`lazyArray` works the same way for arrays
+`lazyArray` works the same way for arrays. Here's an example using ramda's `zip` function:
 
 ```javascript
 import { lazyArray, futureArray } from 'react-futures'
@@ -364,7 +371,7 @@ const [friends, groups] = [new FutureFriends, new FutureGroups];
 const friendsAndGroups = lazyArray(() => zip(friends, groups)) //=> future array
 ```
 
-To defer function composition, you can use ramda's pipeWith or composeWith to wrap callbacks in `lazyObject` and `lazyArray`
+To defer function composition, you can use ramda's `pipeWith` or `composeWith` functions and wrap callbacks in `lazyObject` and `lazyArray`:
 
 ```javascript
 import { pipeWith, filter, sort } from 'ramda';
@@ -496,7 +503,7 @@ const App = () => {
 
 ### Logging
 
-`console.log` with a future will log a proxy, to log the contents of the future use either `toPromise` or `getRaw`.
+`console.log` with a future will log a proxy, which is probably not what you want. To log the contents of the future use either `toPromise` or `getRaw`.
 
 ```javascript
 import { getRaw, toPromise } from 'react-futures';
@@ -516,7 +523,7 @@ const App = () => {
 If future has any nested futures, those will not be visible with `toPromise` or `getRaw`. In this case use the following snippets for `getRawDeep`
 
 ```javascript
-import {isFuture, getRaw} from 'react-futures';
+import { isFuture, getRaw, getRawDeep } from 'react-futures';
 
 const getRawDeep = future => {
   if(isFuture(future)) {
@@ -542,6 +549,7 @@ Coming soon...
 ## Caveats
 
 ### Operation constraints
+
 As a rule of thumb, mutable operations are constrained to outside render and suspense operations are constrained to inside render. For suspense operation workarounds see [Suspense operations outside render](#suspense-operations-outside-render) and [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc). 
 
 Consider moving mutable operations outside render or using an immutable variant instead. All future object constructor static method have been converted to be immutable and lazy.  
@@ -656,11 +664,12 @@ for(const futureItem of items) {
 ```
 
 encapsulate the whole assignment in a block instead
+
 ```javascript
 let arr = lazyArray(() => {
   let temp = []
   for(const futureItem of items) {
-    temp = [...temp, ...futureItem] // leads to infinite getter loop on suspense
+    temp = [...temp, ...futureItem]
   }
   return temp;
 })
