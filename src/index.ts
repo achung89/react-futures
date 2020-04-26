@@ -33,6 +33,9 @@ export const futureObject = <T extends object>(promiseCb) => {
     static get [species]() {
       return LazyObject;
     }
+    static of(...args) {
+      return new FutureObjectCache(...args);
+    }
     static map = undefined;
     static tap = undefined;
     static run = undefined;
@@ -43,7 +46,7 @@ export const futureObject = <T extends object>(promiseCb) => {
       cache.reset();
     }
     constructor(...keys) {
-      if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
+      if(keys.some(key =>typeof key === 'object' && key !== null)) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined, received array or object`)
       }
       super(getCachedPromise(keys));
@@ -80,6 +83,9 @@ export const futureArray = <T>(promiseCb) => {
     static get [species]() {
       return LazyArray;
     }
+    static of(...args) {
+      return new FutureArrayCache(...args);
+    }
     static map = undefined;
     static tap = undefined;
     static run = undefined;
@@ -90,8 +96,8 @@ export const futureArray = <T>(promiseCb) => {
       cache.del(JSON.stringify(keys));
     }
     constructor(...keys) {
-      if(keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined in render, received array or object}`)
+      if(keys.some(key => typeof key === 'object' && key !== null)) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined, received array or object}`)
       };
       super(getCachedPromise(keys));
     }

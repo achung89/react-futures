@@ -27,12 +27,12 @@ Manipulate asynchronous data synchronously
         </a>
       </li>
       <li>
-        <a href="#prefetching">
+        <a href="#fetching-on-component-mount">
           Fetching on component mount 
         </a>     
       </li>
       <li>
-        <a href="">
+        <a href="#prefetching">
         Prefetching
         </a>
       </li>
@@ -53,7 +53,7 @@ Manipulate asynchronous data synchronously
       </li>
       <li>
         <a href="#lazyobject-and-lazyarray-in-reassignment">
-          lazyObject and lazyArray in reassignment
+          lazyObject and lazyArray reassignment
         </a>
       </li>
       </ul>
@@ -177,7 +177,7 @@ This example demonstrates several benefits of React Futures:
 
 ## Usage constraints
 
-Certain operations are constrained inside or outside render. For example, suspense operations are only allowed insider render.
+Certain operations are constrained inside or outside render. For example, suspense operations are allowed only in render.
 Ex. 
 
 ```javascript
@@ -482,12 +482,6 @@ const App = () => {
 }
 ```
 
-### Using with graphql
-
-Coming soon...
-<br />
-<br />
-
 ### Logging
 
 `console.log` with a future will log a proxy, to log the contents of the future use either `toPromise` or `getRaw`.
@@ -527,6 +521,11 @@ const getRawDeep = future => {
   return future;
 }
 ```
+### Using with graphql
+
+Coming soon...
+<br />
+<br />
 
 ## Caveats
 
