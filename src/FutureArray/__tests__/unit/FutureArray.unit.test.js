@@ -1,17 +1,18 @@
 jest.useFakeTimers();
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-
+const {  performance } = require('perf_hooks')
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import { futureArray } from '../../../index';
+import { futureArray, futureObject, toPromise } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
-import { unwrapProxy } from '../../../utils';
+import { unwrapProxy, lazyArray } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
+import delay from 'delay';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 // TODO: setter should not suspend
@@ -35,6 +36,8 @@ let fetchArray = val =>
 let container;
 let FutureArr;
 beforeEach(() => {
+  jest.useFakeTimers();
+
   jest.resetModules();
   FutureArr = futureArray(fetchArray);
   Scheduler = require('scheduler/unstable_mock');
@@ -166,7 +169,8 @@ describe('Array operations', () => {
     ${'reverse'}    | ${arr => arr.reverse()}                   
     ${'sort'}       | ${arr => arr.sort((a, b) => b - a)}                    
     ${'splice'}     | ${arr => arr.splice(2)}                   
-    ${'copyWithin'} | ${arr => arr.copyWithin(0, 2)}            
+    ${'copyWithin'} | ${arr => arr.copyWithin(0, 2)}  
+          
   `(
     `Mutator method $name should defer outside render and throw in render`,
     async ({ method }) => {
@@ -305,7 +309,6 @@ describe('Array operations', () => {
     ${'every'}          | ${arr => arr.every(a => a % 2 === 0)}                       | ${false}
     ${'find'}           | ${arr => arr.find(a => a === 5)}                            | ${5}
     ${'findIndex'}      | ${arr => arr.findIndex(a => a === 5)}                       | ${3}
-    ${'forEach'}        | ${arr => arr.forEach(a => a)}                               | ${undefined}
     ${'some'}           | ${arr => arr.some(a => a % 2 === 0)}                        | ${true}
     ${Symbol.iterator}  | ${arr => [...arr, ...arr]}                                  | ${[2, 3, 4, 5, 2, 3, 4, 5]}
   `(
@@ -389,10 +392,150 @@ describe('Array operations', () => {
 
     expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(LazyArray);
   });
+  test.skip('forEach should return undefined, throw inside render, and defer outside render', async () => {
+    const futArr = new FutureArr(5);
+    let final;
+    const inRender = () => expect(() => {
+      futArr.forEach(val => {
+        final = val
+      })
+    }).toThrowError();
+
+    const outsideRender = () => {
+      futArr.forEach(val => {
+        final = val
+      })      
+    };
+    act(() => {
+      outsideRender();
+    });
+    let renderer;
+    act(() => {
+      renderer = render(
+        <Suspense fallback={<div>Loading...</div>}>
+          <LogSuspense action={inRender}>foo</LogSuspense>
+        </Suspense>,
+        container
+      );
+    });
+    await waitForSuspense(150);
+
+    expect(final).toEqual(5)
+  })
   // it('has immutable static @@species', () => {
   //   let clss = ArrayResource[Symbol.species];
   //   ArrayResource[Symbol.species] = class {};
   //   expect(Object.is(clss, ArrayResource[Symbol.species])).toEqual(true);
   // });
   test.skip('should have debug method', () => {});
+});
+
+describe('parallel iteration', () => {
+  let FutureVal;
+
+  const objectProm = value => new Promise( (res, rej) => {
+    try {
+      setTimeout(() => {
+        res({value})
+      }, 200)
+    } catch(err) {
+      throw err;
+    }
+  })
+
+  beforeEach(() => {
+    jest.useRealTimers()
+    FutureVal = futureObject(objectProm);
+  })
+  afterEach(() => {
+    FutureVal.reset()
+    FutureVal = null;
+  })
+
+  test('filter outside render', async () => {
+    const futureArr = new FutureArr(5);
+
+    const without3 = futureArr
+                       .filter( num => num + new FutureVal(num).value !== 6)
+
+    const without3Res = await toPromise(without3);
+
+    // timeout of FutureArr + timeout of FutureVal
+    expect( without3Res).toEqual([2,4,5])
+  }, 400)
+
+  test('map outside render', async () => {
+    const futureArr = new FutureArr(5);
+    let double = futureArr
+                  .map(num =>  num + new FutureVal(num).value);
+    const doubleRes = await toPromise(double);
+    expect(doubleRes).toEqual([4,6,8,10])
+  }, 400);
+
+  test('sort outside render', async () => {
+    const sorted = new FutureArr(5)
+                        .sort((a, b) => {
+                          return b - new FutureVal(a).value
+                        })
+    const resolved = await toPromise(sorted);
+    expect(resolved).toEqual([5,4,3,2])
+  }, 600)
+
+  test('flatMap outside render', async () => {
+    const futureArr = new FutureArr(5);
+    FutureArr.reset()
+    let flatted = futureArr.flatMap(num => new FutureArr(num));
+
+    const flattedRes = await toPromise(flatted);
+    expect(flattedRes).toEqual([
+      2, 3, 4, 2, 2, 3,
+      4, 3, 2, 3, 4, 4,
+      2, 3, 4, 5
+    ])
+  }, 400);
+
+  test('find', async () => {
+    const futureArr = new FutureArr(5);
+    let val;
+    const arr = lazyArray(() => {
+      val = futureArr.find( num => num + new FutureVal(num).value === 6);
+      return []
+    })
+    await toPromise(arr);
+    expect(val).toEqual(3);
+  }, 400);
+
+  test('every', async () => {
+    const futureArr = new FutureArr(5);
+    let val;
+    const arr = lazyArray(() => {
+      val = futureArr.every( num => num === new FutureVal(num).value);
+      return [];
+    })
+    await toPromise(arr);
+    expect(val).toEqual(true);
+  }, 400);
+
+  test('some', async () => {
+    const futureArr = new FutureArr(5);
+    let val;
+    const arr = lazyArray(() => {
+      val = futureArr.some( num => num !== new FutureVal(num).value);
+      return [];
+    });
+
+    await toPromise(arr);
+    expect(val).toEqual(false);
+  }, 400);
+  test('findIndex', async () => {
+    const futureArr = new FutureArr(5);
+    let val;
+    const arr = lazyArray(() => {
+      val = futureArr.findIndex( num => num + new FutureVal(num).value === 6);
+      return [];
+    });
+
+    await toPromise(arr);
+    expect(val).toEqual(1);
+  }, 400);
 });

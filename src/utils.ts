@@ -64,9 +64,8 @@ export const getRaw = future => {
   if ( !isFuture(future) ) {
     return future;
   }
-
   const instance = thisMap.get(future) 
-  
+
   return instance.constructor[species].run(getRaw, future);
 }
 

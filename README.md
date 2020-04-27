@@ -198,7 +198,7 @@ To accommodate this use case, React Futures provides utilities that can defer ev
 
 There are also constraints on mutable operations and certain operations are globally prohibited like `array.push` and `array.unshift`. To alleviate this, all future object constructor static methods have been made immutable. In v1 we will show descriptive error messages for these cases describing workarounds. 
 
-For a complete overview of these constraints, see the Caveats section (TODO)
+For a complete overview of these constraints, see the [Caveats section](#caveats)
 
 ## Example snippets
 
@@ -549,11 +549,12 @@ Some other operations are globally forbidden because it is uncertain what the us
   futureArray.lastIndexOf()<br />
   futureArray.toString()<br />
   futureArray.toLocaleString()<br />
-  futureArray.forEach()<br />
   futureArray.find()<br />
   futureArray.every()<br />
   futureArray.some()<br />
   futureArray.findIndex()<br />
+  futureArray.reduce()<br />
+  futureArray.reduceRight()<br />
   Object.assign(object, futureObject)<br />
   Object.getOwnPropertyDescriptors(future, ...rest)<br />
   Object.getOwnPropertyNames(future)<br />
@@ -568,6 +569,7 @@ Some other operations are globally forbidden because it is uncertain what the us
   FutureObjectConstructor.isExtensible(future)<br />
   FutureObjectConstructor.isFrozen(future)<br />
   FutureObjectConstructor.isSealed(future)<br />
+
 </ul>
 <ul>
   <h3>Mutable methods: disallowed inside render</h3>
@@ -591,8 +593,6 @@ Some other operations are globally forbidden because it is uncertain what the us
   futureArray.filter()<br />
   futureArray.slice()<br />
   futureArray.map()<br />
-  futureArray.reduce()<br />
-  futureArray.reduceRight()<br />
   futureArray.flat()<br />
   futureArray.flatMap()<br />
   FutueObjectConstructor.getOwnPropertyDescriptor(future)<br />
@@ -616,7 +616,7 @@ Some other operations are globally forbidden because it is uncertain what the us
 
 <ul>
   <h3>
-    Invalid methods: disallowed globally (if you feel strongly that these shouldn't error, please submit an issue explaining your use case)
+    Invalid methods: disallowed globally (if you feel that these shouldn't error, please submit an issue explaining your use case)
   </h3> 
   FutureObjectConstructor.create &nbsp;&nbsp; # not sure how this should differ from behavior of Object.create<br />
   FutureObjectConstructor.is  &nbsp;&nbsp; #should this compare future wrapper or raw value? If future wrapper, what would be the difference between this and `Object.is`?<br />
@@ -626,6 +626,7 @@ Some other operations are globally forbidden because it is uncertain what the us
   futureArray.unshift &nbsp;&nbsp;# both mutable and requires knowledge of array<br />
   delete futureObject &nbsp;&nbsp;# both mutable and requires knowledge of object, since it returns true or false depending on whether operation succeeded<br />
   Object.preventExtensions(future) &nbsp;&nbsp;# Causes problems in proxy<br />
+  futureArray.forEach() &nbsp;&nbsp;# Requires react futures to resolve a future without suspense, which is not yet implemented. Not even sure this is a good idea since deferred side-effects can cause unexpected behavior, plus what benefit would this have over a for loop? <br />
 
 </ul>
 

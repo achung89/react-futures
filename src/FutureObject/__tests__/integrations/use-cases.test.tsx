@@ -2,7 +2,7 @@ jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { futureObject } from "../../../index";
 
 import React, { Suspense, useState } from "react";
-import { lazyArray } from "../../../utils";
+import { lazyArray, lazyObject } from "../../../utils";
 import extractValue from "../../../test-utils/extractValue";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
 import { waitFor } from "@testing-library/dom";
@@ -62,7 +62,7 @@ describe("rhs", () => {
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => ind + 1);
     futureObj.value = op(lazyArray(() => futureObj.value));
-    const mutated = StubFutureObject.mutableAssign(futureObj, { value: "bar" });
+    const mutated = Object.assign(futureObj, { value: "bar" });
 
     const result = extractValue(futureObj);
     const mutatedResult = extractValue(mutated);
