@@ -216,62 +216,6 @@ describe('FutureObject static methods', () => {
       );
     }
   );
-
-
-  // test.each`
-  //   staticMethod                       | returnType    |  expected
-  //   ${mutableAssign_firstParamFuture}  | ${'object'}   | ${assign_firstParam}
-  //   ${'mutablePreventExtensions'}      | ${'object'}   | ${'preventExtensions'}
-  //   ${mutableSetPrototypeOfFuture}     | ${'object'}   | ${setPrototypeOf}
-  //   ${'mutableSeal'}                   | ${'object'}   | ${'seal'}
-  //   ${mutableAssign_secondParamFuture} | ${'object'}   | ${assign_secondParam}
-  //   ${mutableDefinePropertiesFuture}   | ${'object'}   | ${defineProperties}
-  //   ${mutableDefinePropertyFuture}     | ${'object'}   | ${defineProperty}
-  //   ${'mutableFreeze'}                 | ${'object'}   | ${'freeze'}
-  // `('Expect mutable method $staticMethod to throw in render and defer outside render',
-  //   async ({ staticMethod, returnType, expected }) => {
-  //     const futureObj = new FutureObj(1);
-  //     const method =
-  //       typeof staticMethod === 'string'
-  //         ? FutureObj[staticMethod]
-  //         : staticMethod;
-  //     const expectedMethod =
-  //       typeof staticMethod === 'string'
-  //         ? Object[expected]
-  //         : expected;
-  //     // TODO: specify error
-  //     const inRender = () => expect(() => method(futureObj)).toThrowError();
-  //     let created;
-  //     const outsideRender = () => {
-  //       let Constructor;
-  //       if (returnType === 'object') {
-  //         Constructor = LazyObject;
-  //       }
-  //       if (returnType === 'array') {
-  //         Constructor = LazyArray;
-  //       }
-  //       created = method(futureObj)
-  //       expect(unwrapProxy(created)).toBeInstanceOf(Constructor);
-
-  //     };
-
-  //     act(() => {
-  //       outsideRender();
-  //     });
-
-  //     let renderer;
-  //     act(() => {
-  //       renderer = render(<App inRender={inRender} />, container);
-  //     });
-  //     await waitForSuspense(150);
-
-  //     const result = await extractValue(created);
-  //     expect(result).toEqual(expectedMethod(expectedJSON(1)))
-  //     expect(Object.getOwnPropertyDescriptors(result)).toEqual(
-  //       Object.getOwnPropertyDescriptors(expectedMethod(expectedJSON(1)))
-  //     );
-  //   }
-  // );
   test.each`
     staticMethod
     ${'create'} 

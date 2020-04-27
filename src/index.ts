@@ -46,8 +46,8 @@ export const futureObject = <T extends object>(promiseCb) => {
       cache.reset();
     }
     constructor(...keys) {
-      if(keys.some(key =>typeof key === 'object' && key !== null)) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined, received array or object`)
+      if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       super(getCachedPromise(keys));
     }
@@ -96,8 +96,8 @@ export const futureArray = <T>(promiseCb) => {
       cache.del(JSON.stringify(keys));
     }
     constructor(...keys) {
-      if(keys.some(key => typeof key === 'object' && key !== null)) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined, received array or object}`)
+      if(keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
+        throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
       super(getCachedPromise(keys));
     }
