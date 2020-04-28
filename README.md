@@ -198,7 +198,7 @@ To work around this, React Futures provides utilities that  defer evaluation of 
 
 ### 2. No mutable calls inside of render
 
-Operations that mutate a future array or object, like `array.splice`, will error inside render since side-effects can cause bugs in react render. To alleviate this, all future object constructor static methods have been made immutable. In the v1 release, we will point users to immutable variants of mutable operations within error messages. 
+Operations that mutate a future array or object, like `array.splice`, are not allowed within render and should be replaced with their immutable equivalents. To alleviate this constraint, all future object constructor static methods have been made immutable.
 
 ### 3. Global ban on specific functions
 
