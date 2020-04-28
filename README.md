@@ -8,7 +8,7 @@ Manipulate asynchronous data synchronously
 <ul>
   <li> <a href="#install"> Install</a> </li>
   <li> <a href="#explainer">Explainer</a></li>
-  <li> <a href="#usage-constraints">Usage Constraints</a> </li>
+  <li> <a href="#use-constraints">Use Constraints</a> </li>
   <li> <a href="#example-snippets">Example snippets </a>
     <ul>
       <li>
@@ -115,7 +115,7 @@ When the requirements for data fetching increases, the benefits of React Futures
 
 ### Async/Await vs React Futures
 
-Let's compare between using async/await and React Futures for a scenario where we want to display a list of active groups for a user. Here's the async/await version:
+Lets take a scenario where we want to show the active groups of a user. Here's what it would look like using async/await:
 
 ```javascript
 const ActiveGroups = () => {
@@ -140,9 +140,7 @@ const ActiveGroups = () => {
   }, []);
 
   return groups.length > 0 
-    ? <>
-        <ul>{groups.map(group => <li>{group.name}</li>)}</ul>
-      </>
+    ? <ul>{groups.map(group => <li>{group.name}</li>)}</ul>
     : <div>Loading...</div>;
 };
 ```
@@ -162,11 +160,9 @@ const activeGroups = new FutureGroups('Tom').filter(group => {
 
 const ActiveGroups = () => {
   const [groups, setGroups] = useState(activeGroups);
-  return <>
-      <ul>
+  return <ul>
         {groups.map(group => <li>{group.name}</li>)}
       </ul>
-    </>
 };
 ```
 
@@ -175,13 +171,13 @@ This example demonstrates several benefits of React Futures:
 - With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can also be used in other future operations, see how `FuturePosts` is used in `filter` to collect `activeGroups`.
 - With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component.
 
-## Usage constraints
+## Use constraints
 
-There are 3 constraints that you should be aware of, with their respective workarounds.
+There are 3 constraints that you should be aware of and their workarounds.
 
 ### 1. Getters are only allowed in render
 
-Due to the way that Concurrent Mode in React works, suspense operations (i.e. getters) are only allowed in the render function. For example: 
+Due to how Concurrent Mode works, suspense operations (i.e. getters) are only allowed in the render function. For example: 
 
 ```javascript
 const blogs = FutureBlogs()
@@ -196,28 +192,25 @@ const App = () => {
 }
 
 ```
-
 Keep in mind that `on` handlers are not considered a part of render, even though they may be located within the render function.
 
-To accommodate this use case, React Futures provides utilities that can defer evaluation (see [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc) and [Suspense operations outside render](#suspense-operations-outside-render)). In brief you usually just need to wrap the getter with either `lazyArray` or `lazyObject` and you're good to go.
+To work around this, React Futures provides utilities that  defer evaluation of getters until suspense (see [Suspense operations outside render](#suspense-operations-outside-render) and [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc)). In brief, you should wrap getters performed  outside render in `lazyArray` or `lazyObject`.
 
 ### 2. No mutable calls inside of render
 
-Operations that mutate an array or object are not allowed within render, and should be replaced with their immutable equivalents. 
+Operations that mutate a future array or object, like `array.splice`, will error inside render since side-effects can cause bugs in react render. To alleviate this, all future object constructor static methods have been made immutable. In the v1 release, we will point users to immutable variants of mutable operations within error messages. 
 
-### 3. Global ban on specific mutable functions
+### 3. Global ban on specific functions
 
-Certain operations are globally prohibited like `array.push` and `array.unshift`. To alleviate this, all future object constructor static methods have been made immutable. In v1 we will show descriptive error messages for these cases describing workarounds. 
+Some operations are both mutable and are getters. like `array.push` and `array.unshift`. These operations are prohibited globally.
 
-For a complete overview of these constraints, see the [Caveats section](#caveats).
+For a complete reference of constraints, see the [Caveats section](#caveats).
 
 ## Example snippets
 
-There are some additional examples you can reference in the `examples` folder, but for the most part other than the initial `futureArray` or `futureObject` initializer you should be able to proceed with standard javascript calls to manipulate your data. Here are a few examples that cover some of the edge cases in using the library.
-
 ### Object iteration
 
-Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, which is a blocking operation when used with a React Futures object. You should instead use the new `<Future Class>.entries` and `<Future Class>.fromEntries`, which will defer evaluation until necessary. For example:
+Object iteration with native types is normally done with `Object.entries` and `Object.fromEntries`, but with a future this would suspend since `Object.entries` is a getter. You should instead use the new `<Future Class>.entries` and `<Future Class>.fromEntries`, which will defer evaluation until necessary. For example:
 
 ```javascript
 import { futureObject } from "react-futures";
@@ -338,7 +331,7 @@ const dave = new FutureUser('Dave');
 const daveTwin = _.cloneDeep(dave); // Error: can not suspend outside render
 ```
 
-To allow this, use the `lazyObj` to defer evaluation of `_.cloneDeep`
+To allow this, use the `lazyObject` to defer evaluation of `_.cloneDeep`
 
 ```javascript
 import _ from 'lodash'
@@ -552,11 +545,12 @@ Coming soon...
 
 As a rule of thumb, mutable operations are constrained to outside render and suspense operations are constrained to inside render. For suspense operation workarounds see [Suspense operations outside render](#suspense-operations-outside-render) and [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc). 
 
-Consider moving mutable operations outside render or using an immutable variant instead. All future object constructor static method have been converted to be immutable and lazy.  
+Consider moving mutable operations outside render or using an immutable variant instead. All future object constructor static method have been made immutable and lazy.  
 
-Certain operations are forbidden globally since they are both mutable and they inspect the contents of the array. `array.push` is mutable, for example, prohibiting it from being used in render, and it returns the length of the array, requiring knowledge of the array which prohibits use outside render. 
+Certain operations are forbidden globally since they are both mutable and they inspect the contents of the array. `array.push` is mutable, for example, prohibiting it from being used in render, and it synchronously returns the length of the array, prohibiting it from being used outside render. 
 
-Some other operations are globally forbidden because it is uncertain what the use cases are for these methods vs. `Object` static methods. Click below for a complete list
+Other operations are tbd since it is uncertain what the use cases for these methods are vs. `Object` static methods. Depending on how they can be useful, the implementation can vary significantly. Click below for a complete reference of constraints
+
 <details><summary>Complete restriction reference</summary>
 <p>
 <br />
@@ -640,13 +634,13 @@ Some other operations are globally forbidden because it is uncertain what the us
   </h3> 
   FutureObjectConstructor.create &nbsp;&nbsp; # not sure how this should differ from behavior of Object.create<br />
   FutureObjectConstructor.is  &nbsp;&nbsp; #should this compare future wrapper or raw value? If future wrapper, what would be the difference between this and `Object.is`?<br />
-  futureArray.push &nbsp;&nbsp;# both mutable and requires knowledge of array<br /> 
-  futureArray.pop &nbsp;&nbsp;# both mutable and requires knowledge of array<br />
-  futureArray.shift &nbsp;&nbsp;# both mutable and requires knowledge of array<br />
-  futureArray.unshift &nbsp;&nbsp;# both mutable and requires knowledge of array<br />
-  delete futureObject &nbsp;&nbsp;# both mutable and requires knowledge of object, since it returns true or false depending on whether operation succeeded<br />
+  futureArray.push &nbsp;&nbsp;# both mutable and requires sync get of `length`<br /> 
+  futureArray.pop &nbsp;&nbsp;# both mutable and requires sync get of the popped value<br />
+  futureArray.shift &nbsp;&nbsp;# both mutable and requires sync get of `length`<br />
+  futureArray.unshift &nbsp;&nbsp;# both mutable and requires sync get of unshifted value<br />
+  delete futureObject &nbsp;&nbsp;# both mutable and requires knowledge of object property descriptors, since it returns true or false depending on whether operation succeeded<br />
   Object.preventExtensions(future) &nbsp;&nbsp;# Causes problems in proxy<br />
-  futureArray.forEach() &nbsp;&nbsp;# Requires react futures to resolve a future without suspense, which is not yet implemented. Not even sure this is a good idea since deferred side-effects can cause unexpected behavior, plus what benefit would this have over a for loop? <br />
+  futureArray.forEach() &nbsp;&nbsp;# Requires react futures to resolve a future without suspense, which is not yet implemented. Not even sure this is a good since deferred side-effects can cause unexpected behavior, plus what benefit would this have over a for loop in `lazyArray` or 'lazyObject'? <br />
 
 </ul>
 
@@ -655,19 +649,19 @@ Some other operations are globally forbidden because it is uncertain what the us
 
 ### lazyObject and lazyArray in reassignment
 
-Using lazyObject and lazyArray to perform a reassignment inside a loop can lead to an obscure bug.  
+Using `lazyObject` and `lazyArray` to perform a reassignment inside a loop can lead to an unexpected error. This is because the right hand side does not evaluate first since `lazyObject` and `lazyArray` is deferred.  
 
 ```javascript
-let arr = [];
+const arr = [];
 for(const futureItem of items) {
-  arr = lazyArray(() => [...arr, ...futureItem]) // leads to infinite getter loop on suspense
+  arr = lazyArray(() => [...arr, ...futureItem]) // leads to getter loop of `arr` on suspense
 }
 ```
 
-encapsulate the whole assignment in a block instead
+to avoid this bug, encapsulate the whole block in `lazyObject`/`lazyArray`
 
 ```javascript
-let arr = lazyArray(() => {
+const arr = lazyArray(() => {
   let temp = []
   for(const futureItem of items) {
     temp = [...temp, ...futureItem]
