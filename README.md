@@ -227,7 +227,7 @@ const uppercaseUser = FutureUser.fromEntries(uppercaseUserEntries); // lazy
 ```
 <br/>
 
-All future object static methods are deferred, immutable variants of `Object` static methods, so they can used both in and out of render.
+All future object static methods are deferred and immutable variants of `Object` static methods, so they can used both in and out of render.
 
 ### Suspense operations outside render
 
