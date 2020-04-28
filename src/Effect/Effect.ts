@@ -128,7 +128,7 @@ const createEffect = Type =>
       return proxy;
     }
     #map = function map(nextFn: Function, Klass) {
-      return new Klass(pipe(this.#deferredFn, nextFn));
+      return new Klass(pipe(this.#deferredFn, first(nextFn)));
     };
     #splice = function spliceTap(fn) {
       let spliced;

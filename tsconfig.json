@@ -10,7 +10,6 @@
     "allowSyntheticDefaultImports": true,
     "jsx": "react",
     "lib": ["esnext", "dom"],
-    "outDir": "./dist",
     "types": ["react/experimental", "react-dom/experimental"]
   },
   "files": ["./src/index.ts"],

@@ -231,6 +231,6 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
   }
   // forward
   static is(obj1, obj2) {
-    throw Error('FutreObject.is not supported');
+    throw Error('FutureObject.is not supported');
   }
 }

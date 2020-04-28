@@ -8,7 +8,7 @@
 ### futureArray
 
 ```javascript
-futureArray(promiseReturningFunction); // => FutureArrayConstructor
+futureArray(promiseReturningFunction); // => future array class
 ```
 
 Produces a future array constructor. The parameters for the promiseReturningFunction can be passed into the constructor during instantiation.
@@ -19,7 +19,7 @@ promiseReturningFunction ((...Array<string | number | undefined | null>) => Prom
 
 ###### RETURNS
 
-future array constructor (class FutureArrayCache): future array constructor
+future array class (class FutureArrayCache): future array constructor
 
 ##### Basic Usage
 
@@ -35,7 +35,7 @@ const FutureBlogs = futureArray(fetchBlogs);
 
 ### FutureArrayCache
 
-A `FutureArrayCache` constructor is returned from `futureArray` and is used to instantiate future arrays. It consumes the promise from the promiseReturningFunction and caches the resultes using LRU.
+A `FutureArrayCache` class is returned from `futureArray` and is used to instantiate future arrays. It consumes the promise from the promiseReturningFunction and caches the results using LRU.
 <br />
 <br />
 
@@ -51,7 +51,7 @@ new FutureArrayCache(...argumentsOfPromiseReturningFunction); // => future array
 
 ###### RETURNS
 
-future array (intanceof `FutureArrayCache`): a future with the same interface as an array
+future array (instanceof `FutureArrayCache`): a future with the same interface as an array
 <br />
 <br />
 
@@ -133,7 +133,7 @@ FutureArrayCache.of(...argumentsOfPromiseReturningFunction); // => future array 
 ### futureObject
 
 ```javascript
-futureObject(promiseReturningFunction); // => FutureArrayConstructor
+futureObject(promiseReturningFunction); // => future object class
 ```
 
 Produces a future object constructor. The parameters for the promiseReturningFunction can be passed into the constructor on instantiation.
@@ -144,7 +144,7 @@ promiseReturningFunction ((...Array<string | number | undefined | null>) => Prom
 
 ###### RETURNS
 
-future array constructor (class FutureArrayCache): future array constructor
+future object class (class FutureObjectCache): future array constructor
 
 ##### Basic Usage
 
@@ -159,12 +159,12 @@ const futureUser = futureArray(fetchUser);
 
 ### FutureObjectCache
 
-A `FutureObjectCache` constructor is returned from `futureObject` and is used to instantiate future objects. It consumes the promise from the promiseReturningFunction and caches the resultes using LRU.
+A `FutureObjectCache` constructor is returned from `futureObject` and is used to instantiate future objects. It consumes the promise from the promiseReturningFunction and caches the results using LRU.
 
 #### constructor
 
 ```javascript
-new FutureObjectCache(...argumentsOfPromiseReturningFunction); // => future array instance
+new FutureObjectCache(...argumentsOfPromiseReturningFunction); // => future object instance
 ```
 
 ###### ARGUMENTS
@@ -173,7 +173,7 @@ new FutureObjectCache(...argumentsOfPromiseReturningFunction); // => future arra
 
 ###### RETURNS
 
-future object (intanceof `FutureObjectCache`): a future with the same interface as an object. All property lookups will suspend.
+future object (instanceof `FutureObjectCache`): a future with the same interface as an object. All property lookups will suspend.
 
 #### Instance methods
 
@@ -185,7 +185,7 @@ Future objects share the same static methods as the host Object constructor. All
 
 ##### of
 
-instantiantes a future array with the same arguments as the constructor
+instantiates a future object with the same arguments as the constructor
 
 ```javascript
 FutureObjectCache.of(...argumentsOfPromiseReturningFunction); // => future object instance
@@ -227,7 +227,7 @@ These methods require examining the contents of the object and therefore suspend
 
 ##### Invalid method
 
-These methods are invalid globally because their use cases are currently not well understood. We will enable these once we understand how these methods are used, for now please use the static methods of the Object constructor.
+These methods are invalid globally because their implementation is tbd. We will enable these once we are confident about how these methods are used, for now please use the static methods on the Object constructor.
 
 <details><summary>List of invalid static</summary>
 - is<br />
@@ -242,10 +242,10 @@ These methods are invalid globally because their use cases are currently not wel
 
 #### lazyArray
 
-`lazyArray` converts an array returning function into a lazy future returning function.
+`lazyArray` takes an array returning function and converts it to a future. The passed in callback will be evaluated lazily and represents the initial value of the array. 
 
 ```javascript
-lazyArray(arrayReturningFunction); // => lazyArrayReturningImmutableFunction
+lazyArray(arrayReturningFunction); // => future array instance
 ```
 
 ###### ARGUMENTS
@@ -283,10 +283,10 @@ const highSchoolFriends = lazyArray(() => filter( ({age}) => age > 28, friends) 
 
 #### lazyObject
 
-`lazyObject` converts an object returning function into a lazy future object returning function.
+`lazyObject` takes an object returning function and converts it to a future. The passed in callback will be evaluated lazily and represents the initial value of the object.
 
 ```javascript
-lazyObject(objectReturningFunction); // => future object
+lazyObject(objectReturningFunction); // => future object instance
 ```
 
 ###### ARGUMENTS
@@ -308,7 +308,7 @@ const FutureUser = futureObject(...);
 const user = new FutureUser();
 
 
-const invertedUser = lazyObject(() => inverObj(user)) //=> future object
+const invertedUser = lazyObject(() => invertObj(user)) //=> future object
 ```
 
 #### getRaw
