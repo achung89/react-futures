@@ -8,7 +8,7 @@ Manipulate asynchronous data synchronously
 <ul>
   <li> <a href="#install"> Install</a> </li>
   <li> <a href="#explainer">Explainer</a></li>
-  <li> <a href="#use-constraints">Use Constraints</a> </li>
+  <li> <a href="#usage-constraints">Usage Constraints</a> </li>
   <li> <a href="#example-snippets">Example snippets </a>
     <ul>
       <li>
@@ -171,7 +171,7 @@ This example demonstrates several benefits of React Futures:
 - With React Futures asynchronicity is transparent; a future can be used the same way that a native object or array can be used. They can also be used in other future operations, see how `FuturePosts` is used in `filter` to collect `activeGroups`.
 - With React Futures the manipulation and construction of asynchronous data can be done completely outside render if needed. None of the construction code needs to be located inside the component.
 
-## Use constraints
+## Usage constraints
 
 There are 3 constraints that you should be aware of and their workarounds.
 
@@ -198,11 +198,30 @@ To work around this, React Futures provides utilities that  defer evaluation of 
 
 ### 2. No mutable calls inside of render
 
-Operations that mutate a future array or object, like `array.splice`, are not allowed within render and should be replaced with their immutable equivalents. To alleviate this constraint, all future object constructor static methods have been made immutable.
+Operations that mutate a future array or object, like `Object.assign`, are not allowed within render and should be replaced with their immutable equivalents. To alleviate this constraint, all future object constructor static methods have been made immutable. For example, `<Future Class>.assign` is an immutable, deferred version of `Object.assign`:
+
+```javascript
+import {futureObject} from 'react-futures'
+
+const FutureUser = futureObject(...)
+
+const dave = new FutureUser('Dave')
+
+const newDave = Object.assign(dave, , { foo: 'bar' }) // okay
+const newDave2 = FutureUser.assign(dave, { foo: 'bar' }) // okay
+
+const App = () => {
+  const newDave = Object.assign(dave, { foo: 'bar' }) // Error!!
+  const newDave2 = FutureUser.assign(dave, { foo: 'bar' }) // okay
+
+  return ...
+}
+
+```
 
 ### 3. Global ban on specific functions
 
-Some operations are both mutable and are getters. like `array.push` and `array.unshift`. These operations are prohibited globally.
+Some operations are both mutable and are getters, like `array.push` and `array.unshift`. These operations are prohibited globally.
 
 For a complete reference of constraints, see the [Caveats section](#caveats).
 
