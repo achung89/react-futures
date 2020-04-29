@@ -1,6 +1,6 @@
 {
   "name": "react-futures",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "build/index.js",
   "repository": "git@github.com:achung89/react-futures.git",
   "author": "Andrew Chung <chung.andrew7@gmail.com>",
@@ -16,6 +16,9 @@
     "yarn.lock",
     "jest.config.cjs"
   ],
+  "resolutions": {
+    "**/**/minimist": "^1.2.3"
+  },
   "type": "module",
   "devDependencies": {
     "@babel/core": "^7.8.4",
@@ -34,7 +37,7 @@
     "@types/react-dom": "^16.9.6",
     "@types/react-test-renderer": "^16.9.2",
     "delay": "^4.3.0",
-    "jest": "^25.1.0",
+    "jest": "^25.5.0",
     "jest-react": "^0.11.1",
     "react-test-renderer": "^0.0.0-experimental-aae83a4b9",
     "regenerator-runtime": "^0.13.3",
