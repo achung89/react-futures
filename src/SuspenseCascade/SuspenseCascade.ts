@@ -1,46 +1,54 @@
-const resolveCb = (cb) => {
+
+
+export const resolveCb = (cb) => {
   try {
     return new SuspenseValue(cb())
   } catch (errOrProm) {
     if (typeof errOrProm.then === 'function') {
       return new SuspenseJob((async () => {
-        await errOrProm;
-        return resolveCb(cb);
+        try {
+          await errOrProm;
+          return resolveCb(cb);
+        } catch (err) {
+          throw err;
+        }
+
       })())
     } else {
       throw errOrProm
     }
   }
 }
+
 const valueMap = new WeakMap;
 
-class SuspenseValue {
-  val: any;
+type genericFunc = (...args:any) => any
+class SuspenseValue<T = any> {
+  val: T;
   constructor(val) {
     valueMap.set(this, val)
   }
-  map(cb) {
+  map<K extends genericFunc = genericFunc>(cb: K): SuspenseValue<ReturnType<K>> | SuspenseJob<K> {
     return resolveCb(cb.bind(null, valueMap.get(this)));
   }
   get() {
     return valueMap.get(this)
   }
 }
+
 const jobMap = new WeakMap;
-class SuspenseJob {
-  promise: Promise<any>
-  status: 'pending' | 'complete'
+export class SuspenseJob<T> {
+  status: 'pending' | 'complete' | 'error'
   val: any
   constructor(prom) {
     this.status = 'pending'
-    jobMap.set(this, prom)
 
-    this.promise = (async () => {
+    jobMap.set(this, (async () => {
       try {
-        let val = await jobMap.get(this)
+        let val = await prom
         while(val instanceof SuspenseJob || val instanceof SuspenseValue) {
           if (val instanceof SuspenseJob) {
-            val = await val.promise;
+            val = await jobMap.get(val);
           }
           if(val instanceof SuspenseValue) {
             val = val.get()
@@ -48,20 +56,31 @@ class SuspenseJob {
         }
         this.val = val;
         return val;
+      } catch(err) {
+        this.status = 'error'
+        throw err
       } finally {
-        this.status = 'complete'
+        if(this.status !== 'error') {
+          this.status = 'complete'
+        }
       }
-    })()
+    })())
   }
   map(cb) {
     return new SuspenseJob((async () => {
-      const val = await jobMap.get(this)
-      return resolveCb(cb.bind(null, val))
+      try {
+        const val = await jobMap.get(this)
+        
+        return resolveCb(cb.bind(null, val))
+      } catch(err) {
+        throw err;
+      }
+
     })())
   }
   get() {
     if(this.status === 'pending') {
-      throw this.promise;
+      throw jobMap.get(this);
     }
     if(this.status === 'complete') {
       return this.val
@@ -70,11 +89,8 @@ class SuspenseJob {
   }
 }
 
-const pending = Symbol('pending')
 
-
-
-const SuspenseCascade = (cb) => {
+const SuspenseCascade = cb => {
   const suspenseTask = resolveCb(cb)
   return suspenseTask
 }
