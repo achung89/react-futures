@@ -7,7 +7,7 @@ describe('SuspenseJob', () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
         .map(spaceOut);
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -18,14 +18,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(throwOnce(upperCase))
         .map(spaceOut);
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -36,14 +36,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps not-throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
         .map(throwOnce(spaceOut));
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -54,14 +54,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(throwOnce(upperCase))
         .map(throwOnce(spaceOut));
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -72,7 +72,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -80,7 +80,7 @@ describe('SuspenseJob', () => {
         .map(throwOnce(upperCase))
         .map(spaceOut)
         .map(throwOnce(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -91,7 +91,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -99,7 +99,7 @@ describe('SuspenseJob', () => {
         .map(throwOnce(upperCase))
         .map(spaceOut)
         .map(throwOnce(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -110,7 +110,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -118,7 +118,7 @@ describe('SuspenseJob', () => {
         .map(throwOnce(upperCase))
         .map(spaceOut)
         .map(throwOnce(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -129,7 +129,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -137,7 +137,7 @@ describe('SuspenseJob', () => {
         .map(upperCase)
         .map(throwOnce(spaceOut))
         .map(dunder)
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -148,7 +148,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw -> not-throw', async () => {
@@ -167,10 +167,10 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
-  
+
     it('should handle maps not-throw -> throw -> not-throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
@@ -187,7 +187,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps not-throw -> throw -> throw -> not-throw', async () => {
@@ -206,7 +206,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps throw -> not-throw -> not-throw -> throw', async () => {
@@ -225,7 +225,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps throw -> throw -> throw -> throw', async () => {
@@ -244,7 +244,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps not-throw -> not-throw -> not-throw -> not-throw', async () => {
@@ -263,7 +263,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
   })
@@ -272,7 +272,7 @@ describe('SuspenseJob', () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
         .map(spaceOut);
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -283,14 +283,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(throwTwice(upperCase))
         .map(spaceOut);
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -301,14 +301,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps not-throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
         .map(throwTwice(spaceOut));
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -319,14 +319,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(throwTwice(upperCase))
         .map(throwTwice(spaceOut));
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -337,7 +337,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -345,7 +345,7 @@ describe('SuspenseJob', () => {
         .map(throwTwice(upperCase))
         .map(spaceOut)
         .map(throwTwice(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -356,7 +356,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -364,7 +364,7 @@ describe('SuspenseJob', () => {
         .map(throwTwice(upperCase))
         .map(spaceOut)
         .map(throwTwice(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -375,7 +375,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -383,7 +383,7 @@ describe('SuspenseJob', () => {
         .map(throwTwice(upperCase))
         .map(spaceOut)
         .map(throwTwice(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -394,7 +394,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -402,7 +402,7 @@ describe('SuspenseJob', () => {
         .map(upperCase)
         .map(throwTwice(spaceOut))
         .map(dunder)
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -413,7 +413,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw -> not-throw', async () => {
@@ -432,10 +432,10 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
-  
+
     it('should handle maps not-throw -> throw -> not-throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
@@ -452,7 +452,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps not-throw -> throw -> throw -> not-throw', async () => {
@@ -471,7 +471,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps throw -> not-throw -> not-throw -> throw', async () => {
@@ -490,7 +490,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps throw -> throw -> throw -> throw', async () => {
@@ -509,7 +509,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps not-throw -> not-throw -> not-throw -> not-throw', async () => {
@@ -528,7 +528,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
   })
@@ -537,7 +537,7 @@ describe('SuspenseJob', () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
         .map(spaceOut);
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -548,14 +548,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(throwThrice(upperCase))
         .map(spaceOut);
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -566,14 +566,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps not-throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
         .map(throwThrice(spaceOut));
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -584,14 +584,14 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(throwThrice(upperCase))
         .map(throwThrice(spaceOut));
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -602,7 +602,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -610,7 +610,7 @@ describe('SuspenseJob', () => {
         .map(throwThrice(upperCase))
         .map(spaceOut)
         .map(throwThrice(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -621,7 +621,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -629,7 +629,7 @@ describe('SuspenseJob', () => {
         .map(throwThrice(upperCase))
         .map(spaceOut)
         .map(throwThrice(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -640,7 +640,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -648,7 +648,7 @@ describe('SuspenseJob', () => {
         .map(throwThrice(upperCase))
         .map(spaceOut)
         .map(throwThrice(dunder))
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -659,7 +659,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw', async () => {
@@ -667,7 +667,7 @@ describe('SuspenseJob', () => {
         .map(upperCase)
         .map(throwThrice(spaceOut))
         .map(dunder)
-  
+
       try {
         expect(() => cascade.get()).toThrow();
         cascade.get()
@@ -678,7 +678,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O")
     })
     it('should handle maps throw -> not-throw -> throw -> not-throw', async () => {
@@ -697,10 +697,10 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
-  
+
     it('should handle maps not-throw -> throw -> not-throw -> throw', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
         .map(upperCase)
@@ -717,7 +717,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps not-throw -> throw -> throw -> not-throw', async () => {
@@ -736,7 +736,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps throw -> not-throw -> not-throw -> throw', async () => {
@@ -755,7 +755,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps throw -> throw -> throw -> throw', async () => {
@@ -774,7 +774,7 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
     it('should handle maps not-throw -> not-throw -> not-throw -> not-throw', async () => {
@@ -793,29 +793,29 @@ describe('SuspenseJob', () => {
           throw errOrProm
         }
       }
-  
+
       expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
   })
   describe('mix and match throw count', () => {
     it('should handle mix and match of throw counts', async () => {
       const cascade = new SuspenseJob(Promise.resolve('johnny bravo'))
-      .map(throwOnce(upperCase))
-      .map(spaceOut)
-      .map(throwTwice(dunder))
-      .map(throwThrice(dollar))
-    try {
-      expect(() => cascade.get()).toThrow();
-      cascade.get()
-    } catch (errOrProm) {
-      if (typeof errOrProm.then === 'function') {
-        await errOrProm
-      } else {
-        throw errOrProm
+        .map(throwOnce(upperCase))
+        .map(spaceOut)
+        .map(throwTwice(dunder))
+        .map(throwThrice(dollar))
+      try {
+        expect(() => cascade.get()).toThrow();
+        cascade.get()
+      } catch (errOrProm) {
+        if (typeof errOrProm.then === 'function') {
+          await errOrProm
+        } else {
+          throw errOrProm
+        }
       }
-    }
 
-    expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
+      expect(cascade.get()).toEqual("__J O H N N Y   B R A V O$")
     })
   })
 })

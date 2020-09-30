@@ -18,6 +18,7 @@ class InvalidObjectStaticMethod extends Error {
   }
 };
 const rhsMap = new WeakMap();
+
 const createEffect = Type =>
   class Effect<T extends object = object> extends Type {
     static of: <T extends object>(type: T) => Effect<T>; // TODO: check typedef
@@ -50,13 +51,13 @@ const createEffect = Type =>
       }
       return thisMap.get(futr).#run(fn);
     }
-    #deferredFn: Function;
+    #cascade;
     constructor(
-      deferredFn: Function,
+      cascade,
       childProxy: ProxyHandler<typeof Type> = {}
     ) {
       super();
-      this.#deferredFn = first(deferredFn);
+      this.#cascade = cascade;
       const proxy = new Proxy(this, {
         defineProperty: (_target, key, descriptor) => {
           this.#tap(
@@ -128,23 +129,22 @@ const createEffect = Type =>
       return proxy;
     }
     #map = function map(nextFn: Function, Klass) {
-      return new Klass(pipe(this.#deferredFn, first(nextFn)));
+      return new Klass(this.#cascade.map(nextFn));
     };
     #splice = function spliceTap(fn) {
       let spliced;
-      let mutated;
-      const performSplice = first(arr => {
+      const performSplice = arr => {
         spliced = fn(arr);
-      })
+      }
       const result = lazyArray(() => {
         performSplice();
         return spliced
       })
-      this.#deferredFn = pipe(this.#deferredFn, tap(performSplice));
+      this.#cascade = this.#cascade.tap(performSplice);
       return result;
     }
     #tap = function tapper(fn: Function, name: string, futr: Effect) {
-      
+    
       if (isRendering()) {
         // TODO: implement custom error message per method
         throw new Error(
@@ -157,13 +157,11 @@ const createEffect = Type =>
         return this.#splice(fn)
       }
 
-      this.#deferredFn = pipe(this.#deferredFn, first(tap(fn)));
-
+      this.#cascade = this.#cascade.tap(fn);
       return futr;
     };
     #run = function run(fn: Function) {
-      
-      let getVal = this.#deferredFn
+      let getVal = this.#cascade.get;
       if(rhsMap.has(this)) {
         getVal = () => rhsMap.get(this);
       }

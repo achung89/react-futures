@@ -14,6 +14,8 @@ import extractValue from './test-utils/extractValue';
 import { reverseImm } from './FutureArray/__tests__/integrations/deep-render.test';
 expect.extend(require('./test-utils/renderer-extended-expect'));
 
+
+// TODO: test basic cache behaviour in and out of render
 // TODO: test error handling
 const expectedJSON = value => ({
   foo: 'futon',
@@ -238,3 +240,4 @@ test('lazyArray should defer ', async () => {
 
   expect(await value2).toEqual([2,3,4,2].reverse());
 });
+

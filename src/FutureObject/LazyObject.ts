@@ -2,6 +2,7 @@ import { isRendering, thisMap } from '../internal';
 import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species } from '../internal';
+import { metadataMap } from '../utils';
 
 const memoize = fn => {
   const cache = new WeakMap();
@@ -81,8 +82,8 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
     return LazyObject;
   }
 
-  constructor(fn) {
-    super(fn);
+  constructor(cascade) {
+    super(cascade);
   }
   // mutable methods
   // static mutableAssign(obj, ...rest) {

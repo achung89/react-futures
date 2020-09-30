@@ -4,17 +4,18 @@ import { isRendering } from '../internal';
 import { __internal } from '../utils';
 import { species } from '../internal';
 
-export class FutureObject<T extends object> extends LazyObject<T> {
+export class FutureObject<T extends object, K extends object | null> extends LazyObject<T, K> {
   static get [species]() {
     return LazyObject;
   }
-  constructor(promise) {
-    super(() => {
+  constructor(promise, createCascade) {
+    super(createCascade(() => {
       if ( !isRendering() && !__internal.allowSuspenseOutsideRender ) {
         throw new Error('cannot suspend outside render');
       }
 
       let meta = promiseStatusStore.get(promise);
+
       if (typeof meta !== 'undefined') {
         var { status, value } = meta;
       } else {
@@ -23,8 +24,8 @@ export class FutureObject<T extends object> extends LazyObject<T> {
 
       if (status === 'complete') {
         if (typeof value !== 'object' || typeof value === null) {
-          throw new Error(
-            'TypeError: FutureObject received non-object value from promise'
+          throw new TypeError(
+            'FutureObject received non-object value from promise'
           );
         }
         return value;
@@ -39,6 +40,6 @@ export class FutureObject<T extends object> extends LazyObject<T> {
         //TODO: should I put error here?
         throw new Error('Unhandled promise exception');
       }
-    });
+    }));
   }
 }

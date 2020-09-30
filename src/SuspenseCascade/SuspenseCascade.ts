@@ -1,4 +1,8 @@
 
+abstract class SuspenseCallback {
+  abstract map(fn: Function): SuspenseCallback;
+  abstract get(): any;
+}
 
 export const resolveCb = (cb) => {
   try {
@@ -8,7 +12,20 @@ export const resolveCb = (cb) => {
       return new SuspenseJob((async () => {
         try {
           await errOrProm;
-          return resolveCb(cb);
+          let newVal = resolveCb(cb);
+
+          
+          while(newVal instanceof SuspenseCallback ) {
+            if (newVal instanceof SuspenseJob) {
+              newVal = await jobMap.get(newVal);
+            } else if (newVal instanceof SuspenseValue) {
+              newVal = newVal.get();
+            } else {
+              throw new Error('INTERNAL ERROR')
+            }
+          }
+
+          return newVal;
         } catch (err) {
           throw err;
         }
@@ -22,10 +39,11 @@ export const resolveCb = (cb) => {
 
 const valueMap = new WeakMap;
 
-type genericFunc = (...args:any) => any
-class SuspenseValue<T = any> {
+type genericFunc = (...args: any) => any
+class SuspenseValue<T = any> extends SuspenseCallback {
   val: T;
   constructor(val) {
+    super()
     valueMap.set(this, val)
   }
   map<K extends genericFunc = genericFunc>(cb: K): SuspenseValue<ReturnType<K>> | SuspenseJob<K> {
@@ -37,30 +55,24 @@ class SuspenseValue<T = any> {
 }
 
 const jobMap = new WeakMap;
-export class SuspenseJob<T> {
+export class SuspenseJob<T> extends SuspenseCallback {
   status: 'pending' | 'complete' | 'error'
   val: any
   constructor(prom) {
+    super();
     this.status = 'pending'
 
     jobMap.set(this, (async () => {
       try {
         let val = await prom
-        while(val instanceof SuspenseJob || val instanceof SuspenseValue) {
-          if (val instanceof SuspenseJob) {
-            val = await jobMap.get(val);
-          }
-          if(val instanceof SuspenseValue) {
-            val = val.get()
-          }
-        }
+
         this.val = val;
         return val;
-      } catch(err) {
+      } catch (err) {
         this.status = 'error'
         throw err
       } finally {
-        if(this.status !== 'error') {
+        if (this.status !== 'error') {
           this.status = 'complete'
         }
       }
@@ -70,19 +82,26 @@ export class SuspenseJob<T> {
     return new SuspenseJob((async () => {
       try {
         const val = await jobMap.get(this)
-        
-        return resolveCb(cb.bind(null, val))
-      } catch(err) {
+
+        let newVal = resolveCb(cb.bind(null, val))
+        if (newVal instanceof SuspenseJob) {
+          return jobMap.get(newVal);
+        } else if (newVal instanceof SuspenseValue) {
+          return newVal.get();
+        } else {
+          throw new Error('INTERNAL ERROR')
+        }
+      } catch (err) {
         throw err;
       }
 
     })())
   }
   get() {
-    if(this.status === 'pending') {
+    if (this.status === 'pending') {
       throw jobMap.get(this);
     }
-    if(this.status === 'complete') {
+    if (this.status === 'complete') {
       return this.val
     }
     throw new Error("INVALID STATUS")
@@ -90,8 +109,10 @@ export class SuspenseJob<T> {
 }
 
 
-const SuspenseCascade = cb => {
-  const suspenseTask = resolveCb(cb)
-  return suspenseTask
+const SuspenseCascade = {
+  of: cb => {
+    const suspenseTask = resolveCb(cb)
+    return suspenseTask
+  }
 }
 export default SuspenseCascade
