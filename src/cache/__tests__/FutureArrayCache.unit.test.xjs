@@ -1,6 +1,8 @@
 jest.useFakeTimers();
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
+const {  performance } = require('perf_hooks')
 import React, { Suspense } from 'react';
+import ReactDOM from 'react-dom';
 import { futureArray, futureObject, toPromise } from '../../../index';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
@@ -64,7 +66,7 @@ const LogSuspense = ({ action, children }) => {
     throw promise;
   }
 };
-describe('In only render context', () => {
+describe.skip('In only render context', () => {
   it('should render properly', async () => {
     let App = () => <div></div>;
     act(() => {
@@ -160,7 +162,7 @@ describe('In only render context', () => {
   );
 });
 
-describe('Array operations', () => {
+describe.skip('Array operations', () => {
   test.each`
     name                   | method                         
     ${'fill'}       | ${arr => arr.fill(1)}                             
@@ -428,7 +430,7 @@ describe('Array operations', () => {
   test.skip('should have debug method', () => {});
 });
 
-describe('parallel iteration', () => {
+describe.skip('parallel iteration', () => {
   let FutureVal;
 
   const objectProm = value => new Promise( (res, rej) => {

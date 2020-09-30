@@ -1,15 +1,18 @@
 import { ArrayEffect } from '../internal';
 import { ObjectEffect,species } from '../internal';
+import { metadataMap } from '../utils';
 
 const { map, run, tap } = ArrayEffect;
 
 export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
-  constructor(deferredFn) {
-    super(deferredFn);
+  constructor(cascade) {
+    super(cascade);
+    
   }
   static get [species]() {
     return LazyArray;
   }
+
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args) {

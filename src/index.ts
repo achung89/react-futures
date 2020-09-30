@@ -5,7 +5,7 @@ import { FutureArray } from './internal';
 import LRU from 'lru-cache';
 import { LazyArray, species } from './internal';
 import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
-
+import PullCacheCascade from './functorComposition/PullCacheCascade'
 export const futureObject = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
 
@@ -13,21 +13,7 @@ export const futureObject = <T extends object>(promiseCb) => {
     // TODO: add custom error message per method
     throw new Error('cannot create future outside render');
   }
-  const getCachedPromise = keys => {
-    const key = JSON.stringify(keys);
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
-    cache.set(key, promiseCb(...keys));
-
-    const promise = cache.get(key);
-    promise.then(res => {
-      promiseStatusStore.set(promise, { value: res, status: 'complete' });
-    });
-    promiseStatusStore.set(promise, { value: null, status: 'pending' });
-
-    return promise;
-  };
+  const getCachedPromise = createPromiseCache(cache, promiseCb);
 
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
     static get [species]() {
@@ -49,7 +35,7 @@ export const futureObject = <T extends object>(promiseCb) => {
       if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
-      super(getCachedPromise(keys));
+      super(getCachedPromise(keys), cb => PullCacheCascade.of(cb, cache));
     }
   };
 };
@@ -61,23 +47,7 @@ export const futureArray = <T>(promiseCb) => {
     // TODO: add custom error message per method
     throw new Error('cannot create cache in render');
   }
-  const getCachedPromise = keys => {
-    const key = JSON.stringify(keys);
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
-
-
-    cache.set(key, promiseCb(...keys));
-
-    const promise = cache.get(key);
-    promise.then(res => {
-      promiseStatusStore.set(promise, { value: res, status: 'complete' });
-    });
-    promiseStatusStore.set(promise, { value: null, status: 'pending' });
-
-    return promise;
-  };
+  const getCachedPromise = createPromiseCache(cache, promiseCb)
 
   return class FutureArrayCache<A = T> extends FutureArray<A> {
     static get [species]() {
@@ -99,9 +69,27 @@ export const futureArray = <T>(promiseCb) => {
       if(keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
-      super(getCachedPromise(keys));
+      super(getCachedPromise(keys), cb => PullCacheCascade.of(cb, cache));
     }
   };
 };
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
+
+function createPromiseCache(cache: any, promiseCb: any) {
+  return keys => {
+    const key = JSON.stringify(keys);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    cache.set(key, promiseCb(...keys));
+
+    const promise = cache.get(key);
+    promise.then(res => {
+      promiseStatusStore.set(promise, { value: res, status: 'complete' });
+    });
+    promiseStatusStore.set(promise, { value: null, status: 'pending' });
+
+    return promise;
+  };
+}
