@@ -2,6 +2,7 @@ import { promiseStatusStore } from '../shared-properties';
 import { LazyArray } from '../internal';
 import { isRendering, species } from '../internal';
 import { __internal } from '../internal';
+import { createCascadeMap } from '../utils';
 
 export class FutureArray<T> extends LazyArray<T> {
   static get [species]() {
@@ -9,7 +10,7 @@ export class FutureArray<T> extends LazyArray<T> {
   }
 
   constructor(promise, createCascade) {
-    super(createCascade(() => {
+    super(() => {
       if (!isRendering() && !__internal.allowSuspenseOutsideRender ) {
         // TODO: add custom error message per method
         throw new Error(`cannot suspend outside render`);
@@ -42,6 +43,7 @@ export class FutureArray<T> extends LazyArray<T> {
         //TODO: should I put error here?
         throw new Error('Unhandled promise exception');
       }
-    }));
+    }, createCascade);
+
   }
 }

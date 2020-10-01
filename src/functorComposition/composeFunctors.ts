@@ -8,6 +8,9 @@ export const composeFunctors = (functor1, functor2) => {
     },
     tap(fn) {
       return Functor1and2(fun1.tap(fun2 => fun2.tap(fn)))
+    },
+    get functor() {
+      return Functor1and2.of
     }
   })
 

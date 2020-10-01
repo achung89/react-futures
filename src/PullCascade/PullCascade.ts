@@ -3,6 +3,7 @@ import { first, tap } from "../utils"
 const PullCascade = cb => {
   const firstCb = first(cb);
   return {
+  
     get() {
       return cb()
     },
@@ -15,6 +16,9 @@ const PullCascade = cb => {
       //TODO: comment
       let firstFn = first(tap(() => fn(firstCb())))
       return PullCascade(firstFn);
+    },
+    get functor() {
+      return PullCascade.of
     }
   }
 }

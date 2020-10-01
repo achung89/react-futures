@@ -2,6 +2,9 @@
 abstract class SuspenseCallback {
   abstract map(fn: Function): SuspenseCallback;
   abstract get(): any;
+  get functor() {
+    return SuspenseCascade.of
+  }
 }
 
 export const resolveCb = (cb) => {
@@ -49,7 +52,7 @@ class SuspenseValue<T = any> extends SuspenseCallback {
   map<K extends genericFunc = genericFunc>(cb: K): SuspenseValue<ReturnType<K>> | SuspenseJob<K> {
     return resolveCb(cb.bind(null, valueMap.get(this)));
   }
-  get() {
+  get = () => {
     return valueMap.get(this)
   }
 }
@@ -97,7 +100,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
 
     })())
   }
-  get() {
+  get = () => {
     if (this.status === 'pending') {
       throw jobMap.get(this);
     }
@@ -113,6 +116,7 @@ const SuspenseCascade = {
   of: cb => {
     const suspenseTask = resolveCb(cb)
     return suspenseTask
-  }
+  },
+  
 }
 export default SuspenseCascade

@@ -56,7 +56,7 @@
     "react-dom": "0.0.0-experimental-aae83a4b9"
   },
   "scripts": {
-    "test": "jest --maxWorkers=4",
+    "test": "jest",
     "build": "rollup -c"
   }
 }
