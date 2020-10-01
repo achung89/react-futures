@@ -1,10 +1,12 @@
 import React from 'react';
+import PullCacheCascade from './functorComposition/PullCacheCascade';
 import {
   thisMap,
   LazyObject,
   LazyArray,
   species
 } from './internal';
+import PullCascade from './PullCascade/PullCascade';
 export const metadataMap = new WeakMap();
 
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
@@ -50,7 +52,7 @@ export const lazyArray = fn =>  new LazyArray(() => {
   const result = fn()
   if(!Array.isArray(result)) throw new Error('Type Error: expected result of lazyArray to be of type array');
   return result;
-});
+}, defaultCascade);
 
 export const lazyObject = fn => new LazyObject(() => {
 
@@ -59,7 +61,7 @@ export const lazyObject = fn => new LazyObject(() => {
     throw new Error('Type Error: expected result of lazyObject to be of type object');
   }
   return result
-});
+}, defaultCascade);
 
 export const getRaw = future => {
   if ( !isFuture(future) ) {
@@ -86,4 +88,34 @@ export const toPromise = async future => {
     }
     throw errOrProm;
   }
+}
+
+export const createCascadeMap = new WeakMap();
+
+export const getCascade = obj => {
+  if(createCascadeMap.has(obj)) {
+    return createCascadeMap.get(obj);
+  }
+  return defaultCascade
+}
+
+export const defaultCascade = cb => {
+  let cache = {}
+  return PullCacheCascade.of(cb, {
+    set(key, val) {
+      cache[key] = val
+    },
+    del(key) {
+      delete cache[key]
+    },
+    has(key) {
+      return !!cache[key]
+    },
+    get(key) {
+      return cache[key]
+    },
+    reset() {
+      cache = {}
+    }
+  })
 }

@@ -1,12 +1,13 @@
 import { ArrayEffect } from '../internal';
 import { ObjectEffect,species } from '../internal';
-import { metadataMap } from '../utils';
+import PullCascade from '../PullCascade/PullCascade';
+import { defaultCascade, metadataMap } from '../utils';
 
 const { map, run, tap } = ArrayEffect;
 
 export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
-  constructor(cascade) {
-    super(cascade);
+  constructor(cb, createCascade) {
+    super(cb, createCascade);
     
   }
   static get [species]() {
@@ -275,7 +276,7 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   }
 
   static of(arrayReturningCb) {
-    return new LazyArray(arrayReturningCb);
+    return new LazyArray(arrayReturningCb, defaultCascade);
   }
 
   // suspend on iterator access

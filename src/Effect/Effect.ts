@@ -1,6 +1,7 @@
 import { pipe, tap, first, isRendering } from '../internal';
 import { LazyArray, cloneFuture } from '../internal';
 import { isFuture, getRaw, lazyArray } from '../internal';
+import { createCascadeMap, getCascade } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 // implements IO
@@ -53,11 +54,16 @@ const createEffect = Type =>
     }
     #cascade;
     constructor(
-      cascade,
+      cb, 
+
+      createCascade,
       childProxy: ProxyHandler<typeof Type> = {}
     ) {
       super();
-      this.#cascade = cascade;
+      console.log("CREATE CASCADE", createCascade)
+
+      this.#cascade = createCascade(cb);
+      createCascadeMap.set(this, createCascade);
       const proxy = new Proxy(this, {
         defineProperty: (_target, key, descriptor) => {
           this.#tap(
@@ -113,8 +119,10 @@ const createEffect = Type =>
           throw new InvalidObjectStaticMethod(['isExtensible','isFrozen', 'isSealed']);
         },
         ownKeys: _target => {
+          const createCascade = createCascadeMap.get(this)
           // TODO: is this right?
-          return new LazyArray(() => this.#run(target => Reflect.ownKeys(target)));
+          
+          return new LazyArray(() => this.#run(target => Reflect.ownKeys(target)), createCascade);
         },
       preventExtensions: _target => {
           throw new InvalidObjectStaticMethod(['preventExtensions', 'seal'])
@@ -129,7 +137,7 @@ const createEffect = Type =>
       return proxy;
     }
     #map = function map(nextFn: Function, Klass) {
-      return new Klass(this.#cascade.map(nextFn));
+      return new Klass(nextFn, this.#cascade.functor);
     };
     #splice = function spliceTap(fn) {
       let spliced;

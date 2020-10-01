@@ -1,15 +1,16 @@
 import { promiseStatusStore } from '../shared-properties';
 import { LazyObject } from '../internal';
 import { isRendering } from '../internal';
-import { __internal } from '../utils';
+import { createCascadeMap, __internal } from '../utils';
 import { species } from '../internal';
 
 export class FutureObject<T extends object, K extends object | null> extends LazyObject<T, K> {
   static get [species]() {
     return LazyObject;
   }
+
   constructor(promise, createCascade) {
-    super(createCascade(() => {
+    super(() => {
       if ( !isRendering() && !__internal.allowSuspenseOutsideRender ) {
         throw new Error('cannot suspend outside render');
       }
@@ -40,6 +41,6 @@ export class FutureObject<T extends object, K extends object | null> extends Laz
         //TODO: should I put error here?
         throw new Error('Unhandled promise exception');
       }
-    }));
+    }, createCascade);
   }
 }

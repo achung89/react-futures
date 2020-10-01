@@ -1,8 +1,9 @@
+import PullCacheCascade from '../functorComposition/PullCacheCascade';
 import { isRendering, thisMap } from '../internal';
 import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species } from '../internal';
-import { metadataMap } from '../utils';
+import { createCascadeMap, getCascade, metadataMap } from '../utils';
 
 const memoize = fn => {
   const cache = new WeakMap();
@@ -31,29 +32,30 @@ class SuspendOperationOutsideRenderError extends Error {
     this.name = 'InvalidSuspendOperationException';
   }
 }
-const staticMutableOperation = (target, cb, methodName) => {
-  if (isEffect(target)) {
-    const klass = target.constructor[species];
-    return klass.tap(cb, methodName, target);
-  } else {
-    if (isRendering()) {
-      throw new MutableOperationInRenderError(methodName);
-    }
-    if (Array.isArray(target)) {
-      return new LazyArray(() => cb(target));
-    } else {
-      return new LazyObject(() => cb(target));
-    }
-  }
-};
+// const staticMutableOperation = (target, cb, methodName) => {
+//   if (isEffect(target)) {
+//     const klass = target.constructor[species];
+//     return klass.tap(cb, methodName, target);
+//   } else {
+//     if (isRendering()) {
+//       throw new MutableOperationInRenderError(methodName);
+//     }
+//     if (Array.isArray(target)) {
+//       return new LazyArray(() => cb(target));
+//     } else {
+//       return new LazyObject(() => cb(target));
+//     }
+//   }
+// };
 const staticMutableToImmutableOperation = (target, cb) => {
-
+  const createCascade = getCascade(target)
   if (Array.isArray(target)) {
-    return new LazyArray(() => cb(cloneFuture(target)));
+    return new LazyArray(() => cb(cloneFuture(target)), createCascade);
   } else {
-    return new LazyObject(() =>  cb(cloneFuture(target)));
+    return new LazyObject(() =>  cb(cloneFuture(target)), createCascade);
   }
 }
+
 const staticSuspendOperation = (target, cb, methodName) => {
   if (isEffect(target)) {
     const Klass = target.constructor[species];
@@ -64,26 +66,26 @@ const staticSuspendOperation = (target, cb, methodName) => {
     return cb(target);
   }
 };
-const staticImmutableOperation = (target, cb, constructor = undefined) => {
-  if (isEffect(target)) {
-    const klass = constructor || target.constructor[species];
-    return klass.map(cb, target);
-  } else {
-    if (Array.isArray(target)) {
-      return new LazyArray(() => cb(target));
-    } else {
-      return new LazyObject(() => cb(target));
-    }
-  }
-}
+// const staticImmutableOperation = (target, cb, constructor = undefined) => {
+//   if (isEffect(target)) {
+//     const klass = constructor || target.constructor[species];
+//     return klass.map(cb, target);
+//   } else {
+//     if (Array.isArray(target)) {
+//       return new LazyArray(() => cb(target));
+//     } else {
+//       return new LazyObject(() => cb(target));
+//     }
+//   }
+// }
 // TODO test non future params
 export class LazyObject<T extends object> extends ObjectEffect<T> {
   static get [species]() {
     return LazyObject;
   }
 
-  constructor(cascade) {
-    super(cascade);
+  constructor(cb, createCascade) {
+    super(cb, createCascade);
   }
   // mutable methods
   // static mutableAssign(obj, ...rest) {
@@ -130,33 +132,48 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {
-
-    return new LazyObject(() => Object.getOwnPropertyDescriptor(obj, property));
+    const createCascade = getCascade(obj)
+    return new LazyObject(() => Object.getOwnPropertyDescriptor(obj, property), createCascade);
   }
   static getOwnPropertyDescriptors(obj) {
-    return new LazyObject(() => Object.getOwnPropertyDescriptors(obj));
+    const createCascade = getCascade(obj)
+    return new LazyObject(() => Object.getOwnPropertyDescriptors(obj), createCascade);
   }
   static getOwnPropertyNames(obj) {
-    return new LazyArray(() => Object.getOwnPropertyNames(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.getOwnPropertyNames(obj), createCascade);
   }
   static getOwnPropertySymbols(obj) {
-    return new LazyArray(() => Object.getOwnPropertySymbols(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.getOwnPropertySymbols(obj), createCascade);
   }
   static getPrototypeOf(obj) {
-    return new LazyObject(() => Object.getPrototypeOf(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyObject(() => Object.getPrototypeOf(obj), createCascade);
   }
   static keys(obj) {
-    return new LazyArray(() => Object.keys(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.keys(obj), createCascade);
   }
   static entries(obj) {
-    return new LazyArray(() => Object.entries(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.entries(obj), createCascade)
   }
   //TODO: write test for fromEntries
   static fromEntries(obj) {
-    return new LazyObject(() => Object.fromEntries(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyObject(() => Object.fromEntries(obj), createCascade);
   }
   static values(obj) {
-    return new LazyArray(() => Object.values(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.values(obj), createCascade);
   }
 
   // mutable methods made immutable

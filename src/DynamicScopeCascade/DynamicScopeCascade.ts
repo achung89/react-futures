@@ -5,7 +5,9 @@ export default class DynamicScopeCascade {
     static getDynamicScope() {
         return dynamicScopeValue
     }
-
+    static of(...args) {
+        return new DynamicScopeCascade(...args)
+    }
     #dynamicScopeVal: any
     #val: () => any
     constructor(cb, dynamicScopVal = null) {
@@ -30,5 +32,7 @@ export default class DynamicScopeCascade {
     get() {
         return this.#val
     }
-
+    get functor() {
+        return DynamicScopeCascade.of
+    }
 }
