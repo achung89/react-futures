@@ -4,8 +4,8 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import LRU from 'lru-cache';
 import { LazyArray, species } from './internal';
-import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
-import PullCacheCascade from './functorComposition/PullCacheCascade'
+import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PullCacheCascade } from './internal';
+
 export const futureObject = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
 

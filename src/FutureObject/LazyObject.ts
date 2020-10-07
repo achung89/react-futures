@@ -1,4 +1,3 @@
-import PullCacheCascade from '../functorComposition/PullCacheCascade';
 import { isRendering, thisMap } from '../internal';
 import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';

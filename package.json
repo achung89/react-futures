@@ -39,17 +39,19 @@
     "delay": "^4.3.0",
     "jest": "^25.5.0",
     "jest-react": "^0.11.1",
-    "react-test-renderer": "^0.0.0-experimental-aae83a4b9",
+    "react-test-renderer": "0.0.0-experimental-94c0244ba",
     "regenerator-runtime": "^0.13.3",
     "rollup": "^2.7.2",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-terser": "^5.3.0",
-    "scheduler": "^0.0.0-experimental-aae83a4b9",
+    "scheduler": "0.0.0-experimental-94c0244ba",
     "tslib": "^1.11.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "lru-cache": "^5.1.1"
+    "lru-cache": "^5.1.1",
+    "react": "^0.0.0-experimental-94c0244ba",
+    "react-dom": "^0.0.0-experimental-94c0244ba"
   },
   "peerDependencies": {
     "react": "0.0.0-experimental-aae83a4b9",

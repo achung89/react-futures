@@ -15,7 +15,7 @@ export const testSuspenseWithLoader = async (
     document.body.appendChild(container);
   });
   act(() => {
-    root = ReactDOM.createRoot(container);
+    root = ReactDOM.unstable_createRoot(container);
   });
   await act(async () => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);
@@ -40,7 +40,7 @@ export const testRenderWithoutSuspense = async (el, expected) => {
     document.body.appendChild(container);
   });
   act(() => {
-    root = ReactDOM.createRoot(container);
+    root = ReactDOM.unstable_createRoot(container);
   });
   await act(async () => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);

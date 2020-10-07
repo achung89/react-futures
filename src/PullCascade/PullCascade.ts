@@ -1,21 +1,20 @@
 import { first, tap } from "../utils"
 // TODO: test
 const PullCascade = cb => {
-  const firstCb = first(cb);
   return {
-  
     get() {
       return cb()
     },
     map(fn) {
       //TODO: comment
-      let firstFn = first(() => fn(firstCb()))
-      return PullCascade(firstFn)
+      const firstCb = first(cb);
+
+      return PullCascade(() => fn(firstCb()))
     },
     tap(fn) {
+
       //TODO: comment
-      let firstFn = first(tap(() => fn(firstCb())))
-      return PullCascade(firstFn);
+      return this.map(tap(fn));
     },
     get functor() {
       return PullCascade.of
@@ -25,4 +24,4 @@ const PullCascade = cb => {
 
 PullCascade.of = PullCascade
 
-export default PullCascade;
+export { PullCascade }

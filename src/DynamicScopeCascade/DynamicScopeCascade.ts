@@ -1,13 +1,11 @@
-import { tap } from "../utils";
+import { tap } from "../internal";
 
 let dynamicScopeValue = null;
-export default class DynamicScopeCascade {
+export class DynamicScopeCascade {
     static getDynamicScope() {
         return dynamicScopeValue
     }
-    static of(...args) {
-        return new DynamicScopeCascade(...args)
-    }
+
     #dynamicScopeVal: any
     #val: () => any
     constructor(cb, dynamicScopVal = null) {
@@ -16,6 +14,8 @@ export default class DynamicScopeCascade {
             dynamicScopeValue = dynamicScopVal;
             this.#dynamicScopeVal = dynamicScopVal
             this.#val = cb()
+        }catch(err) {
+            throw err;
         } finally {
             dynamicScopeValue = tempDynamicScopVal
         }
@@ -27,7 +27,7 @@ export default class DynamicScopeCascade {
         return new DynamicScopeCascade(() => cb(this.#val), this.#dynamicScopeVal)
     }
     tap(cb) {
-        return new DynamicScopeCascade(tap(() => cb(this.#val)), this.#dynamicScopeVal)
+        return this.map(tap(() => cb(this.#val)))
     }
     get() {
         return this.#val
