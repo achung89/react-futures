@@ -55,13 +55,10 @@ const createEffect = Type =>
     #cascade;
     constructor(
       cb, 
-
       createCascade,
       childProxy: ProxyHandler<typeof Type> = {}
     ) {
       super();
-      console.log("CREATE CASCADE", createCascade)
-
       this.#cascade = createCascade(cb);
       createCascadeMap.set(this, createCascade);
       const proxy = new Proxy(this, {
@@ -81,6 +78,8 @@ const createEffect = Type =>
                 try {
                   rhsMap.set(this, target);
                   value = thisMap.get(value).constructor[species].run(id => id, value) 
+                } catch(err) {
+                  throw err;
                 } finally {
                   rhsMap.delete(this);
                 }
@@ -99,6 +98,7 @@ const createEffect = Type =>
           if (typeof this[key] === 'function') {
             return Reflect.get(target, key, receiver);
           }
+          
           return this.#run(target => Reflect.get(target, key, target));
         },
         getOwnPropertyDescriptor: (_target, prop) => {
@@ -137,18 +137,19 @@ const createEffect = Type =>
       return proxy;
     }
     #map = function map(nextFn: Function, Klass) {
-      return new Klass(nextFn, this.#cascade.functor);
+      return new Klass(nextFn, cb => this.#cascade.map(cb));
     };
     #splice = function spliceTap(fn) {
       let spliced;
       const performSplice = arr => {
         spliced = fn(arr);
       }
+      this.#cascade = this.#cascade.tap(performSplice);
+
       const result = lazyArray(() => {
-        performSplice();
+        this.#cascade.get();
         return spliced
       })
-      this.#cascade = this.#cascade.tap(performSplice);
       return result;
     }
     #tap = function tapper(fn: Function, name: string, futr: Effect) {
@@ -169,11 +170,12 @@ const createEffect = Type =>
       return futr;
     };
     #run = function run(fn: Function) {
-      let getVal = this.#cascade.get;
+      let getVal = () => this.#cascade.get();
       if(rhsMap.has(this)) {
         getVal = () => rhsMap.get(this);
       }
-      return pipe(getVal, first(fn))();
+      const a = getVal()
+      return fn(a)
     };
   };
 

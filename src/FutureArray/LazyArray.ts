@@ -1,6 +1,6 @@
 import { ArrayEffect } from '../internal';
 import { ObjectEffect,species } from '../internal';
-import PullCascade from '../PullCascade/PullCascade';
+import { PullCascade } from '../PullCascade/PullCascade';
 import { defaultCascade, metadataMap } from '../utils';
 
 const { map, run, tap } = ArrayEffect;
@@ -281,7 +281,8 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
 
   // suspend on iterator access
   [Symbol.iterator]() {
-    return map(target => target[Symbol.iterator](), this, LazyIterator);
+    // TODO: turn this to `map` without it crashing
+    return run(target => target[Symbol.iterator](), this);
   }
   values() {
     return map(target => target.values(), this, LazyIterator);
@@ -300,7 +301,7 @@ export class LazyIterator extends ObjectEffect {
   }
   next(...args) {
     return ObjectEffect.run(target => {
-      return  target.next(...args);
+      return target.next(...args);
     }, this);
   }
   [Symbol.iterator]() {

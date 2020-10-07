@@ -151,11 +151,10 @@ describe('toPromise', () => {
   })
   
   test('inside render', async () => {
-    expect.assertions(1)    
+    let result
     const inRender = async () => {
       const futureObj = new FutureObj(3);
-      const result = await toPromise(futureObj);
-      expect(result).toEqual(expectedJSON(3));
+      result = await toPromise(futureObj);
     }
     let renderer;
     act(() => {
@@ -164,19 +163,18 @@ describe('toPromise', () => {
     const {getByText} = renderer;
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
+    expect(result).toEqual(expectedJSON(3));
+
   })  
   test('inside render multiple', async () => {
-    expect.assertions(1)    
+    let transformedResult
     const inRender = async () => {
       const makeFuture = val => new FutureObj(val);
 
 
       const transformed = FutureObj.assign(makeFuture(5), lazyObject(() => invert(makeFuture(4))));
                             
-      const transformedExpected = Object.assign(expectedJSON(5), invert(expectedJSON(4)))
-      const transformedResult = await toPromise(transformed);
-
-      expect(transformedResult).toEqual(transformedExpected);
+      transformedResult = await toPromise(transformed);
     }
     let renderer;
     act(() => {
@@ -185,6 +183,10 @@ describe('toPromise', () => {
     const {getByText} = renderer;
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
+    
+    const transformedExpected = Object.assign(expectedJSON(5), invert(expectedJSON(4)))
+    expect(transformedResult).toEqual(transformedExpected);
+
   })
 })
 

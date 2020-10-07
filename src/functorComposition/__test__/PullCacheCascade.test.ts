@@ -1,4 +1,4 @@
-import PullCacheCascade from "../PullCacheCascade";
+import { PullCacheCascade } from "../../internal";
 
 
 test('should set dynamicScope', () => {

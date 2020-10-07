@@ -1,5 +1,5 @@
-jest.useFakeTimers();
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
+jest.useFakeTimers();
 import React, { Suspense } from 'react';
 import { futureArray, futureObject, toPromise } from '../../../index';
 import { act } from 'react-dom/test-utils';
@@ -183,9 +183,9 @@ describe('Array operations', () => {
         expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
         
       };
-      act(() => {
+
         outsideRender();
-      });
+      
       let renderer;
       act(() => {
         renderer = render(
@@ -320,9 +320,9 @@ describe('Array operations', () => {
           method(futureArr)
         ).toThrowError(/** TODO: outofrender error */);
 
-      act(() => {
+
         outsideRender();
-      });
+
 
       let renderer;
       let created;
@@ -356,14 +356,13 @@ describe('Array operations', () => {
   //TODO: invalid methods pop shift and push
 
   test('subclasses Array', async () => {
-    const resources = new FutureArr(5);
+    let resources = new FutureArr(5);
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(unwrapProxy(resources)).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);
-    expect(() => Array.from(resources)).toThrow();
+    expect(() => Array.from(resources)).toThrowError(); //TODO: specify error
 
     let created;
-    expect(() => Array.from(resources)).toThrowError(); //TODO: specify error
     let renderer;
     act(() => {
       renderer = render(
@@ -379,10 +378,14 @@ describe('Array operations', () => {
         container
       );
     });
+
     const { getByText } = renderer;
 
     expect(Scheduler).toHaveYielded(['Suspend!']);
+
     await waitForSuspense(150);
+    expect(Scheduler).toHaveYielded(['Promise Resolved', 'No Suspense']);
+
     await waitFor(() => getByText('foo'));
     expect(created).toBeInstanceOf(Array);
     expect(created).not.toBeInstanceOf(FutureArr);
@@ -404,9 +407,9 @@ describe('Array operations', () => {
         final = val
       })      
     };
-    act(() => {
+    
       outsideRender();
-    });
+    
     let renderer;
     act(() => {
       renderer = render(

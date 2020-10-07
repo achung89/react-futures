@@ -77,7 +77,6 @@ let FutureObj;
 let container;
 let Scheduler;
 beforeEach(() => {
-  jest.resetModules();
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -204,9 +203,9 @@ describe('Object static methods', () => {
         expect(unwrapProxy(created)).toBeInstanceOf(Constructor);
       };
 
-      act(() => {
+      
         outsideRender();
-      });
+
 
       let renderer;
       act(() => {

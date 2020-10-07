@@ -1,14 +1,14 @@
-import SuspenseCascade from "./SuspenseCascade";
-import { upperCase, spaceOut, throwOnce } from "./suspenseFuncs";
+import { PullCacheCascade } from "../../internal";
+import { upperCase, spaceOut, throwOnce } from "../../SuspenseCascade/suspenseFuncs";
 
 
 
-describe('SuspenseCascade', () => {
+describe('PullCacheCascade', () => {
   it('shouldnt throw suspense if promise is already resolved', async () => {
     const fn = jest.fn()
 
-    let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
-                      .map(throwOnce(upperCase))
+    let suspender = PullCacheCascade.of(throwOnce(() => 'johnny bravo'))
+
     try {
       suspender.get();
     } catch (prom) {
@@ -21,17 +21,17 @@ describe('SuspenseCascade', () => {
 
   })
   it('should return value if no promises throw', () => {
-    const suspense = SuspenseCascade.of(() => 'johnny bravo')
+    const suspense = PullCacheCascade.of(() => 'johnny bravo')
     expect(suspense.get()).toEqual('johnny bravo')
   })
   it('should map callbacks', () => {
     {
-      const suspense = SuspenseCascade.of(() => 'johnny bravo')
+      const suspense = PullCacheCascade.of(() => 'johnny bravo')
         .map(upperCase);
       expect(suspense.get()).toEqual('JOHNNY BRAVO')
     }
     {
-      const suspense = SuspenseCascade.of(() => 'johnny bravo')
+      const suspense = PullCacheCascade.of(() => 'johnny bravo')
         .map(upperCase)
         .map(spaceOut)
 
@@ -42,7 +42,7 @@ describe('SuspenseCascade', () => {
     const fn = jest.fn()
 
 
-    let suspender = SuspenseCascade.of(() => 'johnny bravo')
+    let suspender = PullCacheCascade.of(() => 'johnny bravo')
       .map(throwOnce(upperCase))
     try {
       suspender.get();
@@ -60,7 +60,7 @@ describe('SuspenseCascade', () => {
   it('should throw suspense if first callback throws', async () => {
     const fn = jest.fn()
 
-    let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
+    let suspender = PullCacheCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(upperCase)
     try {
       suspender.get();
@@ -77,7 +77,7 @@ describe('SuspenseCascade', () => {
   it('should throw suspense if first and second callback throws', async () => {
     const fn = jest.fn()
 
-    let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
+    let suspender = PullCacheCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(throwOnce(upperCase))
     try {
       suspender.get();
@@ -86,7 +86,16 @@ describe('SuspenseCascade', () => {
       expect(prom).toBeInstanceOf(Promise);
       await prom
     }
+    
     expect(fn).toHaveBeenCalled()
+    try {
+      suspender.get();
+    } catch (prom) {
+      fn()
+      expect(prom).toBeInstanceOf(Promise);
+      await prom
+    }
+    expect(fn).toHaveBeenCalledTimes(2)
 
     expect(suspender.get()).toEqual('JOHNNY BRAVO')
   })

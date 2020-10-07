@@ -1,4 +1,4 @@
-import DynamicScopeCascade from "../DynamicScopeCascade.ts"
+import { DynamicScopeCascade } from "../../internal"
 
 test('should set dynamicScope', () => {
   expect(DynamicScopeCascade.getDynamicScope()).toEqual(null);
@@ -17,7 +17,6 @@ test('should set dynamicScope if using point', () => {
     expect(DynamicScopeCascade.getDynamicScope()).toEqual(1)
   }, 1)
   expect.assertions(2)
-
 })
 test('should set dynamicScope on map',() => {
   expect(DynamicScopeCascade.getDynamicScope()).toEqual(null);
@@ -45,8 +44,8 @@ test('should get value',() => {
       .map(one => one + 1)
       .map(two => two + 1)
       .get()
-      expect(val).toEqual(3);
-    }
+    expect(val).toEqual(3);
+  }
 })
 
 // TODO: test nested cascade
