@@ -75,7 +75,7 @@ describe('In only render context', () => {
   });
 
   it('should suspend when rendering', async () => {
-    const MiniApp = () => <>{new FutureArr(5)}</>;
+    const MiniApp = () => new FutureArr(5);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -171,20 +171,24 @@ describe('Array operations', () => {
           
   `(
     `Mutator method $name should defer outside render and throw in render`,
-    async ({ method }) => {
-      const futArr = new FutureArr(5);
+    async ({ method, name }) => {
+      const futrArr = new FutureArr(5);
       const inRender = () => expect(() => {
-        method(futArr)
+        console.log(1, name);
+        method(futrArr)
+        console.log(2, name);
       }).toThrowError();
 
       let created;
       const outsideRender = () => {
-        created = method(futArr)
+        console.log(3, name)
+        created = method(futrArr)
+        console.log(4, name)
         expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
         
       };
 
-        outsideRender();
+      outsideRender();
       
       let renderer;
       act(() => {
@@ -196,9 +200,14 @@ describe('Array operations', () => {
         );
       });
       const {getByText} = renderer;
-      await waitForSuspense(150);
 
-      const orig = await extractValue(futArr);
+      expect(Scheduler).toHaveYielded(['No Suspense']);
+
+      await waitForSuspense(150);
+      expect(Scheduler).toHaveYielded(['Promise Resolved']);
+      await waitFor(() => getByText('foo'));
+
+      const orig = await extractValue(futrArr);
       const result = await extractValue(created);
       const expected = [2,3,4,5];
       expect(result).toEqual(method(expected))
@@ -394,16 +403,16 @@ describe('Array operations', () => {
     expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(LazyArray);
   });
   test.skip('forEach should return undefined, throw inside render, and defer outside render', async () => {
-    const futArr = new FutureArr(5);
+    const futrArr = new FutureArr(5);
     let final;
     const inRender = () => expect(() => {
-      futArr.forEach(val => {
+      futrArr.forEach(val => {
         final = val
       })
     }).toThrowError();
 
     const outsideRender = () => {
-      futArr.forEach(val => {
+      futrArr.forEach(val => {
         final = val
       })      
     };
