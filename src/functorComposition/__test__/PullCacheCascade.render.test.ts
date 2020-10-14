@@ -1,5 +1,5 @@
 import { PullCacheCascade } from "../../internal";
-import { upperCase, spaceOut, throwOnce } from "../../SuspenseCascade/suspenseFuncs";
+import { upperCase, spaceOut, throwOnce } from "../../PushCascade/suspenseFuncs";
 
 
 

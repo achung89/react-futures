@@ -4,7 +4,7 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import LRU from 'lru-cache';
 import { LazyArray, species } from './internal';
-import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PullCacheCascade } from './internal';
+import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
 
 export const futureObject = <T extends object>(promiseCb) => {
   const cache = new LRU(500);
@@ -35,7 +35,7 @@ export const futureObject = <T extends object>(promiseCb) => {
       if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
-      super(getCachedPromise(keys), cb => PullCacheCascade.of(cb, cache));
+      super(getCachedPromise(keys), cb => PushCacheCascade.of(cb, cache));
     }
   };
 };
@@ -69,7 +69,7 @@ export const futureArray = <T>(promiseCb) => {
       if(keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
-      super(getCachedPromise(keys), cb => PullCacheCascade.of(cb, cache));
+      super(getCachedPromise(keys), cb => PushCacheCascade.of(cb, cache));
     }
   };
 };

@@ -135,7 +135,7 @@ export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   }
 
   reverse(...args) {
-    return tap(target => console.log(target) || target.reverse(...args), 'reverse', this);
+    return tap(target => target.reverse(...args), 'reverse', this);
   }
 
   fill(...args) {

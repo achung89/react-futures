@@ -2,11 +2,10 @@ jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { futureObject } from "../../../index";
 
 import React, { Suspense, useState } from "react";
-import { lazyArray, lazyObject } from "../../../utils";
+import { lazyArray } from "../../../internal";
 import extractValue from "../../../test-utils/extractValue";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
-import { waitFor } from "@testing-library/dom";
-import { act } from "react-dom/test-utils";
+
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
 
 jest.useFakeTimers();
@@ -47,11 +46,11 @@ afterEach(() => {
 });
 
 describe("rhs", () => {
-  test("outside render", async () => {
+  test.only("outside render", async () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => ind + 1);
-    futureObj.value = op(lazyArray(() => futureObj.value));
+    futureObj.value = op(lazyArray(() => futureObj.value ));
 
     const result = extractValue(futureObj);
     await waitForSuspense(150);
@@ -60,8 +59,13 @@ describe("rhs", () => {
   test("outside render, should evaluate in order", async () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
-    const op = arr => arr.map(ind => ind + 1);
-    futureObj.value = op(lazyArray(() => futureObj.value));
+    const op = arr => arr.map(ind => 
+      ind + 1
+      );
+    futureObj.value = op(lazyArray(
+      () => 
+      futureObj.value
+      ));
     const mutated = Object.assign(futureObj, { value: "bar" });
 
     const result = extractValue(futureObj);

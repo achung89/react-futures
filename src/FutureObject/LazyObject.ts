@@ -2,7 +2,7 @@ import { isRendering, thisMap } from '../internal';
 import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species } from '../internal';
-import { createCascadeMap, getCascade, metadataMap } from '../utils';
+import { getCascade } from '../utils';
 
 const memoize = fn => {
   const cache = new WeakMap();

@@ -1,3 +1,4 @@
+import { isRendering } from "../utils";
 
 const cache = new LRU(500);
 const getCachedPromise = keys => {
@@ -28,7 +29,7 @@ const cacheFuture = () => {
         }
 
         constructor(...keys) {
-          if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
+          if(keys.some(key =>typeof key === 'object' && key !== null) && canSuspend()) {
             throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
           }
           super(getCachedPromise(keys));

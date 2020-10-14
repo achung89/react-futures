@@ -174,16 +174,12 @@ describe('Array operations', () => {
     async ({ method, name }) => {
       const futrArr = new FutureArr(5);
       const inRender = () => expect(() => {
-        console.log(1, name);
         method(futrArr)
-        console.log(2, name);
       }).toThrowError();
 
       let created;
       const outsideRender = () => {
-        console.log(3, name)
         created = method(futrArr)
-        console.log(4, name)
         expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
         
       };
