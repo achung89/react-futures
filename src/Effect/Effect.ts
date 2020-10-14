@@ -174,8 +174,8 @@ const createEffect = Type =>
       if(rhsMap.has(this)) {
         getVal = () => rhsMap.get(this);
       }
-      const a = getVal()
-      return fn(a)
+
+      return fn(getVal())
     };
   };
 

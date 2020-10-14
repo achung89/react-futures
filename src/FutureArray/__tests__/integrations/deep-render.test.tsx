@@ -3,7 +3,8 @@ import { futureArray } from '../../../index';
 
 import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
-import { getRaw, lazyArray } from '../../../utils';
+import { getRaw } from '../../../utils';
+import { reverseImm } from './reverseImm';
 
 jest.useFakeTimers();
 
@@ -14,15 +15,6 @@ jest.useFakeTimers();
 // testing iterating in parent and in child and accessing in child or subchild
 
 let StubFutureArray;
-export let reverseImm = arr => {
-  return lazyArray(() => {
-    let a = [];
-    for (let i = arr.length - 1; i >= 0; i--) {
-      a.push(arr[i]);
-    }
-    return a;
-  })
-}
 const PassThrough = ({ children }) => {
   return <div>{children}</div>;
 };

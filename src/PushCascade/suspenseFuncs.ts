@@ -1,14 +1,15 @@
 
 const createThrower = (throws, callback) => {
   let callCount = 0;
+  let promise = new Promise((res, rej) => {
+    setTimeout(res, 50)
+  })
   return (...args) => {
     if (callCount === throws) {
       return callback(...args)
     }
     callCount++;
-    throw new Promise((res, rej) => {
-      setTimeout(res, 1)
-    })
+    throw promise
   }
 }
 export const suspenseHandler = async cb => {

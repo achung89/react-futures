@@ -6,7 +6,7 @@ import {
   testSuspenseWithLoader,
   testRenderWithoutSuspense,
 } from '../../../test-utils/testSuspense';
-import { reverseImm } from './deep-render.test';
+import { reverseImm } from "./reverseImm";
 
 jest.useFakeTimers();
 

@@ -4,7 +4,7 @@ import {
   LazyObject,
   LazyArray,
   species,
-  PullCacheCascade
+  PushCacheCascade
 } from './internal';
 import * as ReactDOM from 'react-dom';
 
@@ -106,7 +106,7 @@ export const getCascade = obj => {
 
 export const defaultCascade = cb => {
   let cache = {}
-  return PullCacheCascade.of(cb, {
+  return PushCacheCascade.of(cb, {
     set(key, val) {
       cache[key] = val
     },
@@ -124,3 +124,5 @@ export const defaultCascade = cb => {
     }
   })
 }
+
+export const canSuspend = () => canSuspend() || __internal.allowSuspenseOutsideRender

@@ -4,14 +4,14 @@ jest.useFakeTimers();
 
 import React, { Suspense } from 'react';
 import { futureObject, futureArray } from './index';
-import {isEffect, LazyArray, LazyObject} from './internal'
+import { LazyObject } from './internal'
 import waitForSuspense from './test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from './test-utils/rtl-renderer';
 import { waitFor, wait } from '@testing-library/dom';
 import { unwrapProxy, toPromise, lazyObject, lazyArray } from './utils';
 import extractValue from './test-utils/extractValue';
-import { reverseImm } from './FutureArray/__tests__/integrations/deep-render.test';
+import { reverseImm } from "./FutureArray/__tests__/integrations/reverseImm";
 expect.extend(require('./test-utils/renderer-extended-expect'));
 
 
@@ -210,9 +210,9 @@ test.each([
   null,
   undefined
 ])('lazyObject should throw if given %s', async val => {
-  const obj = lazyObject(() => val)
+  
   expect((async () => {
-    await toPromise(obj);
+    lazyObject(() => val)
   })()).rejects.toBeInstanceOf(Error)
 })
 
@@ -223,9 +223,8 @@ test.each([
   null,
   undefined
 ])('lazyObject should throw if given %s', async val => {
-  const obj = lazyArray(() => val)
   expect((async () => {
-    await toPromise(obj);
+    lazyArray(() => val)
   })()).rejects.toBeInstanceOf(Error)
 })
 test('lazyArray should defer ', async () => {
