@@ -1,13 +1,25 @@
 import { act } from 'react-dom/test-utils';
 
-const waitForSuspense = async waitTime => {
+const waitForSuspense = async (waitTime) => {
   act(() => {
     jest.advanceTimersByTime(waitTime);
   });
 
   for (let a = 0; a < 100; a++) {
-    await act(async () => {
-      
+    try {
+      await act(async () => {
+        try {
+          await Promise.resolve();
+          await Promise.resolve();
+          await Promise.resolve();
+          jest.runAllTimers();
+          jest.runAllTicks();
+          jest.runAllImmediates();
+          jest.runOnlyPendingTimers();
+        } catch (err) {
+          throw err;
+        }
+      });
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -15,16 +27,11 @@ const waitForSuspense = async waitTime => {
       jest.runAllTicks();
       jest.runAllImmediates();
       jest.runOnlyPendingTimers();
+    } catch (err) {
+      throw err
+    }
 
-    });
 
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-    jest.runAllTimers();
-    jest.runAllTicks();
-    jest.runAllImmediates();
-    jest.runOnlyPendingTimers();
   }
 };
 

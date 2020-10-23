@@ -49,9 +49,11 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "cd": "^0.3.3",
     "lru-cache": "^5.1.1",
     "react": "^0.0.0-experimental-94c0244ba",
-    "react-dom": "^0.0.0-experimental-94c0244ba"
+    "react-dom": "^0.0.0-experimental-94c0244ba",
+    "why-is-node-running": "^2.2.0"
   },
   "peerDependencies": {
     "react": "0.0.0-experimental-aae83a4b9",

@@ -7,6 +7,7 @@ import {
   PushCacheCascade
 } from './internal';
 import * as ReactDOM from 'react-dom';
+import { DynamicScopeCascade } from './DynamicScopeCascade/DynamicScopeCascade';
 
 export const metadataMap = new WeakMap();
 
@@ -106,7 +107,7 @@ export const getCascade = obj => {
 
 export const defaultCascade = cb => {
   let cache = {}
-  return PushCacheCascade.of(cb, {
+  return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || {
     set(key, val) {
       cache[key] = val
     },

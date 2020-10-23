@@ -1,4 +1,4 @@
-import { SuspenseJob } from "./PushCascade"
+import { SuspenseJob } from "../internal"
 import { upperCase, spaceOut, throwOnce, throwTwice, throwThrice, dunder, dollar } from "./suspenseFuncs";
 
 describe('SuspenseJob', () => {

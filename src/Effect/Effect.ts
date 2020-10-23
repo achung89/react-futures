@@ -8,14 +8,14 @@ export const species = Symbol('species');
 class InvalidObjectStaticMethod extends Error {
   constructor(methodName) {
     // TODO: provide link
-    let objMethods = Array.isArray(methodName) 
-                      ? `Object.${methodName.join('/')}`
-                      : `Object.${methodName}` 
-    let futureObjMethods = Array.isArray(methodName) 
-                            ? `FutureObject.${methodName.join('/')}`
-                            : `FutureObject.${methodName}` 
+    let objMethods = Array.isArray(methodName)
+      ? `Object.${methodName.join('/')}`
+      : `Object.${methodName}`
+    let futureObjMethods = Array.isArray(methodName)
+      ? `FutureObject.${methodName.join('/')}`
+      : `FutureObject.${methodName}`
     super(`Invalid static method ${objMethods} on future detected. Please use ${futureObjMethods} instead`);
-    
+
   }
 };
 const rhsMap = new WeakMap();
@@ -41,7 +41,7 @@ const createEffect = Type =>
     ) {
       if (!thisMap.has(futr)) {
         // TODO: change
-        throw new Error('NOT INSTANCE');
+      throw new Error('NOT INSTANCE');
       }
       return thisMap.get(futr).#map(fn, ReturnClass);
     }
@@ -54,7 +54,7 @@ const createEffect = Type =>
     }
     #cascade;
     constructor(
-      cb, 
+      cb,
       createCascade,
       childProxy: ProxyHandler<typeof Type> = {}
     ) {
@@ -68,18 +68,15 @@ const createEffect = Type =>
             'Object.defineProperty',
             proxy
           );
-          return true;        
+          return true;
         },
         set: (_target, key, value) => {
           this.#tap(
             target => {
 
-              if(isFuture(value)) {
+              if (isFuture(value)) {
                 try {
-                  rhsMap.set(this, target);
-                  value = thisMap.get(value).constructor[species].run(id => id, value) 
-                } catch(err) {
-                  throw err;
+                  Reflect.set(target, key, value.get())
                 } finally {
                   rhsMap.delete(this);
                 }
@@ -98,7 +95,7 @@ const createEffect = Type =>
           if (typeof this[key] === 'function') {
             return Reflect.get(target, key, receiver);
           }
-          
+
           return this.#run(target => Reflect.get(target, key, target));
         },
         getOwnPropertyDescriptor: (_target, prop) => {
@@ -116,15 +113,15 @@ const createEffect = Type =>
           return this.#run(target => Reflect.has(target, key));
         },
         isExtensible: _target => {
-          throw new InvalidObjectStaticMethod(['isExtensible','isFrozen', 'isSealed']);
+          throw new InvalidObjectStaticMethod(['isExtensible', 'isFrozen', 'isSealed']);
         },
         ownKeys: _target => {
           const createCascade = createCascadeMap.get(this)
           // TODO: is this right?
-          
+
           return new LazyArray(() => this.#run(target => Reflect.ownKeys(target)), createCascade);
         },
-      preventExtensions: _target => {
+        preventExtensions: _target => {
           throw new InvalidObjectStaticMethod(['preventExtensions', 'seal'])
         },
         setPrototypeOf: (_target, proto) => {
@@ -153,16 +150,15 @@ const createEffect = Type =>
       return result;
     }
     #tap = function tapper(fn: Function, name: string, futr: Effect) {
-    
       if (isRendering()) {
         // TODO: implement custom error message per method
         throw new Error(
           'Cannot invoke mutable operation ' +
-            name +
-            ' in render. Consider using a immutable variant or performing the operation outside render.'
+          name +
+          ' in render. Consider using a immutable variant or performing the operation outside render.'
         );
       }
-      if(name === 'splice') {
+      if (name === 'splice') {
         return this.#splice(fn)
       }
 
@@ -171,15 +167,14 @@ const createEffect = Type =>
     };
     #run = function run(fn: Function) {
       let getVal = () => this.#cascade.get();
-      if(rhsMap.has(this)) {
-        getVal = () => rhsMap.get(this);
-      }
 
-      return fn(getVal())
+      const a = getVal();
+
+      return fn(a)
     };
   };
 
 // bypass limitation of babel subclassing, only works down to ie11
 // https://babeljs.io/docs/en/babel-plugin-transform-classes
-export const ObjectEffect = createEffect(class extends Object {});
-export const ArrayEffect = createEffect(class extends Array {});
+export const ObjectEffect = createEffect(class extends Object { });
+export const ArrayEffect = createEffect(class extends Array { });
