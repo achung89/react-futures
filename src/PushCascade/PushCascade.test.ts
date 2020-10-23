@@ -90,7 +90,7 @@ describe('PushCascade', () => {
 
     expect(suspender.get()).toEqual('JOHNNY BRAVO')
   })
-  it('should throw same promise on subsequent throw', async () => {
+  it.skip('should throw same promise on subsequent throw', async () => {
     const fn = jest.fn()
 
     let suspender = PushCascade.of(throwTwice(() => 'johnny bravo'))

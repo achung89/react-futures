@@ -1,6 +1,5 @@
 import { ArrayEffect } from '../internal';
 import { ObjectEffect,species } from '../internal';
-import { PullCascade } from '../PullCascade/PullCascade';
 import { defaultCascade, metadataMap } from '../utils';
 
 const { map, run, tap } = ArrayEffect;
@@ -8,7 +7,6 @@ const { map, run, tap } = ArrayEffect;
 export class LazyArray<T> extends ArrayEffect<Array<T>> implements Array<T> {
   constructor(cb, createCascade) {
     super(cb, createCascade);
-    
   }
   static get [species]() {
     return LazyArray;

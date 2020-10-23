@@ -1,3 +1,4 @@
+// const log = require('why-is-node-running')
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { futureObject } from "../../../index";
 
@@ -50,7 +51,9 @@ describe("rhs", () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => ind + 1);
-    futureObj.value = op(lazyArray(() => futureObj.value ));
+    futureObj.value = op(lazyArray(() => {
+      return futureObj.value 
+    }));
 
     const result = extractValue(futureObj);
     await waitForSuspense(150);
@@ -63,14 +66,14 @@ describe("rhs", () => {
       ind + 1
       );
     futureObj.value = op(lazyArray(
-      () => 
-      futureObj.value
+      () => futureObj.value
       ));
     const mutated = Object.assign(futureObj, { value: "bar" });
 
     const result = extractValue(futureObj);
     const mutatedResult = extractValue(mutated);
     await waitForSuspense(150);
+    console.log('bar')
     expect(await result).toEqual(expectedJSON("bar"));
     expect(await mutatedResult).toEqual(expectedJSON("bar"));
   });

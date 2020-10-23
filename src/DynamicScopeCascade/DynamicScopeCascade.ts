@@ -14,7 +14,7 @@ export class DynamicScopeCascade {
             dynamicScopeValue = dynamicScopVal;
             this.#dynamicScopeVal = dynamicScopVal
             this.#val = cb()
-        }catch(err) {
+        } catch(err) {
             throw err;
         } finally {
             dynamicScopeValue = tempDynamicScopVal

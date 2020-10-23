@@ -1,12 +1,12 @@
-import { Suspense } from "react";
-import { tap, __internal } from "../internal";
-const  sigh = async (prom, cb) => {
+
+import { tap, __internal, isFuture, } from "../internal";
+
+const  chain = async (prom, cb) => {
   try {
     await prom;
     let newVal = SuspenseCallback.of(cb);
 
-    
-    while(newVal instanceof SuspenseCallback ) {
+    while(newVal instanceof SuspenseCallback) {
       if (newVal instanceof SuspenseJob) {
         newVal = await jobMap.get(newVal);
       } else if (newVal instanceof SuspenseValue) {
@@ -38,7 +38,7 @@ abstract class SuspenseCallback {
     } catch (errOrProm) {
       __internal.allowSuspenseOutsideRender = false;
       if (typeof errOrProm.then === 'function') {
-        return new SuspenseJob(sigh(errOrProm, cb))
+        return new SuspenseJob(chain(errOrProm, cb))
       } else {
         throw errOrProm
       }
@@ -79,8 +79,9 @@ export class SuspenseJob<T> extends SuspenseCallback {
     jobMap.set(this, this.createJob(promise))
   }
   async createJob(promise) {
-    try { 
-      return this.val = await promise;
+    try {
+       this.val = await promise;
+       return this.val;
     } catch (err) {
       this.status = 'error'
       throw err
@@ -95,10 +96,15 @@ export class SuspenseJob<T> extends SuspenseCallback {
         const val = await jobMap.get(this)
 
         let newVal = SuspenseCallback.of(() => cb(val))
+        if(isFuture(newVal)) {
+          return newVal
+        }
         if (newVal instanceof SuspenseJob) {
-          return jobMap.get(newVal);
+          const a = await jobMap.get(newVal);
+          return a;
         } else if (newVal instanceof SuspenseValue) {
-          return newVal.get();
+          const a = newVal.get();
+          return a
         } else {
           throw new Error('INTERNAL ERROR')
         }
