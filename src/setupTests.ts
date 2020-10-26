@@ -1,7 +1,8 @@
 //setupTests.tsx
-const nodeCrypto = require('crypto');
-window.crypto = {
-  getRandomValues: function (buffer) {
-    return nodeCrypto.randomFillSync(buffer);
+const cryptoNode = require('crypto');
+
+Object.defineProperty(global.self, 'crypto', {
+  value: {
+    getRandomValues: arr => cryptoNode.randomBytes(arr.length)
   }
-};
+});

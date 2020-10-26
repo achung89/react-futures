@@ -3,17 +3,18 @@ import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import LRU from 'lru-cache';
-import { LazyArray, species } from './internal';
+import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
+import { LazyArray, species,  } from './internal';
 import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
 
-export const futureObject = <T extends object>(promiseCb) => {
+
+export const futureObject = <T extends object>(promiseThunk) => {
   const cache = new LRU(500);
 
   if (isRendering()) {
     // TODO: add custom error message per method
     throw new Error('cannot create future outside render');
   }
-  const getCachedPromise = createPromiseCache( promiseCb);
 
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
     static get [species]() {
@@ -32,22 +33,23 @@ export const futureObject = <T extends object>(promiseCb) => {
       cache.reset();
     }
     constructor(...keys) {
-      if(keys.some(key =>typeof key === 'object' && key !== null) && isRendering()) {
+      if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
-      super(getCachedPromise(keys, DynamicScopeCascade.getDynamicScope() || cache), cb => PushCacheCascade.of(cb, cache));
+      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys)
+      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, DynamicScopeCascade.getDynamicScope() || cache)
+      super(promise, cb => PushCacheCascade.of(cb, cache));
     }
   };
 };
 
-export const futureArray = <T>(promiseCb) => {
+export const futureArray = <T>(promiseThunk) => {
   const cache = new LRU(500);
 
   if (isRendering()) {
     // TODO: add custom error message per method
     throw new Error('cannot create cache in render');
   }
-  const getCachedPromise = createPromiseCache( promiseCb)
 
   return class FutureArrayCache<A = T> extends FutureArray<A> {
     static get [species]() {
@@ -66,30 +68,29 @@ export const futureArray = <T>(promiseCb) => {
       cache.del(JSON.stringify(keys));
     }
     constructor(...keys) {
-      if(keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
+      if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
-      super(getCachedPromise(keys, DynamicScopeCascade.getDynamicScope() || cache), cb => PushCacheCascade.of(cb, cache));
+      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys)
+      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, DynamicScopeCascade.getDynamicScope() || cache), cb => PushCacheCascade.of(cb, cache));
     }
   };
 };
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
-function createPromiseCache( promiseCb: any) {
-  return (keys, cache) => {
-    const key = JSON.stringify(keys);
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
-    cache.set(key, promiseCb(...keys));
+function getCachedPromise(promiseThunk: any, key, cache) {
+  if (cache.has(key)) {
+    return cache.get(key);
+  }
+  cache.set(key, promiseThunk());
 
-    const promise = cache.get(key);
-    promise.then(res => {
-      promiseStatusStore.set(promise, { value: res, status: 'complete' });
-    });
-    promiseStatusStore.set(promise, { value: null, status: 'pending' });
+  const promise = cache.get(key);
+  promise.then(res => {
+    promiseStatusStore.set(promise, { value: res, status: 'complete' });
+  });
+  promiseStatusStore.set(promise, { value: null, status: 'pending' });
 
-    return promise;
-  };
-}
+  return promise;
+};
+
