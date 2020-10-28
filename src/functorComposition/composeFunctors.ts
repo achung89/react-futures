@@ -1,5 +1,3 @@
-
-
 export const composeFunctors = (functor1, functor2) => {
   const Functor1and2 = fun1 => ({
     get: () => fun1.get().get(),

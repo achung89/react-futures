@@ -15,7 +15,7 @@ return new Promise((res, rej) => {
       }
       act(() => {
         render(<Suspense fallback={<div>Loading...</div>}><App /></Suspense>, div);
-      })
+      });
       jest.runTimersToTime(0);
     } catch (err) {
       rej(err)

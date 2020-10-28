@@ -8,6 +8,7 @@ import extractValue from "../../../test-utils/extractValue";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
 
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
+expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 jest.useFakeTimers();
 const expectedJSON = value => ({
@@ -36,18 +37,23 @@ const fetchJson = val =>
 // test suspending in child
 // testing iterating in parent and in child and accessing in child or subchild
 let StubFutureObject;
-
+let Scheduler
 beforeEach(() => {
   StubFutureObject = futureObject(fetchJson);
+  Scheduler = require('scheduler/unstable_mock');
+
 });
 
 afterEach(() => {
+  Scheduler = null;
   StubFutureObject.reset();
   StubFutureObject = null;
 });
 
 describe("rhs", () => {
   test.only("outside render", async () => {
+    // jest.setTimeout(10000000);
+
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => ind + 1);
@@ -57,6 +63,7 @@ describe("rhs", () => {
 
     const result = extractValue(futureObj);
     await waitForSuspense(150);
+
     expect(await result).toEqual(expectedJSON(op(val)));
   });
   test("outside render, should evaluate in order", async () => {

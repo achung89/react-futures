@@ -2,8 +2,7 @@ import { promiseStatusStore } from '../shared-properties';
 import { LazyArray } from '../internal';
 import { isRendering, species } from '../internal';
 import { __internal } from '../internal';
-import { createCascadeMap } from '../utils';
-import React from 'react';
+
 export class FutureArray<T> extends LazyArray<T> {
   static get [species]() {
     return LazyArray;
