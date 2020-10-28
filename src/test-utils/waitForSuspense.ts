@@ -1,12 +1,12 @@
 import { act } from 'react-dom/test-utils';
 
 const waitForSuspense = async (waitTime) => {
-  act(() => {
-    jest.advanceTimersByTime(waitTime);
-  });
-
   for (let a = 0; a < 100; a++) {
     try {
+      act(() => {
+        jest.advanceTimersByTime(waitTime);
+      });
+      jest.advanceTimersByTime(waitTime);
       await act(async () => {
         try {
           await Promise.resolve();

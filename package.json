@@ -37,7 +37,6 @@
     "@types/react-dom": "^16.9.6",
     "@types/react-test-renderer": "^16.9.2",
     "delay": "^4.3.0",
-    "jest": "^25.5.0",
     "jest-react": "^0.11.1",
     "react-test-renderer": "0.0.0-experimental-94c0244ba",
     "regenerator-runtime": "^0.13.3",
@@ -50,6 +49,7 @@
   },
   "dependencies": {
     "cd": "^0.3.3",
+    "jest": "^26.6.1",
     "lru-cache": "^5.1.1",
     "react": "^0.0.0-experimental-94c0244ba",
     "react-dom": "^0.0.0-experimental-94c0244ba",

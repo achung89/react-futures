@@ -1,14 +1,14 @@
 
 import { tap, __internal, isFuture, } from "../internal";
 
-const  chain = async (prom, cb) => {
+const  deepChain = async (prom, cb) => {
   try {
     await prom;
     let newVal = SuspenseCallback.of(cb);
-
     while(newVal instanceof SuspenseCallback) {
       if (newVal instanceof SuspenseJob) {
-        newVal = await jobMap.get(newVal);
+        const promise = jobMap.get(newVal);
+        newVal = await promise
       } else if (newVal instanceof SuspenseValue) {
         newVal = newVal.get();
       } else {
@@ -20,7 +20,6 @@ const  chain = async (prom, cb) => {
   } catch (err) {
     throw err;
   }
-
 }
 abstract class SuspenseCallback {
   abstract map(fn: Function): SuspenseCallback;
@@ -38,7 +37,7 @@ abstract class SuspenseCallback {
     } catch (errOrProm) {
       __internal.allowSuspenseOutsideRender = false;
       if (typeof errOrProm.then === 'function') {
-        return new SuspenseJob(chain(errOrProm, cb))
+        return new SuspenseJob(deepChain(errOrProm, cb));
       } else {
         throw errOrProm
       }
@@ -50,6 +49,7 @@ abstract class SuspenseCallback {
 const valueMap = new WeakMap;
 
 type genericFunc = (...args: any) => any
+
 class SuspenseValue<T = any> extends SuspenseCallback {
   val: T;
   constructor(val) {
@@ -69,14 +69,17 @@ class SuspenseValue<T = any> extends SuspenseCallback {
 }
 
 const jobMap = new WeakMap;
+const promiseMap = new WeakMap;
 export class SuspenseJob<T> extends SuspenseCallback {
-  status: 'pending' | 'complete' | 'error'
-  val: any
+  status: 'pending' | 'complete' | 'error';
+  val: any;
+  
   constructor(promise) {
     super();
     this.status = 'pending'
-
+    promiseMap.set(promise,this)
     jobMap.set(this, this.createJob(promise))
+
   }
   async createJob(promise) {
     try {
@@ -120,7 +123,8 @@ export class SuspenseJob<T> extends SuspenseCallback {
   }
   get() {
     if (this.status === 'pending') {
-      throw jobMap.get(this);
+      const a = jobMap.get(this);
+      throw a
     }
     if (this.status === 'complete') {
       return this.val

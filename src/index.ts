@@ -36,7 +36,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
       if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
-      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys)
+      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, DynamicScopeCascade.getDynamicScope() || cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
     }
@@ -71,7 +71,7 @@ export const futureArray = <T>(promiseThunk) => {
       if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
-      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys)
+      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array'
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, DynamicScopeCascade.getDynamicScope() || cache), cb => PushCacheCascade.of(cb, cache));
     }
   };
