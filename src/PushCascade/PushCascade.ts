@@ -1,5 +1,5 @@
 
-import { tap, __internal, isFuture, } from "../internal";
+import {  tapper, __internal, isFuture, } from "../internal";
 
 const  deepChain = async (prom, cb) => {
   try {
@@ -61,7 +61,7 @@ class SuspenseValue<T = any> extends SuspenseCallback {
     return SuspenseCallback.of(() => cb(val));
   }
   tap(cb) {
-    return this.map(tap(cb))
+    return this.map(tapper(cb))
   }
   get() {
     return valueMap.get(this)
@@ -119,7 +119,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
     return new SuspenseJob(this.mapJob(cb))
   }
   tap(cb) {
-    return this.map(tap(cb))
+    return this.map(tapper(cb))
   }
   get() {
     if (this.status === 'pending') {

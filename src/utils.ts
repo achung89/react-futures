@@ -3,8 +3,8 @@ import {
   thisMap,
   LazyObject,
   LazyArray,
-  species,
-  PushCacheCascade
+  PushCacheCascade,
+  run
 } from './internal';
 import * as ReactDOM from 'react-dom';
 import { DynamicScopeCascade } from './DynamicScopeCascade/DynamicScopeCascade';
@@ -14,7 +14,7 @@ export const metadataMap = new WeakMap();
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
   fns.reduce((val, fn) => fn(val), val);
 
-export const tap = (fn: Function) => (val: any) => {
+export const tapper = (fn: Function) => (val: any) => {
   fn(val);
   return val;
 };
@@ -73,8 +73,8 @@ export const getRaw = future => {
   if (!isFuture(future)) {
     return future;
   }
-  const instance = thisMap.get(future)
-  return instance.constructor[species].run(getRaw, future);
+
+  return run(getRaw, future, cascadeMap.get(future));
 }
 
 export const toPromise = async future => {
@@ -97,6 +97,7 @@ export const toPromise = async future => {
 }
 
 export const createCascadeMap = new WeakMap();
+export const cascadeMap = new WeakMap;
 
 export const getCascade = obj => {
   if (createCascadeMap.has(obj)) {

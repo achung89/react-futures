@@ -1,4 +1,4 @@
-import { first, tap } from "../utils"
+import { first, tapper } from "../utils"
 // TODO: test
 const PullCascade = cb => {
   const firstCb = first(cb);
@@ -15,7 +15,7 @@ const PullCascade = cb => {
     tap(fn) {
       //TODO: comment
       
-      return this.map(tap(fn));
+      return this.map(tapper(fn));
     },
     get functor() {
       return PullCascade.of
