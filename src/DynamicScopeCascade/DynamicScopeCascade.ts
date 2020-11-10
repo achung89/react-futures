@@ -1,4 +1,4 @@
-import { tap } from "../internal";
+import { tapper } from "../internal";
 
 let dynamicScopeValue = null;
 export class DynamicScopeCascade {
@@ -27,7 +27,7 @@ export class DynamicScopeCascade {
         return new DynamicScopeCascade(() => cb(this.#val), this.#dynamicScopeVal)
     }
     tap(cb) {
-        return this.map(tap(() => cb(this.#val)))
+        return this.map(tapper(() => cb(this.#val)))
     }
     get() {
         return this.#val

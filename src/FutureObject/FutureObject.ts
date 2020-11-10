@@ -1,7 +1,7 @@
 import { promiseStatusStore } from '../shared-properties';
 import { LazyObject } from '../internal';
 import { isRendering } from '../internal';
-import { createCascadeMap, __internal } from '../utils';
+import {  __internal } from '../utils';
 import { species } from '../internal';
 
 export class FutureObject<T extends object, K extends object | null> extends LazyObject<T, K> {

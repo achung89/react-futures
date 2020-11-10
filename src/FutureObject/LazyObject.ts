@@ -1,8 +1,7 @@
+import { createProxy, run } from '../Effect/Effect';
 import { isRendering, thisMap } from '../internal';
-import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
-import { species } from '../internal';
-import { getCascade } from '../utils';
+import { species, createCascadeMap, getCascade, cascadeMap } from '../internal';
 
 const memoize = fn => {
   const cache = new WeakMap();
@@ -55,10 +54,9 @@ const staticMutableToImmutableOperation = (target, cb) => {
   }
 }
 
-const staticSuspendOperation = (target, cb, methodName) => {
+const staticSuspendOperation = (target, cb, cascade, methodName) => {
   if (isEffect(target)) {
-    const Klass = target.constructor[species];
-    return Klass.run(cb, target);
+    return run(cb, target, cascade);
   } else {
     if (!isRendering())
       throw new SuspendOperationOutsideRenderError(methodName);
@@ -78,13 +76,19 @@ const staticSuspendOperation = (target, cb, methodName) => {
 //   }
 // }
 // TODO test non future params
-export class LazyObject<T extends object> extends ObjectEffect<T> {
+export class LazyObject {
   static get [species]() {
     return LazyObject;
   }
 
   constructor(cb, createCascade) {
-    super(cb, createCascade);
+    const cascade = createCascade(cb);
+    const proxy = createProxy(this, cascade)
+
+    thisMap.set(proxy, this);
+    cascadeMap.set(proxy, cascade)
+    createCascadeMap.set(proxy, createCascade);
+    return proxy;
   }
   // mutable methods
   // static mutableAssign(obj, ...rest) {
@@ -223,6 +227,7 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
     return staticSuspendOperation(
       obj,
       Object.isExtensible,
+      cascadeMap.get(this),
       'FutureObject.isExtensible'
     );
   }
@@ -230,6 +235,7 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
     return staticSuspendOperation(
       obj,
       Object.isFrozen,
+      cascadeMap.get(this),
       'FutureObject.isFrozen'
     );
   }
@@ -237,6 +243,7 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
     return staticSuspendOperation(
       obj,
       Object.isSealed,
+      cascadeMap.get(this),
       'FutureObject.isSealed'
     );
   }
