@@ -2,6 +2,7 @@ import { createProxy, run } from '../Effect/Effect';
 import { isRendering, thisMap } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species, createCascadeMap, getCascade, cascadeMap } from '../internal';
+import { defaultCascade } from '../utils';
 
 const memoize = fn => {
   const cache = new WeakMap();
@@ -54,9 +55,11 @@ const staticMutableToImmutableOperation = (target, cb) => {
   }
 }
 
-const staticSuspendOperation = (target, cb, cascade, methodName) => {
+const staticSuspendOperation = (target, cb, methodName) => {
   if (isEffect(target)) {
-    return run(cb, target, cascade);
+    const createCascade = getCascade(target)
+
+    return run(cb, target, createCascade(() => target));
   } else {
     if (!isRendering())
       throw new SuspendOperationOutsideRenderError(methodName);
@@ -227,7 +230,6 @@ export class LazyObject {
     return staticSuspendOperation(
       obj,
       Object.isExtensible,
-      cascadeMap.get(this),
       'FutureObject.isExtensible'
     );
   }
@@ -235,7 +237,6 @@ export class LazyObject {
     return staticSuspendOperation(
       obj,
       Object.isFrozen,
-      cascadeMap.get(this),
       'FutureObject.isFrozen'
     );
   }
@@ -243,7 +244,6 @@ export class LazyObject {
     return staticSuspendOperation(
       obj,
       Object.isSealed,
-      cascadeMap.get(this),
       'FutureObject.isSealed'
     );
   }

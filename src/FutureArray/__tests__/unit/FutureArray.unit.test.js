@@ -217,7 +217,7 @@ describe('Array operations', () => {
     ${'filter'}      | ${arr => arr.filter(num => num % 2)}
     ${'slice'}       | ${arr => arr.slice(0, 1)}
     ${'map'}         | ${arr => arr.map(i => i + 3)}
-       ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
+    ${'flat'}        | ${arr => arr.map(num => [num + 3]).flat()}
     ${'flatMap'}     | ${arr => arr.flatMap(i => [i + 3])}
   `(
     `Applies defers native immutable method $name both in and outside render `,

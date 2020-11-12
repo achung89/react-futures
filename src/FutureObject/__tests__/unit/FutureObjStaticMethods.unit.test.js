@@ -3,16 +3,13 @@ jest.useFakeTimers();
 
 import React, { Suspense } from 'react';
 import { futureObject } from '../../../index';
-import { FutureObject } from '../../FutureObject';
-import { FutureArray } from '../../../FutureArray/FutureArray';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
 import { LazyObject, isEffect } from '../../../internal';
-import { unwrapProxy, suspend } from '../../../internal';
-import { LazyArray } from '../../../internal';
-import { getRaw } from '../../../utils';
+import { unwrapProxy, suspend, FutureArray } from '../../../internal';
+import { FutureObject, LazyArray } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
 import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
@@ -119,14 +116,14 @@ describe('FutureObject static methods', () => {
       const inRender = () => {
         created = method(futureObj);
       }
-      const outsideRender = () =>
+      const outsideRender = () => {
+        let val = method(futureObj);
+        console.log(val);
         expect(() =>
           method(futureObj)
         ).toThrowError(/** TODO: outofrender error */);
-
-      act(() => {
-        outsideRender();
-      });
+      }
+      outsideRender();
 
       let renderer;
       act(() => {
@@ -197,7 +194,8 @@ describe('FutureObject static methods', () => {
         expect(unwrapProxy(val)).toBeInstanceOf(Constructor);
         created =  val;
       };
-      act(outsideRender);
+
+      outsideRender();
 
       let renderer;
       act(() => {
