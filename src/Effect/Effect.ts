@@ -32,13 +32,21 @@ const splice = (fn, cascade) => {
   return result;
 }
 
+export const map = <T>(fn: Function,  futr: LazyArray<T>, cascade, Klass = thisMap.get(futr).constructor[species]) => {
+  if (!thisMap.has(futr)) {
+    // TODO: change
+    throw new Error('NOT INSTANCE');
+  }
+  return new Klass(fn, cb => cascade.map(cb));
+}
 
 export const run = (fn: Function, futr, cascade) => {
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
   }
-  return fn(cascade.get())
+  const val = cascade.get()
+  return fn(val)
 }
 
 export const tap = (fn: Function, futr: LazyArray, cascade, name: string,) => {

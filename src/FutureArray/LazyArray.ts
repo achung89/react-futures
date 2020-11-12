@@ -1,13 +1,5 @@
-import { species,cascadeMap, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap } from '../internal';
+import { species,cascadeMap, map, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap } from '../internal';
 
-
-const map = <T>(fn: Function,  futr: LazyArray<T>, cascade, Klass = thisMap.get(futr).constructor[species]) => {
-  if (!thisMap.has(futr)) {
-    // TODO: change
-    throw new Error('NOT INSTANCE');
-  }
-  return new Klass(fn, cb => cascade.map(cb));
-}
 
 
 export class LazyArray<T> extends Array<T> {
