@@ -204,7 +204,7 @@ describe('Object static methods', () => {
       };
 
       
-        outsideRender();
+      outsideRender();
 
 
       let renderer;
@@ -241,9 +241,7 @@ describe('Object static methods', () => {
         ).toThrowError(/** TODO: outofrender error */);
       const outsideRender = inRender;
 
-      act(() => {
         outsideRender();
-      });
 
       let renderer;
       act(() => {

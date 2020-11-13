@@ -1,7 +1,7 @@
 import { pipe, first, isRendering } from '../internal';
 import { LazyArray, cloneFuture } from '../internal';
 import { isFuture, getRaw, lazyArray } from '../internal';
-import { cascadeMap, createCascadeMap } from '../utils';
+import { cascadeMap, createCascadeMap, __internal } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 // implements IO
@@ -41,6 +41,10 @@ export const map = <T>(fn: Function,  futr: LazyArray<T>, cascade, Klass = thisM
 }
 
 export const run = (fn: Function, futr, cascade) => {
+  if(!isRendering() && !__internal.allowSuspenseOutsideRender ) {
+              // TODO: add custom error message per method
+              throw new Error(`cannot suspend outside render`);
+  }
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
@@ -77,7 +81,7 @@ export function createProxy<T extends object = object>(that, cascade){
     defineProperty: (_target, key, descriptor) => {
       tap(
         target => Reflect.defineProperty(target, key, descriptor),
-        that,
+        proxy,
         cascade,
         'Object.defineProperty',
       );
@@ -97,7 +101,7 @@ export function createProxy<T extends object = object>(that, cascade){
           }
           Reflect.set(target, key, value);
         },
-        that,
+        proxy,
         cascade,
         'set'
       );

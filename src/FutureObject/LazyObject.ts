@@ -57,9 +57,7 @@ const staticMutableToImmutableOperation = (target, cb) => {
 
 const staticSuspendOperation = (target, cb, methodName) => {
   if (isEffect(target)) {
-    const createCascade = getCascade(target)
-
-    return run(cb, target, createCascade(() => target));
+    return run(cb, target, cascadeMap.get(target));
   } else {
     if (!isRendering())
       throw new SuspendOperationOutsideRenderError(methodName);
