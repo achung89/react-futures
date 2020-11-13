@@ -12,6 +12,7 @@ import { unwrapProxy, suspend, FutureArray } from '../../../internal';
 import { FutureObject, LazyArray } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
 import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'
+import { isRendering } from '../../../utils';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 const getOwnPropertyDescriptorFuture = obj =>
@@ -100,7 +101,7 @@ afterEach(() => {
 });
 
 describe('FutureObject static methods', () => {
-  test.each`
+  test.only.each`
       staticMethod       
       ${'isExtensible'}
       ${'isFrozen'}    
@@ -117,12 +118,11 @@ describe('FutureObject static methods', () => {
         created = method(futureObj);
       }
       const outsideRender = () => {
-        let val = method(futureObj);
-        console.log(val);
         expect(() =>
           method(futureObj)
         ).toThrowError(/** TODO: outofrender error */);
       }
+
       outsideRender();
 
       let renderer;
@@ -142,7 +142,7 @@ describe('FutureObject static methods', () => {
       expect(result).toEqual(expected);
     }
   );
-  test.each`
+  test.only.each`
     staticMethod                      | returnType     |   expected
     ${getOwnPropertyDescriptorFuture} | ${'object'}     | ${getOwnPropertyDescriptor}
     ${'getOwnPropertyDescriptors'}    | ${'object'}     | ${'getOwnPropertyDescriptors'}   
@@ -194,7 +194,7 @@ describe('FutureObject static methods', () => {
         expect(unwrapProxy(val)).toBeInstanceOf(Constructor);
         created =  val;
       };
-
+      console.log(isRendering())
       outsideRender();
 
       let renderer;
