@@ -23,7 +23,11 @@ export const isFuture = proxy => thisMap.has(proxy);
 
 export const unwrapProxy = proxy => thisMap.get(proxy);
 
-export const __internal = { allowSuspenseOutsideRender: false };
+export const __internal = { 
+  allowSuspenseOutsideRender: false,
+  suspenseHandlerCount: 0
+};
+
 export const isRendering = () => {
   const dispatcher =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -82,12 +86,13 @@ export const toPromise = async future => {
     return Promise.resolve(future);
   }
   try {
-    __internal.allowSuspenseOutsideRender = true;
+    __internal.suspenseHandlerCount++;
     const val = getRaw(future);
-    __internal.allowSuspenseOutsideRender = false;
+    __internal.suspenseHandlerCount--;
     return val;
   } catch (errOrProm) {
-    __internal.allowSuspenseOutsideRender = false;
+    __internal.suspenseHandlerCount--;
+    
     if (typeof errOrProm.then === 'function') {
       await errOrProm;
       return toPromise(future);
@@ -127,4 +132,4 @@ export const defaultCascade = cb => {
   })
 }
 
-export const canSuspend = () => canSuspend() || __internal.allowSuspenseOutsideRender
+export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0

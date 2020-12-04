@@ -1,10 +1,17 @@
 import { pipe, first, isRendering } from '../internal';
 import { LazyArray, cloneFuture } from '../internal';
-import { isFuture, getRaw, lazyArray } from '../internal';
+import { isFuture, getRaw, lazyArray, SuspendOperationOutsideRenderError } from '../internal';
 import { cascadeMap, createCascadeMap, __internal } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
-// implements IO
+
+export class MutableOperationInRenderError extends Error {
+  constructor(methodName) {
+    super(`Mutable operation ${methodName} detected in render`);
+    this.name = 'InvalidMutableOperationException';
+  }
+}
+
 class InvalidObjectStaticMethod extends Error {
   constructor(methodName) {
     // TODO: provide link
@@ -17,6 +24,7 @@ class InvalidObjectStaticMethod extends Error {
     super(`Invalid static method ${objMethods} on future detected. Please use ${futureObjMethods} instead`);
   }
 };
+
 const rhsMap = new WeakMap();
 const splice = (fn, cascade) => {
   let spliced;
@@ -32,7 +40,7 @@ const splice = (fn, cascade) => {
   return result;
 }
 
-export const map = <T>(fn: Function,  futr: LazyArray<T>, cascade, Klass = thisMap.get(futr).constructor[species]) => {
+export const map = <T>(fn: Function, futr: LazyArray<T>, cascade, Klass = thisMap.get(futr).constructor[species]) => {
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
@@ -41,9 +49,9 @@ export const map = <T>(fn: Function,  futr: LazyArray<T>, cascade, Klass = thisM
 }
 
 export const run = (fn: Function, futr, cascade) => {
-  if(!isRendering() && !__internal.allowSuspenseOutsideRender ) {
-              // TODO: add custom error message per method
-              throw new Error(`cannot suspend outside render`);
+  if(!(isRendering() || __internal.suspenseHandlerCount > 0)) {
+    // TODO: make messgae specific to method
+    throw new SuspendOperationOutsideRenderError('suspend operation invalid')
   }
   if (!thisMap.has(futr)) {
     // TODO: change
@@ -53,18 +61,14 @@ export const run = (fn: Function, futr, cascade) => {
   return fn(val)
 }
 
-export const tap = (fn: Function, futr: LazyArray, cascade, name: string,) => {
+export const tap = (fn: Function, futr, cascade, name: string,) => {
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
   }
   if (isRendering()) {
     // TODO: implement custom error message per method
-    throw new Error(
-      'Cannot invoke mutable operation ' +
-      name +
-      ' in render. Consider using a immutable variant or performing the operation outside render.'
-    );
+    throw new MutableOperationInRenderError(name)
   }
   if (name === 'splice') {
     return splice(fn, cascade)
@@ -75,7 +79,7 @@ export const tap = (fn: Function, futr: LazyArray, cascade, name: string,) => {
   return futr;
 }
 
-export function createProxy<T extends object = object>(that, cascade){
+export function createProxy<T extends object = object>(that, cascade) {
 
   const proxy = new Proxy(that, {
     defineProperty: (_target, key, descriptor) => {
