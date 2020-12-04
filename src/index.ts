@@ -6,7 +6,7 @@ import LRU from 'lru-cache';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
 import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
-
+const fs = require('fs').promises;
 
 export const futureObject = <T extends object>(promiseThunk) => {
   const cache = new LRU(500);

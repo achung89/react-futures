@@ -11,7 +11,7 @@ import { reverseImm } from "./reverseImm";
 jest.useFakeTimers();
 
 let StubFutureArray;
-
+// TODO: write more tests
 beforeEach(() => {
   StubFutureArray = futureArray(
     val =>
@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 describe('Caching arrays instantiated in render', () => {
-  test('should cache shallow renders', async () => {
+  test.only('should cache shallow renders', async () => {
     const App = ({ nestedFuture = false }) => {
       let numbers = reverseImm(new StubFutureArray(4)
         .map(val => val + 1) // [2,3,4,5]
@@ -49,6 +49,7 @@ describe('Caching arrays instantiated in render', () => {
 
     await testSuspenseWithLoader(<App />, `<div>8642</div>`);
     await testRenderWithoutSuspense(<App />, `<div>8642</div>`);
+    await testSuspenseWithLoader(<App nestedFuture/>, `<div>99</div>`);
     await testRenderWithoutSuspense(<App nestedFuture />, `<div>99</div>`);
 
     StubFutureArray.reset();
