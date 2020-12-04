@@ -2,8 +2,14 @@ import { createProxy, run } from '../Effect/Effect';
 import { isRendering, thisMap } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species, createCascadeMap, getCascade, cascadeMap } from '../internal';
-import { defaultCascade } from '../utils';
+import { __internal } from '../utils';
 
+export class NotSupportedError extends Error {
+  constructor(methodName) {
+    super(`"${methodName}" is not supported`);
+    this.name ='Invalid Operation';
+  } 
+}
 const memoize = fn => {
   const cache = new WeakMap();
   const cached = function(val) {
@@ -19,13 +25,8 @@ export const cloneFuture = memoize(target => {
 })
 export const isEffect = futr => thisMap.has(futr);
 
-class MutableOperationInRenderError extends Error {
-  constructor(methodName) {
-    super(`Mutable operation ${methodName} detected in render`);
-    this.name ='InvalidMutableOperationException';
-  } 
-}
-class SuspendOperationOutsideRenderError extends Error {
+
+export class SuspendOperationOutsideRenderError extends Error {
   constructor(methodName) {
     super(`Suspend operation ${methodName} can not be completed outside render`);
     this.name = 'InvalidSuspendOperationException';
@@ -56,6 +57,9 @@ const staticMutableToImmutableOperation = (target, cb) => {
 }
 
 const staticSuspendOperation = (target, cb, methodName) => {
+  if(!(isRendering() || __internal.suspenseHandlerCount > 0)) {
+    throw new SuspendOperationOutsideRenderError(methodName)
+  }
   if (isEffect(target)) {
     return run(cb, target, cascadeMap.get(target));
   } else {
@@ -76,7 +80,7 @@ const staticSuspendOperation = (target, cb, methodName) => {
 //     }
 //   }
 // }
-// TODO test non future params
+
 export class LazyObject {
   static get [species]() {
     return LazyObject;
@@ -249,10 +253,10 @@ export class LazyObject {
   //invalid method
   static create() {
     // TODO: think through why this shouldn't be allowed
-    throw Error('FutureObject.create not supported');
+    throw new NotSupportedError('FutureObject.create');
   }
   // forward
   static is(obj1, obj2) {
-    throw Error('FutureObject.is not supported');
+    throw new NotSupportedError('FutureObject.is');
   }
 }

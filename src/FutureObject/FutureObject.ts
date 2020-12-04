@@ -11,7 +11,7 @@ export class FutureObject<T extends object, K extends object | null> extends Laz
 
   constructor(promise, createCascade) {
     super(() => {
-      if ( !isRendering() && !__internal.allowSuspenseOutsideRender ) {
+      if ( !(isRendering() || __internal.suspenseHandlerCount > 0) ) {
         throw new Error('cannot suspend outside render');
       }
 

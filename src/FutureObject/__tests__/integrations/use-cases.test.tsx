@@ -50,8 +50,8 @@ afterEach(() => {
   StubFutureObject = null;
 });
 
-describe("rhs", () => {
-  test.only("outside render", async () => {
+describe.skip("rhs", () => {
+  test("outside render", async () => {
     // jest.setTimeout(10000000);
 
     const val = [1, 2, 3, 4];

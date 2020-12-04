@@ -3,8 +3,9 @@ jest.useFakeTimers();
 import React, { Suspense } from 'react';
 import { futureArray, futureObject, toPromise } from '../../../index';
 import { act } from 'react-dom/test-utils';
-import { thisMap } from '../../../Effect/Effect';
+import { MutableOperationInRenderError } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';
+import { SuspendOperationOutsideRenderError } from '../../../FutureObject/LazyObject'
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
@@ -175,7 +176,7 @@ describe('Array operations', () => {
       const futrArr = new FutureArr(5);
       const inRender = () => expect(() => {
         method(futrArr)
-      }).toThrowError();
+      }).toThrowError(MutableOperationInRenderError);
 
       let created;
       const outsideRender = () => {
@@ -323,11 +324,9 @@ describe('Array operations', () => {
       const outsideRender = () =>
         expect(() =>
           method(futureArr)
-        ).toThrowError(/** TODO: outofrender error */);
+        ).toThrowError(SuspendOperationOutsideRenderError);
 
-
-        outsideRender();
-
+      outsideRender();
 
       let renderer;
       let created;

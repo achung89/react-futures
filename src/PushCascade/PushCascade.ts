@@ -1,7 +1,7 @@
 
-import {  tapper, __internal, isFuture, } from "../internal";
+import {  tapper, __internal, isRendering, isFuture, SuspendOperationOutsideRenderError } from "../internal";
 
-const  deepChain = async (prom, cb) => {
+const deepChain = async (prom, cb) => {
   try {
     await prom;
     let newVal = SuspenseCallback.of(cb);
@@ -28,14 +28,14 @@ abstract class SuspenseCallback {
   get functor() {
     return PushCascade.of
   }
-  static of = (cb) => {
+  static of = cb => {
     try {
-      __internal.allowSuspenseOutsideRender = true;
+      __internal.suspenseHandlerCount++
       const newVal = new SuspenseValue(cb());
-      __internal.allowSuspenseOutsideRender = false;
+      __internal.suspenseHandlerCount--;
       return newVal
     } catch (errOrProm) {
-      __internal.allowSuspenseOutsideRender = false;
+      __internal.suspenseHandlerCount--;
       if (typeof errOrProm.then === 'function') {
         return new SuspenseJob(deepChain(errOrProm, cb));
       } else {

@@ -8,11 +8,11 @@ import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
 import { LazyObject, isEffect } from '../../../internal';
-import { unwrapProxy, suspend, FutureArray } from '../../../internal';
-import { FutureObject, LazyArray } from '../../../internal';
+import { unwrapProxy, suspend, FutureArray,SuspendOperationOutsideRenderError } from '../../../internal';
+import { FutureObject, LazyArray, NotSupportedError } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
 import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'
-import { isRendering } from '../../../utils';
+
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 const getOwnPropertyDescriptorFuture = obj =>
@@ -101,7 +101,7 @@ afterEach(() => {
 });
 
 describe('FutureObject static methods', () => {
-  test.only.each`
+  test.each`
       staticMethod       
       ${'isExtensible'}
       ${'isFrozen'}    
@@ -120,7 +120,7 @@ describe('FutureObject static methods', () => {
       const outsideRender = () => {
         expect(() =>
           method(futureObj)
-        ).toThrowError(/** TODO: outofrender error */);
+        ).toThrowError(SuspendOperationOutsideRenderError);
       }
 
       outsideRender();
@@ -142,7 +142,7 @@ describe('FutureObject static methods', () => {
       expect(result).toEqual(expected);
     }
   );
-  test.only.each`
+  test.each`
     staticMethod                      | returnType     |   expected
     ${getOwnPropertyDescriptorFuture} | ${'object'}     | ${getOwnPropertyDescriptor}
     ${'getOwnPropertyDescriptors'}    | ${'object'}     | ${'getOwnPropertyDescriptors'}   
@@ -194,7 +194,6 @@ describe('FutureObject static methods', () => {
         expect(unwrapProxy(val)).toBeInstanceOf(Constructor);
         created =  val;
       };
-      console.log(isRendering())
       outsideRender();
 
       let renderer;
@@ -230,12 +229,11 @@ describe('FutureObject static methods', () => {
       const inRender = () =>
         expect(() =>
           method(futureObj)
-        ).toThrowError(/** TODO: outofrender error */);
+        ).toThrowError(NotSupportedError);
       const outsideRender = inRender;
 
-      act(() => {
-        outsideRender();
-      });
+
+      outsideRender();
 
       let renderer;
       act(() => {
