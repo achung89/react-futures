@@ -37,6 +37,7 @@ export class LazyArray<T> extends Array<T> {
             newArr.push(item);
           }
         } catch (errOrProm) {
+          
           if (typeof errOrProm.then === 'function') {
             promises.push(errOrProm);
             continue;
@@ -90,6 +91,7 @@ export class LazyArray<T> extends Array<T> {
       const Species = arr.constructor[Symbol.species];
       const newArr = new Species;
       const promises: Promise<any[]>[] = [];
+
       for (let i = 0; i < arr.length; i++) {
         try {
           const item = arr[i];
@@ -102,9 +104,11 @@ export class LazyArray<T> extends Array<T> {
           throw errOrProm;
         }
       }
+
       if (promises.length > 0) {
         throw Promise.all(promises);
       }
+
       return newArr.flat();
     }, this, cascadeMap.get(this));
   }

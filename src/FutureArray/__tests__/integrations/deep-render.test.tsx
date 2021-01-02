@@ -4,8 +4,7 @@ import { futureArray } from '../../../index';
 import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
 import { getRaw } from '../../../utils';
-import { reverseImm } from './reverseImm';
-
+import { reverseImm } from '../../../test-utils/reverseImm';
 jest.useFakeTimers();
 
 // test resetting value array prop with future array
@@ -233,23 +232,27 @@ describe('Instantiate in render, deep render scenarios', () => {
 });
 
 describe('Instantiate outside render, deep render scenario', () => {
-  test('should render ', async () => {
+  test.only('should render ', async () => {
+    console.log('hihi')
     const numbers = reverseImm(new StubFutureArray(4)
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
       ) // [8,6,4,2]
-
+    console.log('hihi2')
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
       return <div>{nums}</div>;
     };
-
+    console.log('hihi3')
     await testSuspenseWithLoader(<App />, `<div>8642</div>`);
+    console.log('hihi4')
 
     StubFutureArray.reset();
+    console.log('hihi5')
 
     await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, 5000);
+    console.log('hihi6')
 
     StubFutureArray.reset();
   });
@@ -259,7 +262,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
-      )// [8,6,4,2]
+    )// [8,6,4,2]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
@@ -430,14 +433,14 @@ describe('Instantiate outside render, deep render scenario', () => {
   });
 });
 
-const createNestedFuture = numbers => {
+
+const createNestedFuture = (numbers) => {
   let numbers2 = new StubFutureArray(7); //[1,2,3,7];
 
   return numbers
     .map((num, ind) => num + numbers2[ind]) // [9,8,7,9]
-    .filter(num =>
-      new StubFutureArray(8) // [1,2,3,8]
-        .map(num => num * 3) // [3,6,9,24]
-        .includes(num)
+    .filter(num => new StubFutureArray(8) // [1,2,3,8]
+      .map(num => num * 3) // [3,6,9,24]
+      .includes(num)
     ); //[9,9]
 };

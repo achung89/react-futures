@@ -6,7 +6,6 @@ import LRU from 'lru-cache';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
 import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
-const fs = require('fs').promises;
 
 export const futureObject = <T extends object>(promiseThunk) => {
   const cache = new LRU(500);
@@ -42,7 +41,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
     }
   };
 };
-
+let a = 0
 export const futureArray = <T>(promiseThunk) => {
   const cache = new LRU(500);
 
@@ -62,16 +61,23 @@ export const futureArray = <T>(promiseThunk) => {
     static tap = undefined;
     static run = undefined;
     static reset() {
-      cache.reset();
+      const cacheToReset = DynamicScopeCascade.getDynamicScope() || cache;
+      cacheToReset.reset()
     }
     static invalidate(...keys) {
-      cache.del(JSON.stringify(keys));
+      const cacheToDelete = DynamicScopeCascade.getDynamicScope() || cache;
+
+      cacheToDelete.del(JSON.stringify(keys));
     }
     constructor(...keys) {
       if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
-      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array'
+      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
+      a += 1;
+      if(a === 2) {
+        throw new Error("HEEEEEELLLOOOOOOo")
+      }
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, DynamicScopeCascade.getDynamicScope() || cache), cb => PushCacheCascade.of(cb, cache));
     }
   };
@@ -80,6 +86,7 @@ export const futureArray = <T>(promiseThunk) => {
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
 function getCachedPromise(promiseThunk: any, key, cache) {
+  // console.log(key, cache.has(key))
   if (cache.has(key)) {
     return cache.get(key);
   }

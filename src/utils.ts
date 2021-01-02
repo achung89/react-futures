@@ -111,8 +111,9 @@ export const getCascade = obj => {
   return defaultCascade
 }
 
+let cache = {}
+
 export const defaultCascade = cb => {
-  let cache = {}
   return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || {
     set(key, val) {
       cache[key] = val
