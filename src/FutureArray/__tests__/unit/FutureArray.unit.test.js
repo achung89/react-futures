@@ -172,7 +172,7 @@ describe('Array operations', () => {
           
   `(
     `Mutator method $name should defer outside render and throw in render`,
-    async ({ method, name }) => {
+    async ({ method }) => {
       const futrArr = new FutureArr(5);
       const inRender = () => expect(() => {
         method(futrArr)
@@ -182,7 +182,6 @@ describe('Array operations', () => {
       const outsideRender = () => {
         created = method(futrArr)
         expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
-        
       };
 
       outsideRender();

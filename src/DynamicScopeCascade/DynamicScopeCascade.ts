@@ -1,6 +1,7 @@
 import { tapper } from "../internal";
 
 let dynamicScopeValue = null;
+
 export class DynamicScopeCascade {
     static getDynamicScope() {
         return dynamicScopeValue

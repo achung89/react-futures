@@ -1,4 +1,4 @@
-import { lazyArray } from '../../../utils';
+import { lazyArray } from '../utils';
 
 export let reverseImm = arr => {
   return lazyArray(() => {

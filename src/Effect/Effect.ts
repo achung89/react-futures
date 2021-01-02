@@ -118,7 +118,7 @@ export function createProxy<T extends object = object>(that, cascade) {
       if (typeof that[key] === 'function') {
         return Reflect.get(target, key, receiver);
       }
-
+      
       return run(target => Reflect.get(target, key, target), proxy, cascade);
     },
     getOwnPropertyDescriptor: (_target, prop) => {

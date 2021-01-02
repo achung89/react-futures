@@ -11,7 +11,7 @@ import { render } from './test-utils/rtl-renderer';
 import { waitFor, wait } from '@testing-library/dom';
 import { unwrapProxy, toPromise, lazyObject, lazyArray } from './utils';
 import extractValue from './test-utils/extractValue';
-import { reverseImm } from "./FutureArray/__tests__/integrations/reverseImm";
+import { reverseImm } from "./test-utils/reverseImm";
 expect.extend(require('./test-utils/renderer-extended-expect'));
 
 

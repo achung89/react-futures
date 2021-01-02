@@ -80,7 +80,6 @@ describe.skip("rhs", () => {
     const result = extractValue(futureObj);
     const mutatedResult = extractValue(mutated);
     await waitForSuspense(150);
-    console.log('bar')
     expect(await result).toEqual(expectedJSON("bar"));
     expect(await mutatedResult).toEqual(expectedJSON("bar"));
   });
