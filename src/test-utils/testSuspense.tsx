@@ -27,7 +27,7 @@ export const testSuspenseWithLoader = async (
   await act(async () => {
     expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
   });
-
+  
   await waitForSuspense(suspenseTime);
 
   await act(async () => {

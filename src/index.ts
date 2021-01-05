@@ -41,7 +41,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
     }
   };
 };
-let a = 0
+
 export const futureArray = <T>(promiseThunk) => {
   const cache = new LRU(500);
 
@@ -69,15 +69,13 @@ export const futureArray = <T>(promiseThunk) => {
 
       cacheToDelete.del(JSON.stringify(keys));
     }
+
     constructor(...keys) {
       if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
-      a += 1;
-      if(a === 2) {
-        throw new Error("HEEEEEELLLOOOOOOo")
-      }
+
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, DynamicScopeCascade.getDynamicScope() || cache), cb => PushCacheCascade.of(cb, cache));
     }
   };
@@ -87,6 +85,7 @@ export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
 function getCachedPromise(promiseThunk: any, key, cache) {
   // console.log(key, cache.has(key))
+  // console.log(key, cache)
   if (cache.has(key)) {
     return cache.get(key);
   }
@@ -95,7 +94,7 @@ function getCachedPromise(promiseThunk: any, key, cache) {
   const promise = cache.get(key);
   promise.then(res => {
     promiseStatusStore.set(promise, { value: res, status: 'complete' });
-  });
+  }).catch(err => { throw err });
   promiseStatusStore.set(promise, { value: null, status: 'pending' });
 
   return promise;

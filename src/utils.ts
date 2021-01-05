@@ -113,21 +113,27 @@ export const getCascade = obj => {
 
 let cache = {}
 
+export const testClearCache = () => { return cache = {} }
 export const defaultCascade = cb => {
   return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || {
     set(key, val) {
+      // console.log('set')
       cache[key] = val
     },
     del(key) {
+      // console.log('del')
       delete cache[key]
     },
     has(key) {
+      // console.log('has')
       return !!cache[key]
     },
     get(key) {
+      // console.log('get')
       return cache[key]
     },
     reset() {
+      // console.log('reset');
       cache = {}
     }
   })
