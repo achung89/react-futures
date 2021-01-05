@@ -1,4 +1,5 @@
 import { PushCascade } from "../internal";
+import { testClearCache } from "../utils";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 
 
@@ -118,3 +119,22 @@ describe('PushCascade', () => {
     expect(suspender.get()).toEqual('JOHNNY BRAVO')
   })
 })
+
+// describe('Render scenarios', () => {
+//   let Scheduler;
+//   let container
+//   beforeEach(() => {
+//     Scheduler = require('scheduler/unstable_mock');
+//     container = document.createElement('div');
+//     document.body.appendChild(container);
+//   });
+//   afterEach(() => {
+
+//     document.body.removeChild(container);
+//     container = null;
+//     Scheduler.unstable_clearYields();
+//     Scheduler = null;
+//     testClearCache();
+//   });
+//   it('should')
+// })

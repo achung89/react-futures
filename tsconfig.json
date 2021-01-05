@@ -12,6 +12,7 @@
     "lib": ["esnext", "dom"],
     "types": ["react/experimental", "react-dom/experimental"]
   },
+
   "files": ["./src/index.ts"],
   "exclude": ["node_modules", "**/*.test.*"]
 }

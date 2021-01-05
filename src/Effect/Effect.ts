@@ -98,7 +98,7 @@ export function createProxy<T extends object = object>(that, cascade) {
           if (isFuture(value)) {
             rhsMap.set(that, target)
             try {
-              Reflect.set(target, key, value.get())
+              Reflect.set(target, key, run(target => target, value, cascade))
             } finally {
               rhsMap.delete(that);
             }

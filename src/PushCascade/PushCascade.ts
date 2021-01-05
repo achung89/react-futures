@@ -73,13 +73,12 @@ const promiseMap = new WeakMap;
 export class SuspenseJob<T> extends SuspenseCallback {
   status: 'pending' | 'complete' | 'error';
   val: any;
-  
+  error: Error;
   constructor(promise) {
     super();
     this.status = 'pending'
     promiseMap.set(promise,this)
     jobMap.set(this, this.createJob(promise))
-
   }
   async createJob(promise) {
     try {
@@ -87,6 +86,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
        return this.val;
     } catch (err) {
       this.status = 'error'
+      this.error = err;
       throw err
     } finally {
       if (this.status !== 'error') {
@@ -116,18 +116,29 @@ export class SuspenseJob<T> extends SuspenseCallback {
       }
   }
   map(cb) {
-    return new SuspenseJob(this.mapJob(cb))
+    if(this.status === 'complete') {
+      return SuspenseCallback.of(() => cb(this.val));
+    } 
+    if (this.status === 'error') {
+      throw this.error;
+    }
+    if(this.status === 'pending') {
+      return new SuspenseJob(this.mapJob(cb))
+    }
+    throw new Error("INVALID STATUS")
   }
   tap(cb) {
     return this.map(tapper(cb))
   }
   get() {
     if (this.status === 'pending') {
-      const a = jobMap.get(this);
-      throw a
+      throw jobMap.get(this)
     }
     if (this.status === 'complete') {
       return this.val
+    }
+    if(this.status === 'error') {
+      throw this.error
     }
     throw new Error("INVALID STATUS")
   }

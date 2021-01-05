@@ -3,8 +3,9 @@ import { futureArray } from '../../../index';
 
 import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
-import { getRaw } from '../../../utils';
+import { getRaw, testClearCache } from '../../../utils';
 import { reverseImm } from '../../../test-utils/reverseImm';
+import { FutureArray } from '../../FutureArray';
 jest.useFakeTimers();
 
 // test resetting value array prop with future array
@@ -50,6 +51,7 @@ beforeEach(() => {
 
 afterEach(() => {
   StubFutureArray.reset();
+  testClearCache();
   StubFutureArray = null;
 });
 
@@ -82,7 +84,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         .map(val => val + 1) // [2,3,4,5]
         .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
         .filter(val => val % 2 === 0) // [2,4,6,8]
-        ) // [8,6,4,2]
+      ) // [8,6,4,2]
       const nums = nestedFuture
         ? createNestedFuture(numbers) /**[9,9]*/
         : numbers;
@@ -232,27 +234,26 @@ describe('Instantiate in render, deep render scenarios', () => {
 });
 
 describe('Instantiate outside render, deep render scenario', () => {
-  test.only('should render ', async () => {
-    console.log('hihi')
+
+
+  test('should render ', async () => {
     const numbers = reverseImm(new StubFutureArray(4)
       .map(val => val + 1) // [2,3,4,5]
       .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
       .filter(val => val % 2 === 0) // [2,4,6,8]
-      ) // [8,6,4,2]
-    console.log('hihi2')
+    ) // [8,6,4,2]
+    
+
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
       return <div>{nums}</div>;
     };
-    console.log('hihi3')
+    
     await testSuspenseWithLoader(<App />, `<div>8642</div>`);
-    console.log('hihi4')
 
     StubFutureArray.reset();
-    console.log('hihi5')
 
     await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, 5000);
-    console.log('hihi6')
 
     StubFutureArray.reset();
   });
@@ -272,7 +273,6 @@ describe('Instantiate outside render, deep render scenario', () => {
         </div>
       );
     };
-    ``;
 
     await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`, 5000);
 
@@ -432,7 +432,6 @@ describe('Instantiate outside render, deep render scenario', () => {
     StubFutureArray.reset();
   });
 });
-
 
 const createNestedFuture = (numbers) => {
   let numbers2 = new StubFutureArray(7); //[1,2,3,7];
