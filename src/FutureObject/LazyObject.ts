@@ -188,9 +188,11 @@ export class LazyObject {
   static assign(obj, ...rest) {
     return staticMutableToImmutableOperation(
       obj,
-      obj => Object.assign(obj, ...rest),
+      obj => 
+      Object.assign(obj, ...rest),
     );
   }
+
   static seal(obj) {
     if(thisMap.has(obj)) {
       Object.seal(thisMap.get(obj));
