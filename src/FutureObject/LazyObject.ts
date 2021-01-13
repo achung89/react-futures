@@ -19,10 +19,11 @@ const memoize = fn => {
   return cached;
 };
 
-export const cloneFuture = memoize(target => {
+export const cloneFuture = target => {
   const descriptors = Object.getOwnPropertyDescriptors(getRaw(target));
   return Object.defineProperties(Array.isArray(target) ? [] : {}, descriptors);
-})
+}
+
 export const isEffect = futr => thisMap.has(futr);
 
 
@@ -50,7 +51,8 @@ export class SuspendOperationOutsideRenderError extends Error {
 const staticMutableToImmutableOperation = (target, cb) => {
   const createCascade = getCascade(target)
   if (Array.isArray(target)) {
-    return new LazyArray(() => cb(cloneFuture(target)), createCascade);
+    
+    return  new LazyArray(() => cb(cloneFuture(target)), createCascade);
   } else {
     return new LazyObject(() =>  cb(cloneFuture(target)), createCascade);
   }

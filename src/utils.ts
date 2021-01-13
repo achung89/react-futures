@@ -105,8 +105,9 @@ export const createCascadeMap = new WeakMap();
 export const cascadeMap = new WeakMap;
 
 export const getCascade = obj => {
-  if (createCascadeMap.has(obj)) {
-    return createCascadeMap.get(obj);
+  if (cascadeMap.has(obj)) {
+    const cascade = cascadeMap.get(obj)
+    return cb => cascade.map(cb);
   }
   return defaultCascade
 }
