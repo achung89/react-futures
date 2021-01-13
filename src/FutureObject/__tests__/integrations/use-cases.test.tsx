@@ -70,7 +70,9 @@ describe("rhs", () => {
     futureObj.value = op(lazyArray(() => {
       return futureObj.value 
     }));
-    const MiniApp = () => <div>{JSON.stringify(futureObj)}</div>;
+    const MiniApp = () => <div>{
+      JSON.stringify(futureObj)
+    }</div>;
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -93,7 +95,7 @@ describe("rhs", () => {
     await waitFor(() => getByText(JSON.stringify(expectedJSON(op(val)))));
 
   });
-  test("outside render, should evaluate in order", async () => {
+  test.only("outside render, should evaluate in order", async () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => 
@@ -126,12 +128,13 @@ describe("rhs", () => {
     await waitForSuspense(0);
     await waitFor(() => getByText(JSON.stringify(expectedJSON('bar')) + JSON.stringify(expectedJSON('bar'))));
   });
-  test.only("outside render, should handle multiple setters", async () => {
+  test("outside render, should handle multiple setters", async () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => ind + 1);
     futureObj.value = op(lazyArray(() => 
-    futureObj.value));
+    futureObj.value
+    ));
 
     futureObj = StubFutureObject.assign(futureObj, { value: [5, 6, 7, 8] });
 
@@ -161,7 +164,7 @@ describe("rhs", () => {
     expect(Scheduler).toHaveYielded(['Promise Resolved']);
     await waitForSuspense(0);
     await waitFor(() => getByText(expectedJSON([6, 7, 8, 9])));
-  });
+  },999000);
 });
 
 describe("graph like query", () => {

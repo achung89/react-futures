@@ -103,8 +103,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
           return newVal
         }
         if (newVal instanceof SuspenseJob) {
-          const a = await jobMap.get(newVal);
-          return a;
+          return jobMap.get(newVal);
         } else if (newVal instanceof SuspenseValue) {
           const a = newVal.get();
           return a

@@ -57,8 +57,8 @@ export const run = (fn: Function, futr, cascade) => {
     // TODO: change
     throw new Error('NOT INSTANCE');
   }
-  const val = cascade.get()
-  return fn(val)
+  const val = cascade.map(fn).get()
+  return val
 }
 
 export const tap = (fn: Function, futr, cascade, name: string,) => {
@@ -98,12 +98,13 @@ export function createProxy<T extends object = object>(that, cascade) {
           if (isFuture(value)) {
             rhsMap.set(that, target)
             try {
-              Reflect.set(target, key, run(target => target, value, cascade))
+              Reflect.set(target, key, run(_ => _, value, cascadeMap.get(value)))
             } finally {
               rhsMap.delete(that);
             }
+          } else {
+            Reflect.set(target, key, value)
           }
-          Reflect.set(target, key, value);
         },
         proxy,
         cascade,
