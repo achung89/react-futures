@@ -1,4 +1,5 @@
 import { PushCascade } from "../internal"
+import {  throwOnce, throwTwice, throwThrice } from "./suspenseFuncs";
 
 describe("complex mutable operations", () => {
   it("should run mutable to mutable to mutable to mutable", () => {
