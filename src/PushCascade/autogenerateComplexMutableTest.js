@@ -1,9 +1,9 @@
 import * as recast from "recast";
 import * as typescriptParser from "recast/parsers/typescript.js";
-import fs from 'fs';
-import path from 'path';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -22,9 +22,27 @@ const fun = (node) =>
     )
   );
 const template = fs.readFileSync(path.join(__dirname, './PushCascade.mutable.unit.complex.test.ts'))
-const ast = recast.parse(template,
-  { parser: typescriptParser }
-);
+// const template = `
+// it("should run immutable to mutable to immutable to immutable", () => {
+//   const obj1 = PushCascade.of(() => ({ val: 1 }))
+ 
+//    const obj2 = obj1.map(obj => ({ ...obj, foo: 2 }))
+ 
+//    const obj3 = obj2.tap(obj => { obj.bar = 3 })
+ 
+//    const obj4 = obj3.map(obj => ({ ...obj, baz: 4 }))
+ 
+//    const obj5 = obj4.map(obj => ({ ...obj, foobar: 5 }))
+ 
+//    expect(obj1.get()).toStrictEqual({ val: 1 })
+//    expect(obj2.get()).toStrictEqual({ val: 1, foo: 2, bar: 3 })
+//    expect(obj3.get()).toStrictEqual({ val: 1, foo: 2, bar: 3 })
+//    expect(obj4.get()).toStrictEqual({ val: 1, foo: 2, bar: 3, baz: 4 })
+//    expect(obj5.get()).toStrictEqual({ val: 1, foo: 2, bar: 3, baz: 4, foobar: 5 })
+//  })
+// `;
+
+const ast = recast.parse(template, { parser: typescriptParser });
 
 // all possible combos of 01234
 function* getAllCombo(arr, prev = []) {
@@ -45,10 +63,11 @@ const checkPromise = (operation) =>
       b.literal("function")
     ),
     b.expressionStatement(operation),
-    b.throwStatement(b.identifier('errOrProm'))
+    b.throwStatement(b.identifier("errOrProm"))
   );
 let combos = [...getAllCombo([1, 2, 3, 4, 5])];
-let program = "";
+// let program = "";
+const its = [];
 const throwFns = ["throwOnce", "throwTwice", "throwThrice"];
 for (let i = 0; i < throwFns.length; i++) {
   for (const combo of combos) {
@@ -56,121 +75,162 @@ for (let i = 0; i < throwFns.length; i++) {
       parser: typescriptParser,
     });
     recast.visit(clonedAst, {
-      visitArrowFunctionExpression(path) {
-        // console.log(path)
-        if (path.parent.value?.callee?.name === "it") {
-          const expects = [];
-          // console.log(path);
+      visitExpressionStatement(path) {
+        if (path.value?.expression?.callee?.name === "it") {
           this.visit(path, {
-            visitVariableDeclaration(subPath) {
-              if (
-                combo
-                  .map((num) => `obj${num}`)
-                  .includes(subPath.value.declarations[0].id.name)
-              ) {
-                this.visit(subPath, {
-                  visitArrowFunctionExpression(subSubPath) {
-                    subSubPath.replace(
-                      b.callExpression(b.identifier(throwFns[i]), [
-                        subSubPath.node,
-                      ])
-                    );
-                    return false;
+            visitArrowFunctionExpression(path) {
+              // console.log(path)
+              if (path.parent.value?.callee?.name === "it") {
+                const expects = [];
+                // console.log(path);
+                this.visit(path, {
+                  visitVariableDeclaration(subPath) {
+                    if (
+                      combo
+                        .map((num) => `obj${num}`)
+                        .includes(subPath.value.declarations[0].id.name)
+                    ) {
+                      this.visit(subPath, {
+                        visitArrowFunctionExpression(subSubPath) {
+                          subSubPath.replace(
+                            b.callExpression(b.identifier(throwFns[i]), [
+                              subSubPath.node,
+                            ])
+                          );
+                          return false;
+                        },
+                      });
+                    }
+                    this.traverse(subPath);
+                  },
+                  visitExpressionStatement(subPath) {
+                    if (
+                      subPath.value.expression?.callee?.object?.callee?.name ===
+                      "expect"
+                    ) {
+                      expects.push(subPath.node);
+                      subPath.replace();
+                    }
+                    this.traverse(subPath);
                   },
                 });
+                // console.log(expects[0])
+                const body = path.get("body").value.body;
+                for (let num of combo) {
+                  body.push(
+                    b.variableDeclaration("let", [
+                      b.identifier(`obj${num}ThrowCount`),
+                    ])
+                  );
+                  expects[num - 1] = b.tryStatement(
+                    b.blockStatement([expects[num - 1]]),
+                    b.catchClause(
+                      b.identifier("errOrProm"),
+                      null,
+                      b.blockStatement([
+                        checkPromise(
+                          b.updateExpression(
+                            "++",
+                            b.identifier(`obj${num}ThrowCount`),
+                            false
+                          )
+                        ),
+                      ])
+                    )
+                  );
+                }
+
+                body.push(
+                  b.variableDeclaration("const", [
+                    b.variableDeclarator(
+                      b.identifier("cb"),
+                      b.arrowFunctionExpression([], b.blockStatement(expects))
+                    ),
+                  ])
+                );
+                for (const num of combo) {
+                  for (let a = 0; a <= i; a++) {
+                    body.push(
+                      b.expressionStatement(
+                        b.callExpression(b.identifier("cb"), [])
+                      )
+                    );
+                    body.push(
+                      b.expressionStatement(
+                        b.callExpression(
+                          b.memberExpression(
+                            b.callExpression(b.identifier("expect"), [
+                              b.identifier(`obj${num}ThrowCount`),
+                            ]),
+                            b.identifier("toEqual")
+                          ),
+                          [b.literal(a + 1)]
+                        )
+                      )
+                    );
+                  }
+                }
+                for (let num of combo) {
+                  body.push(
+                    b.expressionStatement(
+                      b.assignmentExpression(
+                        "=",
+                        b.identifier(`obj${num}ThrowCount`),
+                        b.literal(0)
+                      )
+                    )
+                  );
+                }
+                body.push(
+                  b.expressionStatement(
+                    b.callExpression(b.identifier("cb"), [])
+                  )
+                );
+                for (let num of combo) {
+                  body.push(
+                    b.expressionStatement(
+                      b.callExpression(
+                        b.memberExpression(
+                          b.callExpression(b.identifier("expect"), [
+                            b.identifier(`obj${num}ThrowCount`),
+                          ]),
+                          b.identifier("toEqual")
+                        ),
+                        [b.literal(0)]
+                      )
+                    )
+                  );
+                }
+                // console.log(recast.print(clonedAst).code)
               }
-              this.traverse(subPath);
-            },
-            visitExpressionStatement(subPath) {
-              if (
-                subPath.value.expression?.callee?.object?.callee?.name ===
-                "expect"
-              ) {
-                expects.push(subPath.node);
-                subPath.replace();
-              }
-              this.traverse(subPath);
+
+              this.traverse(path);
             },
           });
-          // console.log(expects[0])
-          const body = path.get("body").value.body;
-          for (let num of combo) {
-            body.push(
-              b.variableDeclaration("let", [
-                b.identifier(`obj${num}ThrowCount`),
-              ])
-            );
-            expects[num - 1] = b.tryStatement(
-              b.blockStatement([expects[num - 1]]),
-              b.catchClause(
-                b.identifier("errOrProm"),
-                null,
-                b.blockStatement([
-                  checkPromise(
-                    b.updateExpression(
-                      "++",
-                      b.identifier(`obj${num}ThrowCount`),
-                      false
-                    )
-                  ),
-                ])
-              )
-            );
-          }
-
-          body.push(
-            b.variableDeclaration("const", [
-              b.variableDeclarator(
-                b.identifier("cb"),
-                b.arrowFunctionExpression([], b.blockStatement(expects))
-              ),
-            ])
-          );
-          for (const num of combo) {
-            for(let a = 0; a <= i; a++) {
-              body.push(
-                b.expressionStatement(b.callExpression(b.identifier("cb"), []))
-              );
-              body.push(
-                b.expressionStatement(
-                  b.callExpression(
-                    b.memberExpression(b.callExpression(b.identifier("expect"), [b.identifier(`obj${num}ThrowCount`)]), b.identifier('toEqual')),
-                    [b.literal(a + 1)]
-                  )
-                )
-              );
-            }
-          }
-          for(let num of combo) {
-            body.push(
-              b.expressionStatement(b.assignmentExpression('=', 
-                b.identifier(`obj${num}ThrowCount`),
-                b.literal(0)
-              )
-            ))
-          }
-          body.push(b.expressionStatement(b.callExpression(b.identifier('cb'),[])))
-          for(let num of combo) {
-            body.push(
-              b.expressionStatement(
-                b.callExpression(
-                  b.memberExpression(b.callExpression(b.identifier("expect"), [b.identifier(`obj${num}ThrowCount`)]), b.identifier('toEqual')),
-                  [b.literal(0)]
-                )
-              )
-            );
-          }
-          // console.log(recast.print(clonedAst).code)
+          its.push(path.node);
         }
-
         this.traverse(path);
       },
     });
-    program += recast.print(clonedAst).code;
   }
 }
-
-fs.writeFileSync(path.join(__dirname, './PushCascade.mutable.unit.complex.generated.test.ts'), program)
+// console.log(its);
+const program = b.program([
+  b.importDeclaration(
+    [b.importSpecifier(b.identifier("PushCascade"))],
+    b.literal("../internal")
+  ),
+  b.importDeclaration(
+    [
+      b.importSpecifier(b.identifier("throwOnce")),
+      b.importSpecifier(b.identifier("throwTwice")),
+      b.importSpecifier(b.identifier("throwThrice")),
+    ],
+    b.literal("./suspenseFuncs")
+  ),
+  b.expressionStatement(b.callExpression(b.identifier('describe'), [b.literal('Generated scenarios'), b.arrowFunctionExpression([], b.blockStatement(its))]))
+]);
+fs.writeFileSync(path.join(__dirname, './PushCascade.mutable.unit.complex.generated.test.ts'), recast.print(program).code)
 
 // const isConsecutive = arr => arr.every((num, i) => num + 1 === arr[i + 1] || arr[i + 1] === undefined )
 // b.filter(isConsecutive).filter(arr => arr.length > 1)
