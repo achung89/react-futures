@@ -1,11 +1,13 @@
 
 const createThrower = (throws, callback) => {
   let callCount = 0;
-  let promise = new Promise((res, rej) => {
-    setTimeout(res, 50)
+  let promise = new Promise<void>((res, rej) => {
+    setTimeout(() => {
+      res()
+    }, 50)
   })
   return (...args) => {
-    if (callCount === throws) {
+    if (callCount >= throws) {
       return callback(...args)
     }
     callCount++;

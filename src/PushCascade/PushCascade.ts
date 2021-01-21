@@ -1,6 +1,72 @@
 
 import {  tapper, __internal, isRendering, isFuture, SuspendOperationOutsideRenderError } from "../internal";
 
+function Mutators() {
+  let next;
+  let cbs = new Set<() => any>();
+  let resolveQueueExhaust;
+  let queueExhaustPromise;
+  (async() => {
+    try {
+    while(true) {
+      for(const cb of cbs) {
+        while(true) {
+          try {
+            cb();
+            cbs.delete(cb);
+            if(queueExhaustPromise && resolveQueueExhaust) {
+              resolveQueueExhaust();
+              resolveQueueExhaust = null;
+              queueExhaustPromise = null;
+            }
+            break;
+          } catch(errOrProm) {
+            if(typeof errOrProm.then === 'function') {
+              await errOrProm;
+              continue;
+            }
+          }
+        }
+      }
+      await new Promise((res, rej) => {
+        next = res;
+      })
+    }
+  } catch(errOrProm) {
+    throw errOrProm
+  }
+  })();
+
+  return {
+    add(cb) {
+      cbs.add(cb)
+      
+      if(next) {
+        next();
+        next = undefined;
+      }
+    },
+    get size() {
+      return cbs.size
+    },
+    exhaustQueue() {
+       if(queueExhaustPromise) {
+         return queueExhaustPromise;
+        } else {
+         return queueExhaustPromise = new Promise((res, rej) => {
+          resolveQueueExhaust = res;
+        })
+      }
+    }
+  };
+}
+const waitForMutableDeps = async deps => {
+  for(const prom of deps) {
+    await prom;
+    deps.delete(prom);
+  }
+}
+
 const deepChain = async (prom, cb) => {
   try {
     await prom;
@@ -21,6 +87,7 @@ const deepChain = async (prom, cb) => {
     throw err;
   }
 }
+
 abstract class SuspenseCallback {
   abstract map(fn: Function): SuspenseCallback;
   abstract get(): any;
@@ -45,26 +112,42 @@ abstract class SuspenseCallback {
   }
 }
 
-
 const valueMap = new WeakMap;
 
 type genericFunc = (...args: any) => any
 
 class SuspenseValue<T = any> extends SuspenseCallback {
   val: T;
+  status: 'complete' | 'pending' | 'error';
+  error: Error;
+  mutators: ReturnType<typeof Mutators>
   constructor(val) {
     super()
+    this.status = 'complete';
+    this.mutators = Mutators();
     valueMap.set(this, val)
   }
   map<K extends genericFunc = genericFunc>(cb: K): SuspenseValue<ReturnType<K>> | SuspenseJob<K> {
     const val = valueMap.get(this)
     return SuspenseCallback.of(() => cb(val));
   }
+
   tap(cb) {
-    return this.map(tapper(cb))
+    const val = valueMap.get(this)
+    this.mutators.add(() => cb(val));
+    return this;
   }
   get() {
-    return valueMap.get(this)
+    if(this.mutators.size > 0) {
+      throw this.mutators.exhaustQueue()
+    }
+    if(this.status === 'complete') {
+      return valueMap.get(this)
+    } else if(this.status === 'pending') {
+      throw jobMap.get(this)
+    } else if(this.status === 'error') {
+      throw this.error
+    }
   }
 }
 
@@ -74,6 +157,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
   status: 'pending' | 'complete' | 'error';
   val: any;
   error: Error;
+  mutatorSet: Set<Promise<any>>;
   constructor(promise) {
     super();
     this.status = 'pending'
@@ -94,19 +178,34 @@ export class SuspenseJob<T> extends SuspenseCallback {
       }
     }
   }
+
   async mapJob(cb) {
       try {
         const val = await jobMap.get(this)
 
         let newVal = SuspenseCallback.of(() => cb(val))
+
         if(isFuture(newVal)) {
           return newVal
         }
+
         if (newVal instanceof SuspenseJob) {
           return jobMap.get(newVal);
         } else if (newVal instanceof SuspenseValue) {
-          const a = newVal.get();
-          return a
+
+          while(true) {
+
+            try {
+              return newVal.get();
+
+            } catch (errOrProm) {
+              if(errOrProm.then === 'function') {
+                await errOrProm;
+                continue;
+              }
+              throw errOrProm
+            }
+          }
         } else {
           throw new Error('INTERNAL ERROR')
         }
@@ -114,6 +213,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
         throw err;
       }
   }
+
   map(cb) {
     if(this.status === 'complete') {
       return SuspenseCallback.of(() => cb(this.val));
@@ -126,19 +226,61 @@ export class SuspenseJob<T> extends SuspenseCallback {
     }
     throw new Error("INVALID STATUS")
   }
+
+  async tapJob(mutatorSet) {
+    try {
+    let val = await jobMap.get(this)
+
+    for(const cb of mutatorSet) {
+
+      while(true) {
+
+        try{
+          val = cb(val);
+          mutatorSet.delete(cb);
+
+          break;
+        } catch(errOrProm) {
+
+          if(typeof errOrProm.then === 'function') {
+            await errOrProm;
+            continue;
+          }
+
+          throw errOrProm;
+        }
+      }
+    }
+  } catch(err) {
+    throw err;
+  }
+  }
   tap(cb) {
-    return this.map(tapper(cb))
+
+    if(this.mutatorSet) {
+      this.mutatorSet.add(cb);
+
+    } else {
+      this.mutatorSet = new Set([cb]);
+      jobMap.set(this, this.tapJob(this.mutatorSet))
+    }
+
+    return this;
   }
   get() {
+
     if (this.status === 'pending') {
       throw jobMap.get(this)
     }
+
     if (this.status === 'complete') {
       return this.val
     }
+
     if(this.status === 'error') {
       throw this.error
     }
+
     throw new Error("INVALID STATUS")
   }
 }
