@@ -117,7 +117,6 @@ export class LazyArray<T> extends Array<T> {
 
   // mutable methods
   splice(...args) {
-    // we use map because return futr is not the same as passed in futr for splice
     return tap(target => target.splice(...args), this, cascadeMap.get(this),'splice');
   }
   copyWithin(...args) {
