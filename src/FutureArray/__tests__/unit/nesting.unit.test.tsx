@@ -248,10 +248,10 @@ describe('Nested Future array in lazy array callback', () => {
     jest.runTimersToTime(150);
     expect(Scheduler).toHaveYielded(['Promise Resolved']);
     await waitForSuspense(0);
-    await waitFor(() => getByText('34'));
+    await waitFor(() => getByText('2345'));
   })
   it('should render simple nested array', async () => {
-    const numbers = lazyArray(() => [...new FutureArr(5)]) // [4,3,2,1]
+    const numbers = lazyArray(() => [...new FutureArr(5)]) // [2,3,4,5]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createSimpleNestedFuture(numbers) /** [5, 5, 5, 6] */ : numbers;
@@ -269,7 +269,7 @@ describe('Nested Future array in lazy array callback', () => {
     jest.runTimersToTime(150);
     expect(Scheduler).toHaveYielded(['Promise Resolved']);
     await waitForSuspense(0);
-    await waitFor(() => getByText('34'));
+    await waitFor(() => getByText('46810'));
   }, 999000)
   it('should suspend when instantiating lazy array in render', async () => {
     const MiniApp = () => createNestedFuture(lazyArray(() => [...new FutureArr(5)]));
