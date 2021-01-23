@@ -7,35 +7,34 @@ function Mutators() {
   let resolveQueueExhaust;
   let queueExhaustPromise;
   (async() => {
-    try {
-    while(true) {
-      for(const cb of cbs) {
-        while(true) {
-          try {
-            cb();
-            cbs.delete(cb);
-            if(queueExhaustPromise && resolveQueueExhaust) {
-              resolveQueueExhaust();
-              resolveQueueExhaust = null;
-              queueExhaustPromise = null;
-            }
-            break;
-          } catch(errOrProm) {
-            if(typeof errOrProm.then === 'function') {
-              await errOrProm;
-              continue;
+      while(true) {
+        for(const cb of cbs) {
+          while(true) {
+            try {
+              __internal.suspenseHandlerCount++
+              cb();
+              cbs.delete(cb);
+              if(queueExhaustPromise && resolveQueueExhaust) {
+                resolveQueueExhaust();
+                resolveQueueExhaust = null;
+                queueExhaustPromise = null;
+              }
+              __internal.suspenseHandlerCount--
+              break;
+            } catch(errOrProm) {
+              __internal.suspenseHandlerCount--
+              if(typeof errOrProm.then === 'function') {
+                await errOrProm;
+                continue;
+              }
             }
           }
         }
+        await new Promise((res, rej) => {
+          next = res;
+        })
       }
-      await new Promise((res, rej) => {
-        next = res;
-      })
-    }
-  } catch(errOrProm) {
-    throw errOrProm
-  }
-  })();
+  })().catch(err => {throw err});
 
   return {
     add(cb) {
@@ -76,7 +75,18 @@ const deepChain = async (prom, cb) => {
         const promise = jobMap.get(newVal);
         newVal = await promise
       } else if (newVal instanceof SuspenseValue) {
-        newVal = newVal.get();
+        try{
+          __internal.suspenseHandlerCount++
+          newVal = newVal.get();
+          __internal.suspenseHandlerCount--
+        } catch(errOrProm) {
+          __internal.suspenseHandlerCount--
+          if(typeof errOrProm.then === 'function') {
+            await errOrProm;
+            continue;
+          }
+          throw errOrProm;
+        }
       } else {
         throw new Error('INTERNAL ERROR')
       }
@@ -196,14 +206,16 @@ export class SuspenseJob<T> extends SuspenseCallback {
           while(true) {
 
             try {
+              __internal.suspenseHandlerCount++;
               return newVal.get();
-
             } catch (errOrProm) {
               if(errOrProm.then === 'function') {
                 await errOrProm;
                 continue;
               }
               throw errOrProm
+            } finally {
+              __internal.suspenseHandlerCount--;
             }
           }
         } else {
@@ -236,12 +248,13 @@ export class SuspenseJob<T> extends SuspenseCallback {
       while(true) {
 
         try{
-          val = cb(val);
+          __internal.suspenseHandlerCount++
+          cb(val);
           mutatorSet.delete(cb);
-
+          __internal.suspenseHandlerCount--
           break;
         } catch(errOrProm) {
-
+          __internal.suspenseHandlerCount--
           if(typeof errOrProm.then === 'function') {
             await errOrProm;
             continue;
@@ -251,6 +264,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
         }
       }
     }
+    return val;
   } catch(err) {
     throw err;
   }
