@@ -22,29 +22,9 @@ const fun = (node) =>
     )
   );
 const template = fs.readFileSync(
-  path.join(__dirname, "./PushCascade.mutable.unit.complex.2.test.js")
+  path.join(__dirname, "./SuspenseJobQueue.permutations.test.js")
 );
-// const template = `
-// it("should run immutable to mutable to immutable to immutable", () => {
-//   const obj1 = PushCascade.of(() => ({ val: 1 }))
 
-//    const obj2 = obj1.map(obj => ({ ...obj, foo: 2 }))
-
-//    const obj3 = obj2.tap(obj => { obj.bar = 3 })
-
-//    const obj4 = obj3.map(obj => ({ ...obj, baz: 4 }))
-
-//    const obj5 = obj4.map(obj => ({ ...obj, foobar: 5 }))
-
-//    expect(obj1.get()).toStrictEqual({ val: 1 })
-//    expect(obj2.get()).toStrictEqual({ val: 1, foo: 2, bar: 3 })
-//    expect(obj3.get()).toStrictEqual({ val: 1, foo: 2, bar: 3 })
-//    expect(obj4.get()).toStrictEqual({ val: 1, foo: 2, bar: 3, baz: 4 })
-//    expect(obj5.get()).toStrictEqual({ val: 1, foo: 2, bar: 3, baz: 4, foobar: 5 })
-//  })
-// `;
-
-// all possible combos of 12345 to determine which objs  should be changed
 function* getAllCombo(arr, prev = []) {
   for (let a = 0; a < arr.length; a++) {
     let combo = [...prev, arr[a]];
@@ -70,7 +50,7 @@ const checkPromise = (operation) =>
             b.identifier("jest"),
             b.identifier("advanceTimersByTime")
           ),
-          [b.literal(55)]
+          [b.literal(100)]
         )
       ),
       b.expressionStatement(b.awaitExpression(b.identifier("errOrProm"))),
@@ -86,7 +66,7 @@ let ommittedExpectCombos = [[], ...getAllCombo([0, 1])].filter(
 // let program = "";
 const ast = recast.parse(template, { parser: typescriptParser });
 const printed = recast.print(ast).code;
-const throwFns = ["throwOnce", "throwTwice", "throwThrice"];
+const throwFns = ["wait"];
 for (let i = 0; i < throwFns.length; i++) {
   for (const combo of thrownDeclarationCombos) {
     for (let wrapMapCount = 4; wrapMapCount > 0; wrapMapCount--) {
@@ -118,7 +98,7 @@ for (let i = 0; i < throwFns.length; i++) {
                       visitVariableDeclaration(subPath) {
                         if (
                           combo
-                            .map((num) => `obj${num}`)
+                            .map((num) => `jobQueue${num}`)
                             .includes(subPath.value.declarations[0].id.name)
                         ) {
                           this.visit(subPath, {
@@ -126,6 +106,7 @@ for (let i = 0; i < throwFns.length; i++) {
                               subSubPath.replace(
                                 b.callExpression(b.identifier(throwFns[i]), [
                                   subSubPath.node,
+                                  b.literal(100),
                                 ])
                               );
                               return false;
@@ -137,14 +118,15 @@ for (let i = 0; i < throwFns.length; i++) {
                           if (
                             Number(
                               subPath.value.declarations[0].id.name.replace(
-                                /obj/,
+                                /jobQueue/,
                                 ""
                               )
                             ) >= wrapCount
                           ) {
+
                             if (
-                              subPath.value.declarations[0].init.callee.property
-                                .name === "map"
+                              subPath.value.declarations[0].init.callee
+                                ?.property?.name === "append"
                             ) {
                               wrappedMaps.push(subPath.node);
                               subPath.replace();
@@ -179,7 +161,7 @@ for (let i = 0; i < throwFns.length; i++) {
                             checkPromise(
                               b.updateExpression(
                                 "++",
-                                b.identifier(`obj${i + 1}ThrowCount`),
+                                b.identifier(`jobQueue${i + 1}ThrowCount`),
                                 false
                               )
                             ),
@@ -195,7 +177,7 @@ for (let i = 0; i < throwFns.length; i++) {
                       body.push(
                         b.variableDeclaration("let", [
                           b.variableDeclarator(
-                            b.identifier(`obj${num}ThrowCount`),
+                            b.identifier(`jobQueue${num}ThrowCount`),
                             b.literal(0)
                           ),
                         ])
@@ -224,69 +206,69 @@ for (let i = 0; i < throwFns.length; i++) {
                     /** create cb call sequence */
                     let expectIndex = 0;
                     let throwCount = 0;
-                      for (const declaration of declarationCounts) {
-                        for (let a = 0; a <= i; a++) {
-                          let expect = includedExpects[expectIndex]
-                          if(declaration > expect) {
-                            expect = includedExpects[++expectIndex]
-                            throwCount = 0;
-                          }
-                          body.push(
-                            b.expressionStatement(
-                              b.awaitExpression(
-                                b.callExpression(b.identifier("cb"), [])
-                              )
+                    for (const declaration of declarationCounts) {
+                      for (let a = 0; a <= i; a++) {
+                        let expect = includedExpects[expectIndex];
+                        if (declaration > expect) {
+                          expect = includedExpects[++expectIndex];
+                          throwCount = 0;
+                        }
+                        body.push(
+                          b.expressionStatement(
+                            b.awaitExpression(
+                              b.callExpression(b.identifier("cb"), [])
                             )
-                          );
+                          )
+                        );
 
-                          body.push(
-                            b.expressionStatement(
+                        body.push(
+                          b.expressionStatement(
+                            b.callExpression(
+                              b.memberExpression(
+                                b.callExpression(b.identifier("expect"), [
+                                  b.identifier(`jobQueue${expect}ThrowCount`),
+                                ]),
+                                b.identifier("toEqual")
+                              ),
+                              [b.literal(++throwCount)]
+                            )
+                          )
+                        );
+                        body.push(
+                          b.expressionStatement(
+                            b.awaitExpression(
                               b.callExpression(
                                 b.memberExpression(
-                                  b.callExpression(b.identifier("expect"), [
-                                    b.identifier(`obj${expect}ThrowCount`),
-                                  ]),
-                                  b.identifier("toEqual")
-                                ),
-                                [b.literal(++throwCount)]
-                              )
-                            )
-                          );
-                          body.push(
-                            b.expressionStatement(
-                              b.awaitExpression(
-                                b.callExpression(
-                                  b.memberExpression(
-                                    b.identifier("Promise"),
-                                    b.identifier("resolve")
-                                  ),
-                                  []
-                                )
-                              )
-                            )
-                          );
-
-                          body.push(
-                            b.expressionStatement(
-                              b.callExpression(
-                                b.memberExpression(
-                                  b.identifier("jest"),
-                                  b.identifier("runAllTimers")
+                                  b.identifier("Promise"),
+                                  b.identifier("resolve")
                                 ),
                                 []
                               )
                             )
-                          );
-                        }
+                          )
+                        );
+
+                        body.push(
+                          b.expressionStatement(
+                            b.callExpression(
+                              b.memberExpression(
+                                b.identifier("jest"),
+                                b.identifier("runAllTimers")
+                              ),
+                              []
+                            )
+                          )
+                        );
                       }
-                    
+                    }
+
                     /** set throw count to 0 before the final call to cb */
                     for (let num of combo) {
                       body.push(
                         b.expressionStatement(
                           b.assignmentExpression(
                             "=",
-                            b.identifier(`obj${num}ThrowCount`),
+                            b.identifier(`jobQueue${num}ThrowCount`),
                             b.literal(0)
                           )
                         )
@@ -309,7 +291,7 @@ for (let i = 0; i < throwFns.length; i++) {
                           b.callExpression(
                             b.memberExpression(
                               b.callExpression(b.identifier("expect"), [
-                                b.identifier(`obj${num}ThrowCount`),
+                                b.identifier(`jobQueue${num}ThrowCount`),
                               ]),
                               b.identifier("toEqual")
                             ),
@@ -337,15 +319,11 @@ for (let i = 0; i < throwFns.length; i++) {
           comments: [b.commentBlock("@jest-environment node", true, true)],
           body: [
             b.importDeclaration(
-              [b.importSpecifier(b.identifier("PushCascade"))],
-              b.literal("../../internal")
+              [b.importSpecifier(b.identifier("SuspenseJobQueue"))],
+              b.literal("./SuspenseJobQueue")
             ),
             b.importDeclaration(
-              [
-                b.importSpecifier(b.identifier("throwOnce")),
-                b.importSpecifier(b.identifier("throwTwice")),
-                b.importSpecifier(b.identifier("throwThrice")),
-              ],
+              [b.importSpecifier(b.identifier("wait"))],
               b.literal("../suspenseFuncs")
             ),
             b.expressionStatement(
@@ -365,29 +343,36 @@ for (let i = 0; i < throwFns.length; i++) {
             ),
           ],
         });
-        // console.time(`./generated-tests/PushCascade.mutable.unit.complex.${throwFns[i]}On${combo.join('-')}.wrap${wrapCount === 0 ? wrapCount : 6-wrapCount}Callbacks.generated.test.js`)
-        fs.writeFile(
-          path.join(
-            __dirname,
-            `./generated-suspensejobqueue-tests/SuspenseJobQueue.${
-              throwFns[i]
-            }On${combo.join("-")}.wrap${
-              wrapCount === 0 ? wrapCount : 6 - wrapCount
-            }Callbacks.omit${
-              ommitedExpects.length === 0 ? "No" : ommitedExpects.join("-")
-            }Assertions.generated.test.js`
-          ),
-          recast.print(program).code,
-          () => {
-            // console.timeEnd(`./generated-tests/PushCascade.mutable.unit.complex.${throwFns[i]}On${combo.join('-')}.wrap${wrapCount === 0 ? wrapCount : 6-wrapCount}Callbacks.generated.test.js`)
-            console.log(
-              `./generated-suspensejobqueue-tests/SuspenseJobQueue.${
-                throwFns[i]
-              }On${combo.join("-")}.wrap${
-                wrapCount === 0 ? wrapCount : 6 - wrapCount
-              }Callbacks.omit${
-                ommitedExpects.length === 0 ? "No" : ommitedExpects.join("-")
-              }Assertions.generated.test.js`
+        fs.mkdir(
+          path.join(__dirname, `./generated-suspensejobqueue-tests`),
+          { recursive: true },
+          (err) => {
+            if (err) throw err;
+            // console.time(`./generated-tests/PushCascade.mutable.unit.complex.${throwFns[i]}On${combo.join('-')}.wrap${wrapCount === 0 ? wrapCount : 6-wrapCount}Callbacks.generated.test.js`)
+            fs.writeFile(
+              path.join(
+                __dirname,
+                `./generated-suspensejobqueue-tests/SuspenseJobQueue.${
+                  throwFns[i]
+                }On${combo.join("-")}.wrap${
+                  wrapCount === 0 ? wrapCount : 6 - wrapCount
+                }Callbacks.omit${
+                  ommitedExpects.length === 0 ? "No" : ommitedExpects.join("-")
+                }Assertions.generated.test.js`
+              ),
+              recast.print(program).code,
+              () => {
+                // console.timeEnd(`./generated-tests/PushCascade.mutable.unit.complex.${throwFns[i]}On${combo.join('-')}.wrap${wrapCount === 0 ? wrapCount : 6-wrapCount}Callbacks.generated.test.js`)
+                console.log(
+                  `./generated-suspensejobqueue-tests/SuspenseJobQueue.${
+                    throwFns[i]
+                  }On${combo.join("-")}.wrap${
+                    wrapCount === 0 ? wrapCount : 6 - wrapCount
+                  }Callbacks.omit${
+                    ommitedExpects.length === 0 ? "No" : ommitedExpects.join("-")
+                  }Assertions.generated.test.js`
+                );
+              }
             );
           }
         );
