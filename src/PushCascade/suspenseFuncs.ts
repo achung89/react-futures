@@ -33,3 +33,29 @@ export const upperCase = string => string.toUpperCase()
 export const spaceOut = string => string.split('').join(' ')
 export const dunder = string => `__${string}`
 export const dollar = string => string  + '$'
+
+
+export const wait = (cb, time) => {
+  let done = false;
+  const prom = new Promise<void>((res, rej) => {
+    try {
+      setTimeout(() => {
+        done = true
+        res();
+      }, time)
+    } catch(err) {
+      rej(err);
+    }
+  });
+
+  const fun = (...args) => {
+    if(done) {
+      return cb(...args);
+    }
+    throw prom;
+  }
+
+  fun.promise = prom;
+  
+  return fun;
+}
