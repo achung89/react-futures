@@ -177,7 +177,7 @@ describe('Object static methods', () => {
       expect(Scheduler).toHaveYielded(['Promise Resolved']);
     }
   );
-  test.each`
+  test.skip.each`
     staticMethod           | returnType
     ${defineProperties}    | ${'object'}
     ${defineProperty}      | ${'object'}

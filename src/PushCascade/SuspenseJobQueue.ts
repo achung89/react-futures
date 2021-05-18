@@ -1,6 +1,6 @@
 type SuspenseJob<T> = {
   status: T;
-} & T extends "success"
+} & T extends "done"
   ? {
       value: any;
     }
@@ -15,11 +15,44 @@ type SuspenseJob<T> = {
   : {};
 
 interface SuspenseJobQueueType {
-  new (fn: (val: any) => any): SuspenseJobQueue;
   append(fn: (val: any) => any): SuspenseJobQueue;
-  getJob(): SuspenseJob<"success" | "blocked" | "error">;
+  getJob(): SuspenseJob<"done" | "blocked" | "error">;
 }
 
-class SuspenseJobQueue implements SuspenseJobQueueType {
-  
+
+export class SuspenseJobQueue implements SuspenseJobQueueType {
+  #job: SuspenseJob<"done" | "blocked" | "error">
+
+  constructor(cb) {
+    try {
+      const value = cb();
+      this.#job = {
+        status: 'done',
+        value
+      }
+    } catch(errOrProm) {
+      if(typeof errOrProm.then === 'function') {
+        this.#job = {
+          status: 'blocked',
+          blocker: errOrProm.then( value => {
+            this.#job = {
+              status: 'done',
+              value
+            }
+          })
+        }
+      } else {
+        this.#job = {
+          status: 'error',
+          error: errOrProm
+        }
+      }
+    }
+  }
+  append(cb) {
+    return new SuspenseJobQueue()
+  }
+  getJob() {
+    return this.#job;
+  }
 }
