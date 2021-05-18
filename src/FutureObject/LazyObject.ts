@@ -10,14 +10,6 @@ export class NotSupportedError extends Error {
     this.name ='Invalid Operation';
   } 
 }
-const memoize = fn => {
-  const cache = new WeakMap();
-  const cached = function(val) {
-    return cache.has(val) ? cache.get(val) : cache.set(val, fn.call(this, val)) && cache.get(val);
-  };
-  cached.cache = cache;
-  return cached;
-};
 
 export const cloneFuture = target => {
   const descriptors = Object.getOwnPropertyDescriptors(getRaw(target));
