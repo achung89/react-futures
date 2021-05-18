@@ -61,7 +61,7 @@ afterEach(() => {
 });
 
 describe("rhs", () => {
-  test("outside render", async () => {
+  test.skip("outside render", async () => {
     // jest.setTimeout(10000000);
 
     const val = [1, 2, 3, 4];
@@ -95,7 +95,7 @@ describe("rhs", () => {
     await waitFor(() => getByText(JSON.stringify(expectedJSON(op(val)))));
 
   });
-  test.only("outside render, should evaluate in order", async () => {
+  test.skip("outside render, should evaluate in order", async () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => 
@@ -128,7 +128,7 @@ describe("rhs", () => {
     await waitForSuspense(0);
     await waitFor(() => getByText(JSON.stringify(expectedJSON('bar')) + JSON.stringify(expectedJSON('bar'))));
   });
-  test("outside render, should handle multiple setters", async () => {
+  test.skip("outside render, should handle multiple setters", async () => {
     const val = [1, 2, 3, 4];
     let futureObj = new StubFutureObject(val);
     const op = arr => arr.map(ind => ind + 1);
