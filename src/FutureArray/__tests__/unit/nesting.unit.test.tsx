@@ -6,7 +6,7 @@ import { futureArray } from "../../..";
 import { render } from "../../../test-utils/rtl-renderer";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
 import React from 'react';
-import { lazyArray, testClearCache } from "../../../utils";
+import { lazyArray } from "../../../utils";
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
@@ -36,7 +36,6 @@ afterEach(() => {
   container = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
-  testClearCache();
 });
 describe('Nested future arrays', () => {
   it('should suspend when rendering deeply nested future', async () => {

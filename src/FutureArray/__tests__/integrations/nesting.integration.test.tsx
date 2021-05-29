@@ -7,7 +7,7 @@ import { render } from "../../../test-utils/rtl-renderer";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
 import React from 'react';
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
-import { lazyArray, testClearCache } from "../../../utils";
+import { lazyArray } from "../../../utils";
 import { reverseImm } from "../../../test-utils/reverseImm";
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
@@ -37,7 +37,6 @@ afterEach(() => {
   container = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
-  testClearCache()
 });
 describe('Nested future arrays', () => {
   it('should suspend when rendering deeply nested future', async () => {
