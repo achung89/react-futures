@@ -1,5 +1,4 @@
 import { PushCascade } from "../internal";
-import { testClearCache } from "../utils";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 
 
@@ -134,7 +133,7 @@ describe('PushCascade', () => {
 //     container = null;
 //     Scheduler.unstable_clearYields();
 //     Scheduler = null;
-//     testClearCache();
+
 //   });
 //   it('should')
 // })
