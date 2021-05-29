@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {unstable_getCacheForType as getCacheForType} from 'react';
 import {
   thisMap,
   LazyObject,
@@ -8,6 +8,7 @@ import {
 } from './internal';
 import * as ReactDOM from 'react-dom';
 import { DynamicScopeCascade } from './DynamicScopeCascade/DynamicScopeCascade';
+import { getCache } from './index';
 
 export const metadataMap = new WeakMap();
 
@@ -113,11 +114,9 @@ export const getCascade = obj => {
   return defaultCascade
 }
 
-let cache = new Map()
 
-export const testClearCache = () => { return cache = new Map() }
 export const defaultCascade = cb => {
-  return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || cache)
+  return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache): getCache()))
 }
 
 export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0

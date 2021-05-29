@@ -3,7 +3,6 @@ import { futureArray } from '../../../index';
 
 import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
-import { getRaw, testClearCache } from '../../../utils';
 import { reverseImm } from '../../../test-utils/reverseImm';
 import { FutureArray } from '../../FutureArray';
 jest.useFakeTimers();
@@ -52,7 +51,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  testClearCache();
   StubFutureArray = null;
 });
 

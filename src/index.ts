@@ -8,8 +8,9 @@ import { LazyArray, species,  } from './internal';
 import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
 import React, {unstable_getCacheForType as getCacheForType} from 'react'
 
+export const getCache = () => new Map();
+
 export const futureObject = <T extends object>(promiseThunk) => {
-  const getCache = () => new Map()
 
   if (isRendering()) {
     // TODO: add custom error message per method
@@ -43,7 +44,6 @@ export const futureObject = <T extends object>(promiseThunk) => {
 };
 
 export const futureArray = <T>(promiseThunk) => {
-  const getCache = () => new Map();
 
   if (isRendering()) {
     // TODO: add custom error message per method

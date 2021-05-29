@@ -10,7 +10,6 @@ import waitForSuspense from "../../../test-utils/waitForSuspense";
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
 import { act } from "react-dom/test-utils";
 import { render } from "../../../test-utils/rtl-renderer";
-import { testClearCache } from "../../../utils";
 import { waitFor } from "@testing-library/dom";
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
@@ -56,7 +55,6 @@ afterEach(() => {
   StubFutureObject = null;
   document.body.removeChild(container);
   container = null;
-  testClearCache();
 });
 
 describe("rhs", () => {
