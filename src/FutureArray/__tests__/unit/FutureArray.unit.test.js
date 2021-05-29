@@ -1,14 +1,15 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
-import React, { Suspense } from 'react';
+import React, { Suspense, unstable_Cache as Cache } from 'react';
 import { futureArray, futureObject, toPromise } from '../../../index';
-import { act } from 'react-dom/test-utils';
+import { act } from '@testing-library/react';
 import { MutableOperationInRenderError } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';
 import { SuspendOperationOutsideRenderError } from '../../../FutureObject/LazyObject'
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
+
 import { unwrapProxy, lazyArray } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
 import delay from 'delay';
@@ -34,6 +35,7 @@ let fetchArray = val =>
 
 let container;
 let FutureArr;
+let renderer;
 beforeEach(() => {
   jest.useFakeTimers();
 
@@ -44,12 +46,13 @@ beforeEach(() => {
   document.body.appendChild(container);
 });
 afterEach(() => {
-  FutureArr.reset();
   FutureArr = null;
+  jest.useRealTimers()
   document.body.removeChild(container);
   container = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
+  // renderer && renderer.unmount()
 });
 const LogSuspense = ({ action, children }) => {
   try {
@@ -71,7 +74,9 @@ describe('In only render context', () => {
     act(() => {
       render(<App />, container);
     });
-    await waitForSuspense(0);
+    await act(async () => {
+      await waitForSuspense(0);
+    })
     expect(container.innerHTML).toEqual(`<div></div>`);
   });
 
@@ -85,17 +90,29 @@ describe('In only render context', () => {
         </div>
       </Suspense>
     );
-    let renderer;
+
+      
+    
     act(() => {
       renderer = render(<App />, container);
     });
+    
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    
+    act(() => {
+      jest.runOnlyPendingTimers();
+    })
+
     await waitFor(() => getByText('Loading...'));
 
-    jest.runTimersToTime(150);
+    act(() => {
+      jest.runTimersToTime(150);
+    })
+
     expect(Scheduler).toHaveYielded(['Promise Resolved']);
-    await waitForSuspense(0);
+    act(() => {Scheduler.unstable_flushAll()})
+
+    await act(async () => await waitForSuspense(0));
     await waitFor(() => getByText('2345'));
   });
 
@@ -104,7 +121,7 @@ describe('In only render context', () => {
     async index => {
       const resources = new FutureArr(5);
       let resolvedValue;
-      let App = () => {
+      const App = () => {
         return (
           <Suspense fallback={<div>Loading...</div>}>
             <LogSuspense action={() => (resolvedValue = resources[index])}>
@@ -113,7 +130,7 @@ describe('In only render context', () => {
           </Suspense>
         );
       };
-      let renderer;
+        
       act(() => {
         renderer = render(<App />, container);
       });
@@ -122,6 +139,7 @@ describe('In only render context', () => {
       await waitFor(() => getByText('Loading...'));
       expect(Scheduler).toHaveYielded(['Suspend!']);
       jest.runTimersToTime(150);
+
       expect(Scheduler).toHaveYielded(['Promise Resolved']);
       await waitForSuspense(0);
       await waitFor(() => getByText('foo'));
@@ -143,7 +161,7 @@ describe('In only render context', () => {
           </Suspense>
         );
       };
-      let renderer;
+        
       act(() => {
         renderer = render(<App />, container);
       });
@@ -186,7 +204,7 @@ describe('Array operations', () => {
 
       outsideRender();
       
-      let renderer;
+        
       act(() => {
         renderer = render(
           <Suspense fallback={<div>Loading...</div>}>
@@ -227,7 +245,7 @@ describe('Array operations', () => {
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray);
       }).not.toThrow();
-      let renderer;
+        
       act(() => {
         renderer = render(
           <Suspense fallback={<div>Loading...</div>}>
@@ -268,7 +286,7 @@ describe('Array operations', () => {
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyIterator);
       }).not.toThrow();
-      let renderer;
+        
       act(() => {
         renderer = render(
           <Suspense fallback={<div>Loading...</div>}>
@@ -327,7 +345,7 @@ describe('Array operations', () => {
 
       outsideRender();
 
-      let renderer;
+        
       let created;
       expect(() => method(resource)).toThrow(); //TODO: specify error
       act(() => {
@@ -366,7 +384,7 @@ describe('Array operations', () => {
     expect(() => Array.from(resources)).toThrowError(); //TODO: specify error
 
     let created;
-    let renderer;
+      
     act(() => {
       renderer = render(
         <Suspense fallback={<div>Loading...</div>}>
@@ -413,7 +431,7 @@ describe('Array operations', () => {
     
       outsideRender();
     
-    let renderer;
+      
     act(() => {
       renderer = render(
         <Suspense fallback={<div>Loading...</div>}>
@@ -452,7 +470,6 @@ describe('parallel iteration', () => {
     FutureVal = futureObject(objectProm);
   })
   afterEach(() => {
-    FutureVal.reset()
     FutureVal = null;
   })
 
@@ -487,7 +504,7 @@ describe('parallel iteration', () => {
 
   test('flatMap outside render', async () => {
     const futureArr = new FutureArr(5);
-    FutureArr.reset()
+    FutureArr = futureArray(fetchArray);
     let flatted = futureArr.flatMap(num => new FutureArr(num));
 
     const flattedRes = await toPromise(flatted);

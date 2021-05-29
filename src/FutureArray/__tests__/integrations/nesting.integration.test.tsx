@@ -24,6 +24,7 @@ let fetchArray = val =>
       res([2, 3, 4, val]);
     }, 100);
   });
+
 beforeEach(() => {
   FutureArr = futureArray(fetchArray);
   Scheduler = require('scheduler/unstable_mock');
@@ -31,7 +32,6 @@ beforeEach(() => {
   document.body.appendChild(container);
 });
 afterEach(() => {
-  FutureArr.reset();
   FutureArr = null;
   document.body.removeChild(container);
   container = null;
@@ -53,6 +53,7 @@ describe('Nested future arrays', () => {
     await testSuspenseWithLoader(<App />, `<div>34</div>`, 5000);
 
   });
+
   it('should suspend when rendering deeply nested future that has a nested prefetched array', async () => {
     const MiniApp = () => createMoreComplexNestedFuture(new FutureArr(5));
 

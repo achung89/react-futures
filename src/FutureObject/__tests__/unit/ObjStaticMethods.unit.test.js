@@ -86,7 +86,6 @@ beforeEach(() => {
 afterEach(() => {
   document.body.removeChild(container);
   container = null;
-  FutureObj.reset();
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;

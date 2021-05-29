@@ -33,24 +33,25 @@ const DeepPassThrough = ({ children, level }) => {
   }, children);
 };
 
+const createFutureArray = () => futureArray(
+  val =>
+    new Promise((res, rej) => {
+      setTimeout(() => {
+        try {
+          res([1, 2, 3, val]);
+        } catch (err) {
+          console.error(err);
+          rej(err);
+        }
+      }, 1000);
+    })
+);
+
 beforeEach(() => {
-  StubFutureArray = futureArray(
-    val =>
-      new Promise((res, rej) => {
-        setTimeout(() => {
-          try {
-            res([1, 2, 3, val]);
-          } catch (err) {
-            console.error(err);
-            rej(err);
-          }
-        }, 1000);
-      })
-  );
+  StubFutureArray = createFutureArray()
 });
 
 afterEach(() => {
-  StubFutureArray.reset();
   testClearCache();
   StubFutureArray = null;
 });
@@ -73,7 +74,7 @@ describe('Instantiate in render, deep render scenarios', () => {
 
     await testSuspenseWithLoader(<App />, `<div>8642</div>`);
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, 5000);
   });
@@ -97,7 +98,7 @@ describe('Instantiate in render, deep render scenarios', () => {
     };
 
     await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`);
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     await testSuspenseWithLoader(
       <App nestedFuture />,
       `<div><div>99</div></div>`
@@ -127,21 +128,21 @@ describe('Instantiate in render, deep render scenarios', () => {
       `<div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div>`
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} nestedFuture />,
       `<div><div><div><div><div><div><div>99</div></div></div></div></div></div></div>`
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={200} />,
       `<div>`.repeat(202) + '8642' + `</div>`.repeat(202)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <AppVeryDeep nestedFuture level={200} />,
@@ -165,18 +166,18 @@ describe('Instantiate in render, deep render scenarios', () => {
 
     await testSuspenseWithLoader(<App level={10} />, '<div>8642</div>');
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
       '<div>99</div>'
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray();
 
     await testSuspenseWithLoader(<App level={200} />, `<div>8642</div>`);
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray();
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
@@ -210,21 +211,21 @@ describe('Instantiate in render, deep render scenarios', () => {
       '<div><div><div><div><div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div></div></div></div></div>'
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture={true} />,
       '<div><div><div><div><div><div><div><div><div><div><div>99</div></div></div></div></div></div></div></div></div></div></div>'
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App level={200} />,
       '<div>'.repeat(201) + '8642' + '</div>'.repeat(201)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture={true} />,
@@ -251,11 +252,11 @@ describe('Instantiate outside render, deep render scenario', () => {
     
     await testSuspenseWithLoader(<App />, `<div>8642</div>`);
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, 5000);
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
   });
 
   test('should render deeply', async () => {
@@ -276,7 +277,7 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`, 5000);
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App nestedFuture />,
@@ -284,7 +285,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       5000
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
   });
 
   test('should render very deeply', async () => {
@@ -312,7 +313,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       '<div>'.repeat(7) + `8642` + '</div>'.repeat(7)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -320,7 +321,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       `<div><div><div><div><div><div><div>99</div></div></div></div></div></div></div>`
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -328,7 +329,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       `<div>`.repeat(202) + '8642' + `</div>`.repeat(202)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -336,7 +337,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       `<div>`.repeat(202) + '99' + `</div>`.repeat(202)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
   });
 
   test('should render with prop drilling', async () => {
@@ -354,7 +355,7 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(<App level={10} />, '<div>8642</div>');
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -362,19 +363,19 @@ describe('Instantiate outside render, deep render scenario', () => {
       '<div>99</div>'
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(<App level={200} />, `<div>8642</div>`);
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
       `<div>99</div>`
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
   });
 
   test('should render intermediate transformations', async () => {
@@ -405,7 +406,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       '<div><div><div><div><div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div></div></div></div></div>'
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -413,7 +414,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       '<div><div><div><div><div><div><div><div><div><div><div>99</div></div></div></div></div></div></div></div></div></div></div>'
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -421,7 +422,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       '<div>'.repeat(201) + '8642' + '</div>'.repeat(201)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
@@ -429,7 +430,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       '<div>'.repeat(201) + '99' + '</div>'.repeat(201)
     );
 
-    StubFutureArray.reset();
+    StubFutureArray = createFutureArray()
   });
 });
 
