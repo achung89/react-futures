@@ -86,7 +86,6 @@ beforeEach(() => {
 afterEach(() => {
   document.body.removeChild(container);
   container = null;
-  FutureObj.reset();
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
@@ -170,7 +169,6 @@ describe('toPromise', () => {
     let transformedResult
     const inRender = async () => {
       const makeFuture = val => new FutureObj(val);
-
 
       const transformed = FutureObj.assign(makeFuture(5), lazyObject(() => invert(makeFuture(4))));
                             

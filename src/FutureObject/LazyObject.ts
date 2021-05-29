@@ -62,18 +62,6 @@ const staticSuspendOperation = (target, cb, methodName) => {
     return cb(target);
   }
 };
-// const staticImmutableOperation = (target, cb, constructor = undefined) => {
-//   if (isEffect(target)) {
-//     const klass = constructor || target.constructor[species];
-//     return klass.map(cb, target);
-//   } else {
-//     if (Array.isArray(target)) {
-//       return new LazyArray(() => cb(target));
-//     } else {
-//       return new LazyObject(() => cb(target));
-//     }
-//   }
-// }
 
 export class LazyObject {
   static get [species]() {
@@ -89,48 +77,6 @@ export class LazyObject {
     createCascadeMap.set(proxy, createCascade);
     return proxy;
   }
-  // mutable methods
-  // static mutableAssign(obj, ...rest) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.assign(obj, ...rest),
-  //     'FutureObject.mutableAssign'
-  //   );
-  // }
-  // static mutableSeal(obj) {
-  //   return staticMutableOperation(obj, Object.seal, 'FutureObject.seal');
-  // }
-  // static mutablePreventExtensions(obj) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     Object.preventExtensions,
-  //     'FutureObject.mutablePreventExtensions'
-  //   );
-  // }
-  // static mutableDefineProperties(obj, descs) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.defineProperties(obj, descs),
-  //     'FutureObject.mutableDefineProperties'
-  //   );
-  // }
-  // static mutableDefineProperty(obj, prop, desc) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.defineProperty(obj, prop, desc),
-  //     'FutureObject.mutableDefineProperty'
-  //   );
-  // }
-  // static mutableFreeze(obj) {
-  //   return staticMutableOperation(obj, Object.freeze, 'FutureObject.freeze');
-  // }
-  // static mutableSetPrototypeOf(obj, proto) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.setPrototypeOf(obj, proto),
-  //     'FutureObject.mutableSetPrototypeOf'
-  //   );
-  // }
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {

@@ -53,7 +53,6 @@ beforeEach(() => {
 
 afterEach(() => {
   Scheduler = null;
-  StubFutureObject.reset();
   StubFutureObject = null;
   document.body.removeChild(container);
   container = null;

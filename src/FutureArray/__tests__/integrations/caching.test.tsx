@@ -30,7 +30,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  StubFutureArray.reset();
   StubFutureArray = null;
 });
 
