@@ -31,7 +31,6 @@ beforeEach(() => {
   document.body.appendChild(container);
 });
 afterEach(() => {
-  FutureArr.reset();
   FutureArr = null;
   document.body.removeChild(container);
   container = null;

@@ -2,7 +2,7 @@ import { act } from 'react-dom/test-utils';
 
 const waitForSuspense = async (waitTime) => {
 
-  for (let a = 0; a < 1000; a++) {
+  for (let a = 0; a < 10; a++) {
     try {
       jest.advanceTimersByTime(waitTime);
 

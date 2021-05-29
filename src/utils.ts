@@ -32,11 +32,12 @@ export const isRendering = () => {
   const dispatcher =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
       .ReactCurrentDispatcher.current;
-  const isTestDomRendering =  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.IsSomeRendererActing.current
+  const isTestDomRendering =  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.IsSomeRendererActing?.current
   const currentOwner = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner.current;
   // console.log("SIJOJDSF", isTestDomRendering)
   // console.log(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner)
   const isDomRendering = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6].current;
+
   // console.log('DISPATCHER', dispatcher);
   // console.log(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events);
   return (( dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError') || currentOwner) || isDomRendering || isTestDomRendering;
@@ -112,32 +113,11 @@ export const getCascade = obj => {
   return defaultCascade
 }
 
-let cache = {}
+let cache = new Map()
 
-export const testClearCache = () => { return cache = {} }
+export const testClearCache = () => { return cache = new Map() }
 export const defaultCascade = cb => {
-  return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || {
-    set(key, val) {
-      // console.log('set')
-      cache[key] = val
-    },
-    del(key) {
-      // console.log('del')
-      delete cache[key]
-    },
-    has(key) {
-      // console.log('has')
-      return !!cache[key]
-    },
-    get(key) {
-      // console.log('get')
-      return cache[key]
-    },
-    reset() {
-      // console.log('reset');
-      cache = {}
-    }
-  })
+  return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || cache)
 }
 
 export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0
