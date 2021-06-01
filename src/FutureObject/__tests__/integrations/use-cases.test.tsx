@@ -1,8 +1,8 @@
 // const log = require('why-is-node-running')
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
-import { futureObject } from "../../../index";
+import { futureObject } from "../../../futures";
 
-import React, { Suspense, useState } from "react";
+import  { Suspense, useState } from "react";
 import { lazyArray } from "../../../internal";
 import extractValue from "../../../test-utils/extractValue";
 import waitForSuspense from "../../../test-utils/waitForSuspense";

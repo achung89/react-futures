@@ -6,7 +6,7 @@ import LRU from 'lru-cache';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
 import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
-import React, {unstable_getCacheForType as getCacheForType} from 'react'
+import {unstable_getCacheForType as getCacheForType} from 'react'
 
 export const getCache = () => new Map();
 
@@ -36,7 +36,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
-      const cache = DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache) :(getCache()))
+      const cache = DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache) : getCache())
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
     }
@@ -76,7 +76,7 @@ export const futureArray = <T>(promiseThunk) => {
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
-function getCachedPromise(promiseThunk: any, key, cache) {
+function getCachedPromise(promiseThunk: any, key, cache) {    
   // console.log(key, cache.has(key))
   // console.log(key, cache)
   if (cache.has(key)) {
@@ -92,4 +92,3 @@ function getCachedPromise(promiseThunk: any, key, cache) {
 
   return promise;
 };
-

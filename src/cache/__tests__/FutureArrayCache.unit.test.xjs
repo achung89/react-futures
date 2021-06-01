@@ -1,9 +1,9 @@
 jest.useFakeTimers();
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 const {  performance } = require('perf_hooks')
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import { futureArray, futureObject, toPromise } from '../../../index';
+import { futureArray, futureObject, toPromise } from '../../../futures';
 import { act } from 'react-dom/test-utils';
 import { thisMap } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';

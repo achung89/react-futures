@@ -1,7 +1,6 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { futureObject } from '../../../index';
+import { futureObject } from '../../../futures';
 
-import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
 
 jest.useFakeTimers();

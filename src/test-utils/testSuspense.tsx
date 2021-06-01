@@ -1,6 +1,6 @@
 import waitForSuspense from './waitForSuspense';
 import waitForLoading from './waitForLoading';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import Scheduler from 'scheduler/unstable_mock';
