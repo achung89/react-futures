@@ -8,7 +8,6 @@ import { useRef, useReducer } from 'react';
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
-const promiseCache = {}
 const initializePromise = promise => {
   promise.then(res => {
     promiseStatusStore.set(promise, { value: res, status: 'complete' });
@@ -26,35 +25,9 @@ export class RenderOperationError extends Error {
   }
 };
 
-export class FetchObject<T extends object> extends FutureObject<T> {
-  constructor(requestInfo: RequestInfo, requestInit: RequestInit = {}) {
-    if(isRendering()) {
-      throw new RenderOperationError('Instantiating raw future inside render is not valid, use "useFetchObject" or "cache" instead')
-    }
-
-    const key = getFetchKey(requestInfo, requestInit);
-
-    if(!promiseCache[key]) {
-      promiseCache[key] = initializePromise(fetchWithArgs(requestInfo, requestInit));
-    } 
-    super(promiseCache[key]);
-  }
-};
-type Metadata = {cacheKey: string;}
-export class FetchArray<T> extends FutureArray<T,Metadata> {
-  constructor(requestInfo: RequestInfo, requestInit: RequestInit = {}) {
-    if(isRendering() ) {
-      throw new RenderOperationError('Instantiating raw future inside render is not valid, use "useFetchObject" or "cache" instead')
-    }
-
-    const key = getFetchKey(requestInfo, requestInit);
-    
-    if(!promiseCache[key]) {
-      promiseCache[key] = initializePromise(fetchWithArgs(requestInfo, requestInit));
-    } 
-    super(promiseCache[key], { cacheKey: key });
-  }
-};
+export const fetchArray = url => {
+  
+}
 
 export const useFetchArray = (requestInfo: RequestInfo, init: RequestInit = {}) => {
   return useFuture(FutureArray, requestInfo, init);
