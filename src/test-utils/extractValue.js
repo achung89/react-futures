@@ -1,6 +1,6 @@
 import {render} from './rtl-renderer'
 import { getRaw } from '../utils'
-import React, {Suspense} from 'react';
+import {Suspense} from 'react';
 import { act } from 'react-dom/test-utils';
 
 const extractValue = future => {

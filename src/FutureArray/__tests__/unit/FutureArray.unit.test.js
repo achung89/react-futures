@@ -1,7 +1,7 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
-import React, { Suspense, unstable_Cache as Cache } from 'react';
-import { futureArray, futureObject, toPromise } from '../../../index';
+import  { Suspense, unstable_Cache as Cache } from 'react';
+import { futureArray, futureObject, toPromise } from '../../../futures';
 import { act } from '@testing-library/react';
 import { MutableOperationInRenderError } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';

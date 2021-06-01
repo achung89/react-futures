@@ -1,7 +1,6 @@
-import { futureObject } from "./index";
+import { futureObject } from "./futures";
 import { render } from "./test-utils/rtl-renderer";
 import { act } from "react-dom/test-utils";
-import React from 'react'
 jest.useFakeTimers()
 const { default: waitForSuspense } = require("./test-utils/waitForSuspense");
 const delay = require('delay');

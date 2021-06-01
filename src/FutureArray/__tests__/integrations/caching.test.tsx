@@ -1,7 +1,6 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { futureArray } from '../../../index';
+import { futureArray } from '../../../futures';
 
-import React from 'react';
 import {
   testSuspenseWithLoader,
   testRenderWithoutSuspense,

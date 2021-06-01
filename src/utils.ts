@@ -1,4 +1,4 @@
-import React, {unstable_getCacheForType as getCacheForType} from 'react';
+import {unstable_getCacheForType as getCacheForType} from 'react';
 import {
   thisMap,
   LazyObject,
@@ -8,8 +8,8 @@ import {
 } from './internal';
 import * as ReactDOM from 'react-dom';
 import { DynamicScopeCascade } from './DynamicScopeCascade/DynamicScopeCascade';
-import { getCache } from './index';
-
+import { getCache } from './futures';
+import React from 'react';
 export const metadataMap = new WeakMap();
 
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
@@ -38,7 +38,7 @@ export const isRendering = () => {
   // console.log("SIJOJDSF", isTestDomRendering)
   // console.log(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner)
   const isDomRendering = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6].current;
-
+  // console.log(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED)
   // console.log('DISPATCHER', dispatcher);
   // console.log(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events);
   return (( dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError') || currentOwner) || isDomRendering || isTestDomRendering;
@@ -115,8 +115,6 @@ export const getCascade = obj => {
 }
 
 
-export const defaultCascade = cb => {
-  return PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache): getCache()))
-}
+export const defaultCascade = cb =>  PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache): getCache()))
 
-export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0
+export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0;

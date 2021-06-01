@@ -1,9 +1,9 @@
 jest.useFakeTimers();
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 const {  performance } = require('perf_hooks')
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
-import { FetchArray, useFetchArray, futureObject, toPromise, FetchObject } from '../../../index';
+import { FetchArray, useFetchArray, futureObject, toPromise, FetchObject } from '../../../futures';
 import { act } from 'react-dom/test-utils';
 import { LazyArray, LazyIterator } from '../../LazyArray';
 import { render } from '../../../test-utils/rtl-renderer';
@@ -24,13 +24,14 @@ expect.extend(require('../../../test-utils/renderer-extended-expect'));
 // TODO: imm methods
 // TODO: future value shouldn't be accessible from outside render ( add get raw value function )
 let Scheduler;
-let fetchArray = val => () =>
+let fetchArrayPromise = val => () =>
   new Promise((res, rej) => {
     setTimeout(() => {
       Scheduler.unstable_yieldValue('Promise Resolved');
       res([2, 3, 4, val]);
     }, 100);
   });
+
   const objectProm = value => () => new Promise( (res, rej) => {
     value = Number(value)
     try {
@@ -55,7 +56,7 @@ beforeEach(() => {
     console.log(url.pathname, value)
     switch(url.pathname) {
       case '/blogs': 
-        return ({ json() { return fetchArray(value ?? 5)() } })
+        return ({ json() { return fetchArrayPromise(value ?? 5)() } })
       case '/person': 
         return ({ json() { return objectProm(value)() } })
       default:
@@ -133,7 +134,7 @@ describe('In only render context', () => {
   test.each(['1', 2, '3', 4])(
     `should suspend on %i index access`,
     async index => {
-      const resources = new FetchArray('/blogs');
+      const resources = fetchArray('/blogs');
       let resolvedValue;
       let App = () => {
         return (
@@ -163,7 +164,7 @@ describe('In only render context', () => {
   test.each(['bar', Symbol('foo'), 'baz'])(
     `should suspend on %s property access`,
     async index => {
-      const resources = new FetchArray('/blogs');
+      const resources = fetchArray('/blogs');
       let resolvedValue;
       let App = () => {
         return (
@@ -203,7 +204,7 @@ describe('Array operations', () => {
   `(
     `Mutator method $name should defer outside render and throw in render`,
     async ({ method }) => {
-      const futArr = new FetchArray('/blogs');
+      const futArr = fetchArray('/blogs');
       const inRender = () => expect(() => {
         method(futArr)
       }).toThrowError();
@@ -249,7 +250,7 @@ describe('Array operations', () => {
     `Applies defers native immutable method $name both in and outside render `,
     async ({ method }) => {
       let created;
-      const futrArr = new FetchArray('/blogs');
+      const futrArr = fetchArray('/blogs');
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray);
       }).not.toThrow();
@@ -290,7 +291,7 @@ describe('Array operations', () => {
     `Applies defers native iterator-returning immutable method $name both in and outside render`,
     async ({ method }) => {
       let created;
-      const futrArr = new FetchArray('/blogs');
+      const futrArr = fetchArray('/blogs');
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyIterator);
       }).not.toThrow();
@@ -343,7 +344,7 @@ describe('Array operations', () => {
   `(
     `suspends on $name inside render and throws outside render`,
     async ({ method, expected }) => {
-      const futureArray = new FetchArray('/blogs');
+      const futureArray = fetchArray('/blogs');
 
       const inRender = () => method(futureArray);
       const outsideRender = () =>
@@ -387,7 +388,7 @@ describe('Array operations', () => {
   //TODO: invalid methods pop shift and push
 
   test('subclasses Array', async () => {
-    const resources = new FetchArray('/blogs');
+    const resources = fetchArray('/blogs');
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(unwrapProxy(resources)).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);
@@ -422,7 +423,7 @@ describe('Array operations', () => {
     expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(LazyArray);
   });
   test.skip('forEach should return undefined, throw inside render, and defer outside render', async () => {
-    const futArr = new FetchArray('/blogs');
+    const futArr = fetchArray('/blogs');
     let final;
     const inRender = () => expect(() => {
       futArr.forEach(val => {
@@ -465,7 +466,7 @@ describe('Running iteration callbacks in parallel', () => {
   })
 
   test('filter outside render', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
 
     const without3 = futureArray
                        .filter( num => num +  new FetchObject('/person?value='+num).value !== 6)
@@ -477,7 +478,7 @@ describe('Running iteration callbacks in parallel', () => {
   }, 400)
 
   test('map outside render', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
     let double = futureArray
                   .map(num =>  num + new FetchObject('/person?value='+num).value);
     const doubleRes = await toPromise(double);
@@ -485,7 +486,7 @@ describe('Running iteration callbacks in parallel', () => {
   }, 400);
 
   test('sort outside render', async () => {
-    const sorted = new FetchArray('/blogs')
+    const sorted = fetchArray('/blogs')
                         .sort((a, b) => {
                           return b -  new FetchObject('/person?value='+num).value
                         })
@@ -494,9 +495,9 @@ describe('Running iteration callbacks in parallel', () => {
   }, 600)
 
   test('flatMap outside render', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
 
-    let flatted = futureArray.flatMap(num => new FetchArray('/blogs?value=' + num));
+    let flatted = futureArray.flatMap(num => fetchArray('/blogs?value=' + num));
 
     const flattedRes = await toPromise(flatted);
     expect(flattedRes).toEqual([
@@ -507,7 +508,7 @@ describe('Running iteration callbacks in parallel', () => {
   }, 400);
 
   test('find', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
     let val;
     const arr = lazyArray(() => {
       val = futureArray.find( num => num + new FetchObject('/person?value='+num).value === 6 );
@@ -518,7 +519,7 @@ describe('Running iteration callbacks in parallel', () => {
   }, 400);
 
   test('every', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
     let val;
     const arr = lazyArray(() => {
       val = futureArray.every( num => num === new FetchObject('/person?value='+num).value );
@@ -529,7 +530,7 @@ describe('Running iteration callbacks in parallel', () => {
   }, 400);
 
   test('some', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
     let val;
     const arr = lazyArray(() => {
       val = futureArray.some( num => num !== new FetchObject('/person?value='+num).value);
@@ -540,7 +541,7 @@ describe('Running iteration callbacks in parallel', () => {
     expect(val).toEqual(true);
   }, 400);
   test('findIndex', async () => {
-    const futureArray = new FetchArray('/blogs');
+    const futureArray = fetchArray('/blogs');
     let val;
     const arr = lazyArray(() => {
       val = futureArray.findIndex( num => num + new FetchObject('/person?value='+num).value === 6);
