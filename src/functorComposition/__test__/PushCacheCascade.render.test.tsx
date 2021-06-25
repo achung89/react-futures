@@ -794,7 +794,7 @@ describe("PushCacheCascade", () => {
           );
         });
 
-        expect(cacheInsideRender.cache).not.toBeTruthy();
+        expect(cacheInsideRender.cache).toBeTruthy();
 
         await waitForSuspense(0);
         const { getByText } = renderer;
@@ -823,6 +823,7 @@ describe("PushCacheCascade", () => {
       it("should have different cache in different chains outside render after refresh", async () => {
         let renderer;
         const getCache = () => new Map();
+        const getCache2 = () => new Map();
         let cacheOutsideRender1;
         let cacheOutsideRender2;
 
@@ -844,7 +845,7 @@ describe("PushCacheCascade", () => {
         expect(cacheOutsideRender1).toBeTruthy();
         expect(cacheOutsideRender2).toBeTruthy();
 
-        expect(cacheOutsideRender1.cache).not.toBe(cacheOutsideRender1.cache);
+        expect(cacheOutsideRender1.cache).not.toBe(cacheOutsideRender2.cache);
 
         let refresh;
         let val;
@@ -862,6 +863,7 @@ describe("PushCacheCascade", () => {
             container
           );
         });
+
         await waitForSuspense(0);
 
         const { getByText } = renderer;
@@ -1023,9 +1025,10 @@ describe("PushCacheCascade", () => {
         expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
       });
 
-      it("should have different cache in different chains inside render after refresh", async () => {
+      it("should have different cache in different chains with different callbacks inside render after refresh", async () => {
         let renderer;
         const getCache = () => new Map();
+        const getCache2 = () => new Map();
         let cacheInsideRender1;
         let cacheInsideRender2;
 
@@ -1035,14 +1038,13 @@ describe("PushCacheCascade", () => {
         });
 
         const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
-          cache: getCache(),
-          cacheCb: getCache,
+          cache: getCache2(),
+          cacheCb: getCache2,
         });
 
-        expect(cacheInsideRender1).toBeTruthy();
-        expect(cacheInsideRender2).toBeTruthy();
+        expect(cacheInsideRender1).not.toBeTruthy();
+        expect(cacheInsideRender2).not.toBeTruthy();
 
-        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender1.cache);
         let val;
         let refresh;
         const App = () => {
@@ -1070,11 +1072,16 @@ describe("PushCacheCascade", () => {
             container
           );
         });
+        expect(cacheInsideRender1).toBeTruthy();
+        expect(cacheInsideRender2).toBeTruthy();
 
         await waitForSuspense(0);
 
         const { getByText } = renderer;
         await waitFor(() => getByText("1"));
+
+        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
+
         let tempCacheInsideRender = cacheInsideRender1;
         let tempCacheInsideRender2 = cacheInsideRender2;
 
@@ -1090,7 +1097,7 @@ describe("PushCacheCascade", () => {
         expect(tempCacheInsideRender.cache).not.toBe(cacheInsideRender1.cache);
         expect(tempCacheInsideRender2.cache).not.toBe(cacheInsideRender2.cache);
 
-        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender1.cache);
+        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
       });
     });
   });
@@ -1163,7 +1170,7 @@ describe("PushCacheCascade", () => {
         await waitForSuspense(0);
         const { getByText } = renderer;
 
-        await waitFor(() => getByText("johnny bravo"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
         expect(cacheOutsideRender1.cache).toBeTruthy();
         expect(cacheOutsideRender2.cache).toBeTruthy();
@@ -1198,17 +1205,17 @@ describe("PushCacheCascade", () => {
           },
         });
 
-        let refresh;
+        
         const App = () => {
           a = suspense.map((val) => {
             cacheInsideRender = PushCacheCascade.getDynamicScope();
             return val;
           });
 
-          refresh = useCacheRefresh();
 
           return <div>{domSuspendArr}</div>;
         };
+        expect(cacheInsideRender).not.toBeTruthy();
 
         act(() => {
           renderer = render(
@@ -1219,11 +1226,10 @@ describe("PushCacheCascade", () => {
           );
         });
 
-        expect(cacheInsideRender.cache).not.toBeTruthy();
 
         await waitForSuspense(0);
         const { getByText } = renderer;
-        await waitFor(() => getByText("johnny bravo"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
         expect(cacheOutsideRender1.cache).toBeTruthy();
         expect(cacheInsideRender.cache).toBeTruthy();
@@ -1266,10 +1272,8 @@ describe("PushCacheCascade", () => {
           },
         });
 
-        let refresh;
 
         const App = () => {
-          refresh = useCacheRefresh();
           return <div>{domSuspendArr}</div>;
         };
         act(() => {
@@ -1283,18 +1287,18 @@ describe("PushCacheCascade", () => {
         await waitForSuspense(0);
 
         const { getByText } = renderer;
-        await waitFor(() => getByText("johnny bravo"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
-        await waitFor(() => getByText("johnny bravo"));
         expect(cacheOutsideRender1.cache).toBeTruthy();
         expect(cacheOutsideRender2.cache).toBeTruthy();
 
         expect(cacheOutsideRender1.cache).not.toBe(cacheOutsideRender2.cache);
       });
 
-      it("should have different cache in different chains inside render", async () => {
+      it("should have different cache in different chains inside render with different cache callback", async () => {
         let renderer;
         const getCache = () => new Map();
+        const getCache2 = () => new Map();
         let cacheInsideRender1;
         let cacheInsideRender2;
 
@@ -1304,15 +1308,14 @@ describe("PushCacheCascade", () => {
         });
 
         const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
-          cache: getCache(),
-          cacheCb: getCache,
+          cache: getCache2(),
+          cacheCb: getCache2,
         });
 
-        expect(cacheInsideRender1).toBeTruthy();
-        expect(cacheInsideRender2).toBeTruthy();
+        expect(cacheInsideRender1).not.toBeTruthy();
+        expect(cacheInsideRender2).not.toBeTruthy();
 
-        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
-        let val;
+
         let domSuspendArr = new Proxy([1, 2], {
           get(target, p) {
             if (p === "length") {
@@ -1321,10 +1324,8 @@ describe("PushCacheCascade", () => {
             return suspense.get();
           },
         });
-        let refresh;
 
         const App = () => {
-          refresh = useCacheRefresh();
           suspense.map((val) => {
             cacheInsideRender1 = PushCacheCascade.getDynamicScope();
             return val;
@@ -1350,13 +1351,77 @@ describe("PushCacheCascade", () => {
         await waitForSuspense(0);
 
         const { getByText } = renderer;
-        await waitFor(() => getByText("johnny bravo"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
-        await waitFor(() => getByText("johnny bravo"));
         expect(cacheInsideRender1.cache).toBeTruthy();
         expect(cacheInsideRender2.cache).toBeTruthy();
 
         expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
+      });
+
+      
+      it("should have same cache in different chains inside render for same cache callback", async () => {
+        let renderer;
+        const getCache = () => new Map();
+        let cacheInsideRender1;
+        let cacheInsideRender2;
+
+        const suspense = PushCacheCascade.of(() => "johnny bravo", {
+          cache: getCache(),
+          cacheCb: getCache,
+        });
+
+        const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
+          cache: getCache(),
+          cacheCb: getCache,
+        });
+
+        expect(cacheInsideRender1).not.toBeTruthy();
+        expect(cacheInsideRender2).not.toBeTruthy();
+
+
+        let val;
+        let domSuspendArr = new Proxy([1, 2], {
+          get(target, p) {
+            if (p === "length") {
+              return 2;
+            }
+            return suspense.get();
+          },
+        });
+
+        const App = () => {
+          suspense.map((val) => {
+            cacheInsideRender1 = PushCacheCascade.getDynamicScope();
+            return val;
+          });
+
+          suspense2.map((val) => {
+            cacheInsideRender2 = PushCacheCascade.getDynamicScope();
+            return val;
+          });
+
+          return <div>{domSuspendArr}</div>;
+        };
+
+        act(() => {
+          renderer = render(
+            <Suspense fallback={<div>Loading...</div>}>
+              <App />
+            </Suspense>,
+            container
+          );
+        });
+
+        await waitForSuspense(0);
+
+        const { getByText } = renderer;
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
+
+        expect(cacheInsideRender1.cache).toBeTruthy();
+        expect(cacheInsideRender2.cache).toBeTruthy();
+
+        expect(cacheInsideRender1.cache).toBe(cacheInsideRender2.cache);
       });
     });
 
@@ -1386,11 +1451,18 @@ describe("PushCacheCascade", () => {
         expect(cacheOutsideRender1.cache).toBe(cache);
         let a;
         let refresh;
+        let domSuspendArr = new Proxy([1, 2], {
+          get(target, p) {
+            if (p === "length") {
+              return 2;
+            }
+            return suspense.get();
+          },
+        });
 
         const App = () => {
-          a = suspense.get();
           refresh = useCacheRefresh();
-          return <div>1</div>;
+          return <div>{domSuspendArr}</div>;
         };
 
         act(() => {
@@ -1404,17 +1476,18 @@ describe("PushCacheCascade", () => {
 
         await waitForSuspense(0);
         const { getByText } = renderer;
-        await waitFor(() => getByText("1"));
+
+
         let tempCacheOutsideRender1 = cacheOutsideRender1;
         let tempCacheOutsideRender2 = cacheOutsideRender2;
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
         act(() => {
           refresh();
         });
 
-        await waitFor(() => getByText("1"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
-        expect(a).toEqual("johnny bravo");
         expect(cacheOutsideRender1.cache).toBeTruthy();
         expect(cacheOutsideRender2.cache).toBeTruthy();
 
@@ -1443,6 +1516,16 @@ describe("PushCacheCascade", () => {
 
         let a;
         let refresh;
+
+        let domSuspendArr = new Proxy([1, 2], {
+          get(target, p) {
+            if (p === "length") {
+              return 2;
+            }
+            return suspense.get();
+          },
+        });
+
         const App = () => {
           a = suspense
             .map((val) => {
@@ -1453,7 +1536,7 @@ describe("PushCacheCascade", () => {
 
           refresh = useCacheRefresh();
 
-          return <div>1</div>;
+          return <div>{domSuspendArr}</div>;
         };
 
         act(() => {
@@ -1465,11 +1548,11 @@ describe("PushCacheCascade", () => {
           );
         });
 
-        expect(cacheInsideRender.cache).not.toBeTruthy();
 
         await waitForSuspense(0);
         const { getByText } = renderer;
-        await waitFor(() => getByText("1"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
+        expect(cacheInsideRender.cache).toBeTruthy();
 
         let tempCacheOutsideRender = cacheOutsideRender;
         let tempCacheInsideRender2 = cacheInsideRender;
@@ -1478,9 +1561,8 @@ describe("PushCacheCascade", () => {
           refresh();
         });
 
-        await waitFor(() => getByText("1"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
-        expect(a).toEqual("johnny bravo");
         expect(cacheOutsideRender.cache).toBeTruthy();
         expect(cacheInsideRender.cache).toBeTruthy();
 
@@ -1515,14 +1597,24 @@ describe("PushCacheCascade", () => {
         expect(cacheOutsideRender1).toBeTruthy();
         expect(cacheOutsideRender2).toBeTruthy();
 
-        expect(cacheOutsideRender1.cache).not.toBe(cacheOutsideRender1.cache);
+        expect(cacheOutsideRender1.cache).not.toBe(cacheOutsideRender2.cache);
 
         let refresh;
         let val;
+        
+        let domSuspendArr = new Proxy([1, 2], {
+          get(target, p) {
+            if (p === "length") {
+              return 2;
+            }
+            return suspense.get();
+          },
+        });
+
         const App = () => {
           val = suspense.get();
           refresh = useCacheRefresh();
-          return <div>1</div>;
+          return <div>{domSuspendArr}</div>;
         };
 
         act(() => {
@@ -1536,7 +1628,7 @@ describe("PushCacheCascade", () => {
         await waitForSuspense(0);
 
         const { getByText } = renderer;
-        await waitFor(() => getByText("1"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
         let tempCacheOutsideRender = cacheOutsideRender1;
         let tempCacheOutsideRender2 = cacheOutsideRender2;
@@ -1545,9 +1637,8 @@ describe("PushCacheCascade", () => {
           refresh();
         });
 
-        await waitFor(() => getByText("1"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
 
-        expect(val).toEqual("johnny bravo");
         expect(cacheOutsideRender1.cache).toBeTruthy();
         expect(cacheOutsideRender2.cache).toBeTruthy();
 
@@ -1557,7 +1648,87 @@ describe("PushCacheCascade", () => {
         expect(cacheOutsideRender1.cache).not.toBe(cacheOutsideRender2.cache);
       });
 
-      it("should have different cache in different chains inside render after refresh", async () => {
+      it("should have different cache in different chains inside render with different callbacks after refresh", async () => {
+        let renderer;
+        const getCache = () => new Map();
+        const getCache2 = () => new Map();
+        let cacheInsideRender1;
+        let cacheInsideRender2;
+
+        const suspense = PushCacheCascade.of(() => "johnny bravo", {
+          cache: getCache(),
+          cacheCb: getCache,
+        });
+
+        const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
+          cache: getCache2(),
+          cacheCb: getCache2,
+        });
+
+        let refresh;
+
+        let domSuspendArr = new Proxy([1, 2], {
+          get(target, p) {
+            if (p === "length") {
+              return 2;
+            }
+            return suspense.get();
+          },
+        });
+
+        const App = () => {
+          refresh = useCacheRefresh();
+
+          suspense.map((val) => {
+            cacheInsideRender1 = PushCacheCascade.getDynamicScope();
+            return val;
+          });
+
+          suspense2.map((val) => {
+            cacheInsideRender2 = PushCacheCascade.getDynamicScope();
+            return val;
+          });
+
+          return <div>{domSuspendArr}</div>;
+        };
+
+        act(() => {
+          renderer = render(
+            <Suspense fallback={<div>Loading...</div>}>
+              <App />
+            </Suspense>,
+            container
+          );
+        });
+
+        await waitForSuspense(0);
+
+        const { getByText } = renderer;
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
+        
+        expect(cacheInsideRender1).toBeTruthy();
+        expect(cacheInsideRender2).toBeTruthy();
+
+        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
+        let tempCacheInsideRender = cacheInsideRender1;
+        let tempCacheInsideRender2 = cacheInsideRender2;
+
+        act(() => {
+          refresh();
+        });
+
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
+        expect(cacheInsideRender1.cache).toBeTruthy();
+        expect(cacheInsideRender2.cache).toBeTruthy();
+
+        expect(tempCacheInsideRender.cache).not.toBe(cacheInsideRender1.cache);
+        expect(tempCacheInsideRender2.cache).not.toBe(cacheInsideRender2.cache);
+
+        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
+      });
+
+      
+      it("should have same cache in different chains inside render with same callback after refresh", async () => {
         let renderer;
         const getCache = () => new Map();
         let cacheInsideRender1;
@@ -1573,12 +1744,19 @@ describe("PushCacheCascade", () => {
           cacheCb: getCache,
         });
 
-        expect(cacheInsideRender1).toBeTruthy();
-        expect(cacheInsideRender2).toBeTruthy();
 
-        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender1.cache);
         let val;
         let refresh;
+
+        let domSuspendArr = new Proxy([1, 2], {
+          get(target, p) {
+            if (p === "length") {
+              return 2;
+            }
+            return suspense.get();
+          },
+        });
+
         const App = () => {
           refresh = useCacheRefresh();
 
@@ -1593,7 +1771,7 @@ describe("PushCacheCascade", () => {
           });
 
           val = suspense.get();
-          return <div>1</div>;
+          return <div>{domSuspendArr}</div>;
         };
 
         act(() => {
@@ -1608,7 +1786,13 @@ describe("PushCacheCascade", () => {
         await waitForSuspense(0);
 
         const { getByText } = renderer;
-        await waitFor(() => getByText("1"));
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
+
+        expect(cacheInsideRender1).toBeTruthy();
+        expect(cacheInsideRender2).toBeTruthy();
+
+        expect(cacheInsideRender2.cache).toBe(cacheInsideRender1.cache);
+
         let tempCacheInsideRender = cacheInsideRender1;
         let tempCacheInsideRender2 = cacheInsideRender2;
 
@@ -1616,15 +1800,15 @@ describe("PushCacheCascade", () => {
           refresh();
         });
 
-        await waitFor(() => getByText("1"));
-        expect(val).toEqual("johnny bravo");
+        await waitFor(() => getByText("johnny bravojohnny bravo"));
+
         expect(cacheInsideRender1.cache).toBeTruthy();
         expect(cacheInsideRender2.cache).toBeTruthy();
 
         expect(tempCacheInsideRender.cache).not.toBe(cacheInsideRender1.cache);
         expect(tempCacheInsideRender2.cache).not.toBe(cacheInsideRender2.cache);
 
-        expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender1.cache);
+        expect(cacheInsideRender1.cache).toBe(cacheInsideRender1.cache);
       });
     });
   });
