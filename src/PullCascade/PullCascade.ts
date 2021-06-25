@@ -12,11 +12,11 @@ const PullCascade = cb => {
       
       return PullCascade(() => fn(firstCb()))
     },
-    tap(fn) {
-      //TODO: comment
+    // tap(fn) {
+    //   //TODO: comment
       
-      return this.map(tapper(fn));
-    },
+    //   return this.map(tapper(fn));
+    // },
     get functor() {
       return PullCascade.of
     }

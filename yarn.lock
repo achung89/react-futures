@@ -160,6 +160,18 @@
     levenary "^1.1.1"
     semver "^5.5.0"
 
+"@babel/helper-create-class-features-plugin@^7.14.3":
+  version "7.14.4"
+  resolved "https://registry.yarnpkg.com/@babel/helper-create-class-features-plugin/-/helper-create-class-features-plugin-7.14.4.tgz#abf888d836a441abee783c75229279748705dc42"
+  integrity sha512-idr3pthFlDCpV+p/rMgGLGYIVtazeatrSOQk8YzO2pAepIjQhCN3myeihVg58ax2bbbGK9PUE1reFi7axOYIOw==
+  dependencies:
+    "@babel/helper-annotate-as-pure" "^7.12.13"
+    "@babel/helper-function-name" "^7.14.2"
+    "@babel/helper-member-expression-to-functions" "^7.13.12"
+    "@babel/helper-optimise-call-expression" "^7.12.13"
+    "@babel/helper-replace-supers" "^7.14.4"
+    "@babel/helper-split-export-declaration" "^7.12.13"
+
 "@babel/helper-create-class-features-plugin@^7.8.3":
   version "7.8.3"
   resolved "https://registry.yarnpkg.com/@babel/helper-create-class-features-plugin/-/helper-create-class-features-plugin-7.8.3.tgz#5b94be88c255f140fd2c10dd151e7f98f4bff397"
@@ -383,7 +395,7 @@
     "@babel/traverse" "^7.12.1"
     "@babel/types" "^7.12.1"
 
-"@babel/helper-replace-supers@^7.13.12":
+"@babel/helper-replace-supers@^7.13.12", "@babel/helper-replace-supers@^7.14.4":
   version "7.14.4"
   resolved "https://registry.yarnpkg.com/@babel/helper-replace-supers/-/helper-replace-supers-7.14.4.tgz#b2ab16875deecfff3ddfcd539bc315f72998d836"
   integrity sha512-zZ7uHCWlxfEAAOVDYQpEf/uyi1dmeC7fX4nCf2iz9drnCwi1zvwXL3HwWWNXUQEJ1k23yVn3VbddiI9iJEXaTQ==
@@ -536,6 +548,15 @@
     "@babel/helper-create-class-features-plugin" "^7.8.3"
     "@babel/helper-plugin-utils" "^7.8.3"
 
+"@babel/plugin-proposal-class-static-block@^7.14.3":
+  version "7.14.3"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-class-static-block/-/plugin-proposal-class-static-block-7.14.3.tgz#5a527e2cae4a4753119c3a3e7f64ecae8ccf1360"
+  integrity sha512-HEjzp5q+lWSjAgJtSluFDrGGosmwTgKwCXdDQZvhKsRlwv3YdkUEqxNrrjesJd+B9E9zvr1PVPVBvhYZ9msjvQ==
+  dependencies:
+    "@babel/helper-create-class-features-plugin" "^7.14.3"
+    "@babel/helper-plugin-utils" "^7.13.0"
+    "@babel/plugin-syntax-class-static-block" "^7.12.13"
+
 "@babel/plugin-proposal-dynamic-import@^7.8.3":
   version "7.8.3"
   resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-dynamic-import/-/plugin-proposal-dynamic-import-7.8.3.tgz#38c4fe555744826e97e2ae930b0fb4cc07e66054"
@@ -619,6 +640,13 @@
   integrity sha512-U40A76x5gTwmESz+qiqssqmeEsKvcSyvtgktrm0uzcARAmM9I1jR221f6Oq+GmHrcD+LvZDag1UTOTe2fL3TeA==
   dependencies:
     "@babel/helper-plugin-utils" "^7.10.4"
+
+"@babel/plugin-syntax-class-static-block@^7.12.13":
+  version "7.12.13"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-class-static-block/-/plugin-syntax-class-static-block-7.12.13.tgz#8e3d674b0613e67975ceac2776c97b60cafc5c9c"
+  integrity sha512-ZmKQ0ZXR0nYpHZIIuj9zE7oIqCx2hw9TKi+lIo73NNrMPAZGHfS92/VRV0ZmPj6H2ffBgyFHXvJ5NYsNeEaP2A==
+  dependencies:
+    "@babel/helper-plugin-utils" "^7.12.13"
 
 "@babel/plugin-syntax-dynamic-import@^7.8.0":
   version "7.8.0"
@@ -4250,19 +4278,19 @@ qs@~6.5.2:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.5.2.tgz#cb3ae806e8740444584ef154ce8ee98d403f3e36"
   integrity sha512-N5ZAX4/LxJmF+7wN74pUD6qAh9/wnvdQcjq9TZjevvXzSUo7bfmw91saqMjzGS2xq91/odN2dW/WOl7qQHNDGA==
 
-react-dom@^0.0.0-experimental-d75105fa9:
-  version "0.0.0-experimental-d75105fa9"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-d75105fa9.tgz#2196bfc3e6eeac95c815fb03601b8dcff5f1233e"
-  integrity sha512-MP/kL+EojcJ4nRZ40jjzYNeahOyl6PWJWZk9+vMuC2SzrDp3iUwba8EUexqbzuFpoYdO7/KhhWFphRpEh9flww==
+react-dom@^0.0.0-experimental-01be61c12:
+  version "0.0.0-experimental-01be61c12"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-01be61c12.tgz#099cbf9f7d2da75034eb37ef7a29b23d6e897984"
+  integrity sha512-gK3NgIu/icEJYdkMEAyAWq5sHWazyP0hhoDUTSUoSgTjczMx+enUapYBo2GNCooaRIPgbB+Q+caXMDfNL31OUQ==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
-    scheduler "0.0.0-experimental-d75105fa9"
+    scheduler "0.0.0-experimental-01be61c12"
 
-react-is@0.0.0-experimental-d75105fa9:
-  version "0.0.0-experimental-d75105fa9"
-  resolved "https://registry.yarnpkg.com/react-is/-/react-is-0.0.0-experimental-d75105fa9.tgz#ee7d76d79436954527a6a663e18df75de76480a0"
-  integrity sha512-IDljudMeSj9mKxZI+YLM/khFlMJ/jA6WBLFKHjglKa5QHthNn+OZLU22aVNyQjZz+u7WNBelmSosKeZ2ykP4Rw==
+react-is@0.0.0-experimental-01be61c12:
+  version "0.0.0-experimental-01be61c12"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-0.0.0-experimental-01be61c12.tgz#b4ebf8d51cfb8b1e5c7f5e8e1ae25965325df8b1"
+  integrity sha512-GfhEitmSNwAedY1pHrMRMP9GTR/jAQXo0uTxAHyTbx3vNgiD349pCHmC3innzqLyemnuT/C0NU3+eARO9vBLIQ==
 
 react-is@^16.12.0:
   version "16.12.0"
@@ -4282,20 +4310,20 @@ react-shallow-renderer@^16.13.1:
     object-assign "^4.1.1"
     react-is "^16.12.0"
 
-react-test-renderer@0.0.0-experimental-d75105fa9:
-  version "0.0.0-experimental-d75105fa9"
-  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-0.0.0-experimental-d75105fa9.tgz#243c229a1d736787da68fde4e74e12b718cbe521"
-  integrity sha512-4mAs+AGmVx3S+BpY+fZ6cZDfeHZB6xwWdid4qU/HPlz0LbCELbYPGAr+G4hZnmo/r60FfX8n3Waozwtd1BkK3w==
+react-test-renderer@0.0.0-experimental-01be61c12:
+  version "0.0.0-experimental-01be61c12"
+  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-0.0.0-experimental-01be61c12.tgz#3dbaabff5fc1e0e14f2c52d29a578d9610fefc9b"
+  integrity sha512-8qZdciPLrysA7mUBms2wHMvpKzy1zoCALqqUw/V26B4IIFW9V/H6X/vX706TY05mXIKexav8JyQv0n5T7cP5DA==
   dependencies:
     object-assign "^4.1.1"
-    react-is "0.0.0-experimental-d75105fa9"
+    react-is "0.0.0-experimental-01be61c12"
     react-shallow-renderer "^16.13.1"
-    scheduler "0.0.0-experimental-d75105fa9"
+    scheduler "0.0.0-experimental-01be61c12"
 
-react@^0.0.0-experimental-d75105fa9:
-  version "0.0.0-experimental-d75105fa9"
-  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-d75105fa9.tgz#c57c119b4a020a525848b823049ec225bc572bfe"
-  integrity sha512-bVzACyURlSa7yWtdPuY8jSejETPZg7cBzHfr47ctm+2ni37QCrelrhurBd7f+s+sj3FdVwnDJ97WZfGy9tdt8Q==
+react@^0.0.0-experimental-01be61c12:
+  version "0.0.0-experimental-01be61c12"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-01be61c12.tgz#3b3c01c1115694d494e4f1efbb137845288852bb"
+  integrity sha512-H/uoEsBNXV2o6o5dlr8TQpCqff+yOYABmSZmBIceXeNnNn/5X0FEArWSyKuIfYuyd/r0Zl8ey68k0eb2m+DPXA==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
@@ -4598,10 +4626,10 @@ saxes@^5.0.0:
   dependencies:
     xmlchars "^2.2.0"
 
-scheduler@0.0.0-experimental-d75105fa9:
-  version "0.0.0-experimental-d75105fa9"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-d75105fa9.tgz#954d104f7d27e6602cb24d550d5440402df09478"
-  integrity sha512-WJvy763S7S9as+wfBwcsbSgYfRByMTF96od8bI5wcFjd6h4AM+yn12WWELRJzlOgCdmz0YbL0OHrQbB0o4eiCQ==
+scheduler@0.0.0-experimental-01be61c12:
+  version "0.0.0-experimental-01be61c12"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-01be61c12.tgz#144a48a37e70b0c9224c99b8162f0b77a752944f"
+  integrity sha512-fSF5lI8u1HmnxSMAGq6VYhC0CMpp55ldX2Vv7b0rL3r6YKmFlAWNp2V8YaRL9afDp0vAZipvHyrrWsWKT7COQw==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"

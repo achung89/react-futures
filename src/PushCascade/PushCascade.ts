@@ -1,70 +1,8 @@
 
-import {  tapper, __internal, isRendering, isFuture, SuspendOperationOutsideRenderError } from "../internal";
+import {  __internal,  isFuture, } from "../internal";
+import { isReactRendering } from "../utils";
 
-function Mutators() {
-  let next;
-  let cbs = new Set<() => any>();
-  let resolveQueueExhaust;
-  let queueExhaustPromise;
-  (async() => {
-      while(true) {
-        for(const cb of cbs) {
-          while(true) {
-            try {
-              __internal.suspenseHandlerCount++
-              cb();
-              cbs.delete(cb);
-              if(queueExhaustPromise && resolveQueueExhaust) {
-                resolveQueueExhaust();
-                resolveQueueExhaust = null;
-                queueExhaustPromise = null;
-              }
-              __internal.suspenseHandlerCount--
-              break;
-            } catch(errOrProm) {
-              __internal.suspenseHandlerCount--
-              if(typeof errOrProm.then === 'function') {
-                await errOrProm;
-                continue;
-              }
-            }
-          }
-        }
-        await new Promise((res, rej) => {
-          next = res;
-        })
-      }
-  })().catch(err => {throw err});
 
-  return {
-    add(cb) {
-      cbs.add(cb)
-      
-      if(next) {
-        next();
-        next = undefined;
-      }
-    },
-    get size() {
-      return cbs.size
-    },
-    exhaustQueue() {
-       if(queueExhaustPromise) {
-         return queueExhaustPromise;
-        } else {
-         return queueExhaustPromise = new Promise((res, rej) => {
-          resolveQueueExhaust = res;
-        })
-      }
-    }
-  };
-}
-const waitForMutableDeps = async deps => {
-  for(const prom of deps) {
-    await prom;
-    deps.delete(prom);
-  }
-}
 
 const deepChain = async (prom, cb) => {
   try {
@@ -114,6 +52,7 @@ abstract class SuspenseCallback {
     } catch (errOrProm) {
       __internal.suspenseHandlerCount--;
       if (typeof errOrProm.then === 'function') {
+
         return new SuspenseJob(deepChain(errOrProm, cb));
       } else {
         throw errOrProm
@@ -130,27 +69,19 @@ class SuspenseValue<T = any> extends SuspenseCallback {
   val: T;
   status: 'complete' | 'pending' | 'error';
   error: Error;
-  mutators: ReturnType<typeof Mutators>
   constructor(val) {
     super()
     this.status = 'complete';
-    this.mutators = Mutators();
     valueMap.set(this, val)
   }
+
   map<K extends genericFunc = genericFunc>(cb: K): SuspenseValue<ReturnType<K>> | SuspenseJob<K> {
     const val = valueMap.get(this)
+
     return SuspenseCallback.of(() => cb(val));
   }
 
-  tap(cb) {
-    const val = valueMap.get(this)
-    this.mutators.add(() => cb(val));
-    return this;
-  }
   get() {
-    if(this.mutators.size > 0) {
-      throw this.mutators.exhaustQueue()
-    }
     if(this.status === 'complete') {
       return valueMap.get(this)
     } else if(this.status === 'pending') {
@@ -161,13 +92,22 @@ class SuspenseValue<T = any> extends SuspenseCallback {
   }
 }
 
+class RenderJob  {
+  #promises: Promise<any>[]
+  constructor(promises) {
+    this.#promises = promises;
+  }
+  map() {
+
+  }
+}
+
 const jobMap = new WeakMap;
 const promiseMap = new WeakMap;
 export class SuspenseJob<T> extends SuspenseCallback {
   status: 'pending' | 'complete' | 'error';
   val: any;
   error: Error;
-  mutatorSet: Set<Promise<any>>;
   constructor(promise) {
     super();
     this.status = 'pending'
@@ -239,48 +179,6 @@ export class SuspenseJob<T> extends SuspenseCallback {
     throw new Error("INVALID STATUS")
   }
 
-  async tapJob(mutatorSet) {
-    try {
-    let val = await jobMap.get(this)
-
-    for(const cb of mutatorSet) {
-
-      while(true) {
-
-        try{
-          __internal.suspenseHandlerCount++
-          cb(val);
-          mutatorSet.delete(cb);
-          __internal.suspenseHandlerCount--
-          break;
-        } catch(errOrProm) {
-          __internal.suspenseHandlerCount--
-          if(typeof errOrProm.then === 'function') {
-            await errOrProm;
-            continue;
-          }
-
-          throw errOrProm;
-        }
-      }
-    }
-    return val;
-  } catch(err) {
-    throw err;
-  }
-  }
-  tap(cb) {
-
-    if(this.mutatorSet) {
-      this.mutatorSet.add(cb);
-
-    } else {
-      this.mutatorSet = new Set([cb]);
-      jobMap.set(this, this.tapJob(this.mutatorSet))
-    }
-
-    return this;
-  }
   get() {
 
     if (this.status === 'pending') {
