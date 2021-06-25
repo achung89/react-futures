@@ -28,20 +28,24 @@ export const __internal = {
   allowSuspenseOutsideRender: false,
   suspenseHandlerCount: 0
 };
+export const isReactRendering = () => {
+  const dispatcher =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    .ReactCurrentDispatcher.current;
+  const currentOwner = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner.current;
+
+  return(( dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError') || currentOwner)
+}
+
+export const isDomRendering = () => {
+  const isTestDomRendering =  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.IsSomeRendererActing?.current
+  const isDomRendering = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6].current;
+  return   isDomRendering || isTestDomRendering;
+
+}
 
 export const isRendering = () => {
-  const dispatcher =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-      .ReactCurrentDispatcher.current;
-  const isTestDomRendering =  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.IsSomeRendererActing?.current
-  const currentOwner = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner.current;
-  // console.log("SIJOJDSF", isTestDomRendering)
-  // console.log(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner)
-  const isDomRendering = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6].current;
-  // console.log(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED)
-  // console.log('DISPATCHER', dispatcher);
-  // console.log(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events);
-  return (( dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError') || currentOwner) || isDomRendering || isTestDomRendering;
+  return isReactRendering() || isDomRendering();
 };
 
 // returns result of first call on every subsequent call
@@ -115,6 +119,9 @@ export const getCascade = obj => {
 }
 
 
-export const defaultCascade = cb =>  PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache): getCache()))
+export const defaultCascade = cb =>  PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || (isReactRendering() ? {
+  cache: getCacheForType(getCache),
+  cacheCb: getCache,
+}: { cache: getCache(), cacheCb: getCache}))
 
 export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0;

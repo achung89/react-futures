@@ -10,7 +10,7 @@ import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
 
-import { unwrapProxy, lazyArray } from '../../../utils';
+import { unwrapProxy, lazyArray, isRendering } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
 import delay from 'delay';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
@@ -112,7 +112,7 @@ describe('In only render context', () => {
     expect(Scheduler).toHaveYielded(['Promise Resolved']);
     act(() => {Scheduler.unstable_flushAll()})
 
-    await act(async () => await waitForSuspense(0));
+     await waitForSuspense(0);
     await waitFor(() => getByText('2345'));
   });
 
@@ -180,7 +180,7 @@ describe('In only render context', () => {
 });
 
 describe('Array operations', () => {
-  test.each`
+  test.skip.each`
     name                   | method                         
     ${'fill'}       | ${arr => arr.fill(1)}                             
     ${'reverse'}    | ${arr => arr.reverse()}                   
@@ -493,7 +493,7 @@ describe('parallel iteration', () => {
     expect(doubleRes).toEqual([4,6,8,10])
   }, 400);
 
-  test('sort outside render', async () => {
+  test.skip('sort outside render', async () => {
     const sorted = new FutureArr(5)
                         .sort((a, b) => {
                           return b - new FutureVal(a).value

@@ -2,11 +2,11 @@ import { isRendering } from './internal';
 import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
-import LRU from 'lru-cache';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
 import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
 import {unstable_getCacheForType as getCacheForType} from 'react'
+import { isDomRendering, isReactRendering } from './utils';
 
 export const getCache = () => new Map();
 
@@ -26,18 +26,14 @@ export const futureObject = <T extends object>(promiseThunk) => {
       return new FutureObjectCache(...args);
     }
     
-    static map = undefined;
-    static tap = undefined;
-    static run = undefined;
-
 
     constructor(...keys) {
       if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
-      const cache = DynamicScopeCascade.getDynamicScope() || (isRendering() ? getCacheForType(getCache) : getCache())
-      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache)
+      const cache = DynamicScopeCascade.getDynamicScope().cache ? DynamicScopeCascade.getDynamicScope() : (isReactRendering()? {cache: getCacheForType(getCache), cacheCb: getCache }: { cache: getCache(), cacheCb: getCache})
+      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
     }
   };
@@ -54,22 +50,20 @@ export const futureArray = <T>(promiseThunk) => {
     static get [species]() {
       return LazyArray;
     }
+
     static of(...args) {
       return new FutureArrayCache(...args);
     }
-    static map = undefined;
-    static tap = undefined;
-    static run = undefined;
 
     constructor(...keys) {
       if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
-      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
-      const cache = DynamicScopeCascade.getDynamicScope() ||( isRendering() ? getCacheForType(getCache) :(   getCache()))
-      
 
-      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache), cb => PushCacheCascade.of(cb, cache));
+      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
+      const cache = DynamicScopeCascade.getDynamicScope().cache ? DynamicScopeCascade.getDynamicScope() : (isReactRendering() ? {cache: getCacheForType(getCache), cacheCb: getCache }: { cache: getCache(), cacheCb: getCache})
+
+      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
     }
   };
 };
@@ -77,8 +71,6 @@ export const futureArray = <T>(promiseThunk) => {
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
 function getCachedPromise(promiseThunk: any, key, cache) {    
-  // console.log(key, cache.has(key))
-  // console.log(key, cache)
   if (cache.has(key)) {
     return cache.get(key);
   }

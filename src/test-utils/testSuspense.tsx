@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import Scheduler from 'scheduler/unstable_mock';
+import { waitFor } from '@testing-library/dom';
 
 export const testSuspenseWithLoader = async (
   el,
@@ -20,17 +21,17 @@ export const testSuspenseWithLoader = async (
   act(() => {
     root = ReactDOM.createRoot(container);
   });
-  await act(async () => {
+   act( () => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);
   });
   waitForLoading();
-  await act(async () => {
+  await waitFor(() => {
     expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
   });
   
   await waitForSuspense(suspenseTime);
 
-  await act(async () => {
+  await waitFor(() => {
     expect(container.innerHTML).toEqual(expected);
   });
 };

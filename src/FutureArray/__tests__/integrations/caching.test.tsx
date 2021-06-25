@@ -17,6 +17,7 @@ beforeEach(() => {
     val =>
       new Promise((res, rej) => {
         setTimeout(() => {
+          console.log(val);
           try {
             res([1, 2, 3, val]);
           } catch (err) {
@@ -51,7 +52,7 @@ describe('Caching arrays instantiated in render', () => {
   });
 
   test('should cache deep renders', async () => {
-    await testSuspenseWithLoader(<App nestedFuture/>, `<div>99</div>`);
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`);
     await testRenderWithoutSuspense(<App nestedFuture />, `<div>99</div>`);
   });
 });
