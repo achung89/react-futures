@@ -120,20 +120,55 @@ describe('PushCascade', () => {
 })
 
 // describe('Render scenarios', () => {
-//   let Scheduler;
-//   let container
-//   beforeEach(() => {
-//     Scheduler = require('scheduler/unstable_mock');
-//     container = document.createElement('div');
-//     document.body.appendChild(container);
-//   });
-//   afterEach(() => {
+  
+//   it('should suspend in react render', async () => {
+//     let refresh;
+//     let renderer;
+//     const App = () => {
+//       const futArr = new FutureArr('test-key');
 
-//     document.body.removeChild(container);
-//     container = null;
-//     Scheduler.unstable_clearYields();
-//     Scheduler = null;
+//       refresh = useCacheRefresh();
 
-//   });
-//   it('should')
+      
+//       return <div>
+//         {futArr}
+//       </div>;
+//     }
+//     act(() => {
+//       renderer = render(
+//         <Suspense fallback={<div>Loading...</div>}>
+//           <App />
+//         </Suspense>, container);
+//     });
+//     const {getByText} = renderer;
+    
+
+//     await waitFor(() => getByText('Loading...'));
+//     expect(Scheduler).toHaveYielded([])
+    
+//     act(() => {
+//       jest.runTimersToTime(150);
+//     })
+
+//     await waitForSuspense(0)
+//     expect(Scheduler).toHaveYielded(['Promise Resolved. value: test-key'])
+
+//     await waitFor(() => getByText('234test-key'));
+
+//     act(() => {
+//       refresh();
+//     })
+
+//     await waitFor(() => getByText('Loading...'));
+//     expect(Scheduler).toHaveYielded([])
+    
+//     act(() => {
+//       jest.runTimersToTime(150);
+//     })
+
+//     await waitForSuspense(0)
+//     expect(Scheduler).toHaveYielded(['Promise Resolved. value: test-key'])
+
+//     await waitFor(() => getByText('234test-key'));
+//   })
 // })

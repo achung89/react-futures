@@ -194,7 +194,7 @@ describe('In only render context', () => {
 });
 
 describe('Array operations', () => {
-  test.only.each`
+  test.skip.each`
     name            | method                         
     ${'fill'}       | ${arr => arr.fill(1)}                             
     ${'reverse'}    | ${arr => arr.reverse()}                   

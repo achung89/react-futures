@@ -1,7 +1,7 @@
 import { DynamicScopeCascade } from "../../internal"
 
 test('should set dynamicScope', () => {
-  expect(DynamicScopeCascade.getDynamicScope()).toEqual(null);
+  expect(JSON.stringify(DynamicScopeCascade.getDynamicScope())).toEqual(JSON.stringify({ cache: null }));
   
   new DynamicScopeCascade(() => {
     expect(DynamicScopeCascade.getDynamicScope()).toEqual(1)
@@ -11,7 +11,7 @@ test('should set dynamicScope', () => {
 })
 
 test('should set dynamicScope if using point', () => {
-  expect(DynamicScopeCascade.getDynamicScope()).toEqual(null);
+  expect(JSON.stringify(DynamicScopeCascade.getDynamicScope())).toEqual(JSON.stringify({ cache: null }));
   
   DynamicScopeCascade.of(() => {
     expect(DynamicScopeCascade.getDynamicScope()).toEqual(1)
@@ -19,7 +19,9 @@ test('should set dynamicScope if using point', () => {
   expect.assertions(2)
 })
 test('should set dynamicScope on map',() => {
-  expect(DynamicScopeCascade.getDynamicScope()).toEqual(null);
+  
+  expect(JSON.stringify(DynamicScopeCascade.getDynamicScope())).toEqual(JSON.stringify({ cache: null }));
+  
   
   new DynamicScopeCascade(() => {
     return null

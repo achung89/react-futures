@@ -61,6 +61,7 @@ export const run = (fn: Function, futr, cascade) => {
 }
 
 export const tap = (fn: Function, futr, cascade, name: string,) => {
+  throw new Error('Mutable operations not allowed in render')
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
