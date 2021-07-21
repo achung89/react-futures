@@ -116,7 +116,7 @@ describe('In only render context', () => {
     await waitFor(() => getByText('2345'));
   });
 
-  test.each(['1', 2, '3', 4])(
+  test.only.each(['1', 2, '3', 4])(
     `should suspend on %i index access`,
     async index => {
       const resources = new FutureArr(5);

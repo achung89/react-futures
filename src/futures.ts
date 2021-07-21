@@ -4,14 +4,14 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
-import { DynamicScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
+import { CacheScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
 import {unstable_getCacheForType as getCacheForType} from 'react'
 import { isDomRendering, isReactRendering } from './utils';
 
 export const getCache = () => new Map();
 
 export const futureObject = <T extends object>(promiseThunk) => {
-
+  const getCache = () => new Map();
   if (isRendering()) {
     // TODO: add custom error message per method
     throw new Error('cannot create future outside render');
@@ -32,7 +32,8 @@ export const futureObject = <T extends object>(promiseThunk) => {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
-      const cache = DynamicScopeCascade.getDynamicScope().cache ? DynamicScopeCascade.getDynamicScope() : (isReactRendering()? {cache: getCacheForType(getCache), cacheCb: getCache }: { cache: getCache(), cacheCb: getCache})
+      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), cacheCb: getCache }
+
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
     }
@@ -40,6 +41,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
 };
 
 export const futureArray = <T>(promiseThunk) => {
+  const getCache = () => new Map();
 
   if (isRendering()) {
     // TODO: add custom error message per method
@@ -61,7 +63,7 @@ export const futureArray = <T>(promiseThunk) => {
       };
 
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
-      const cache = DynamicScopeCascade.getDynamicScope().cache ? DynamicScopeCascade.getDynamicScope() : (isReactRendering() ? {cache: getCacheForType(getCache), cacheCb: getCache }: { cache: getCache(), cacheCb: getCache})
+      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), cacheCb: getCache }
 
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
     }
@@ -70,10 +72,11 @@ export const futureArray = <T>(promiseThunk) => {
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
-function getCachedPromise(promiseThunk: any, key, cache) {    
+function getCachedPromise(promiseThunk: any, key, cache) { 
   if (cache.has(key)) {
     return cache.get(key);
   }
+
   cache.set(key, promiseThunk());
 
   const promise = cache.get(key);

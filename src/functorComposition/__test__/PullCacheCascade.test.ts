@@ -2,10 +2,10 @@ import { PullCacheCascade } from "../../internal";
 
 
 test('should set dynamicScope', () => {
-  expect(JSON.stringify(PullCacheCascade.getDynamicScope())).toEqual(JSON.stringify({cache: null }));
+  expect(JSON.stringify(PullCacheCascade.getCurrentScope())).toEqual(undefined);
   
   const cascade = PullCacheCascade.of(() => {
-    expect(PullCacheCascade.getDynamicScope()).toEqual(1)
+    expect(PullCacheCascade.getCurrentScope()).toEqual(1)
   }, 1)
   expect.assertions(1)
 
@@ -15,14 +15,14 @@ test('should set dynamicScope', () => {
 
 })
 
-test('should set dynamicScope on map',() => {
-  expect(JSON.stringify(PullCacheCascade.getDynamicScope())).toEqual(JSON.stringify({ cache: null }));
+test('should set dynamicScope on map', () => {
+  expect(JSON.stringify(PullCacheCascade.getCurrentScope())).toEqual(undefined);
   
   const cascade = PullCacheCascade.of(() => {
     return null
   }, 1)
     .map(() => {
-      expect(PullCacheCascade.getDynamicScope()).toEqual(1)
+      expect(PullCacheCascade.getCurrentScope()).toEqual(1)
     })
 
     expect.assertions(1)
