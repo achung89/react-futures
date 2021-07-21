@@ -5,7 +5,6 @@ import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import Scheduler from 'scheduler/unstable_mock';
 import { waitFor } from '@testing-library/dom';
-
 export const testSuspenseWithLoader = async (
   el,
   expected,

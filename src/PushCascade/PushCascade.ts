@@ -92,15 +92,6 @@ class SuspenseValue<T = any> extends SuspenseCallback {
   }
 }
 
-class RenderJob  {
-  #promises: Promise<any>[]
-  constructor(promises) {
-    this.#promises = promises;
-  }
-  map() {
-
-  }
-}
 
 const jobMap = new WeakMap;
 const promiseMap = new WeakMap;

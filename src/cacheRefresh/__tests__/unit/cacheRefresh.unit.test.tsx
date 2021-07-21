@@ -5,10 +5,12 @@ import { futureArray, } from '../../../futures';
 import { render } from '../../../test-utils/rtl-renderer';
 import { Suspense, unstable_getCacheForType as getCacheForType, unstable_useCacheRefresh as useCacheRefresh, unstable_Cache as Cache} from 'react';
 import { waitFor } from '@testing-library/dom';
-import Scheduler from 'scheduler/unstable_mock'
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { useFetchRefresh } from '../../cacheRefresh';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
+
+let Scheduler;
+
 
 let fetchArray = val =>
   new Promise((res, rej) => {
@@ -26,16 +28,18 @@ beforeEach(() => {
 
   jest.resetModules();
   FutureArr = futureArray(fetchArray);
+  Scheduler = require('scheduler/unstable_mock');
 
   container = document.createElement('div');
   document.body.appendChild(container);
 });
-afterEach(() => {
+afterEach(async () => {
   FutureArr = null;
   jest.useRealTimers()
   document.body.removeChild(container);
   container = null;
   Scheduler.unstable_clearYields();
+  Scheduler = null;
 });
 const LogSuspense = ({ action, children }) => {
   try {
@@ -228,7 +232,9 @@ describe('useCacheRefresh', () => {
     act(() => {
       renderer = render(
         <Suspense fallback={<div>Loading...</div>}>
-          <App />
+          <Cache>
+            <App />
+          </Cache>
         </Suspense>, container);
     });
     const {getByText} = renderer;
@@ -243,8 +249,8 @@ describe('useCacheRefresh', () => {
 
     await waitForSuspense(0)
     expect(Scheduler).toHaveYielded(['Promise Resolved. value: test-key'])
-
     await waitFor(() => getByText('234test-key'));
+
 
     act(() => {
       refresh();
@@ -258,14 +264,15 @@ describe('useCacheRefresh', () => {
     })
 
     await waitForSuspense(0)
+    await waitFor(() => getByText('234test-key'));
+
     expect(Scheduler).toHaveYielded(['Promise Resolved. value: test-key'])
 
-    await waitFor(() => getByText('234test-key'));
   });
   it('shouldn\'t refresh cache on useCacheRefresh if future was created outside render', async () => {
     let refresh;
     let renderer;
-    const futArr = new FutureArr('test-key');
+    const futArr = new FutureArr('test-ke');
 
     const App = () => {
 
@@ -279,7 +286,9 @@ describe('useCacheRefresh', () => {
     act(() => {
       renderer = render(
         <Suspense fallback={<div>Loading...</div>}>
-          <App />
+          <Cache>
+            <App />
+          </Cache>
         </Suspense>, container);
     });
     const {getByText} = renderer;
@@ -518,10 +527,9 @@ describe('useCacheRefresh', () => {
     act(() => {
       jest.runTimersToTime(150);
     })
-
     
     await waitForSuspense(0)
-
+    
     expect(Scheduler).toHaveYielded(['Promise Resolved. value: test-key', 'Promise Resolved. value: test-key2'])
 
     await waitFor(() => getByText('468test-key2test-key'));
