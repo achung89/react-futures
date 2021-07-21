@@ -4,7 +4,7 @@ export * from './FutureArray/LazyArray';
 export * from './FutureObject/LazyObject';
 export * from './FutureArray/FutureArray';
 export * from './FutureObject/FutureObject';
-export * from './DynamicScopeCascade/DynamicScopeCascade'
+export * from './CacheScopeCascade/CacheScopeCascade'
 export * from './utils';
 export * from './PullCascade/PullCascade'
 export * from './PushCascade/PushCascade'

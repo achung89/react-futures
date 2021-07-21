@@ -17,7 +17,6 @@ beforeEach(() => {
     val =>
       new Promise((res, rej) => {
         setTimeout(() => {
-          console.log(val);
           try {
             res([1, 2, 3, val]);
           } catch (err) {

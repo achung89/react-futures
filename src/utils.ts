@@ -6,11 +6,13 @@ import {
   PushCacheCascade,
   run
 } from './internal';
-import * as ReactDOM from 'react-dom';
-import { DynamicScopeCascade } from './DynamicScopeCascade/DynamicScopeCascade';
+import ReactDOM from 'react-dom';
+import { CacheScopeCascade } from './CacheScopeCascade/CacheScopeCascade';
 import { getCache } from './futures';
 import React from 'react';
 export const metadataMap = new WeakMap();
+
+
 
 export const pipe = (...fns: Function[]) => (val: any = undefined) =>
   fns.reduce((val, fn) => fn(val), val);
@@ -38,15 +40,18 @@ export const isReactRendering = () => {
 }
 
 export const isDomRendering = () => {
+  // console.log('===================', ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED)
+  // console.log('===================', 
+    // ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[0](), 
+    // ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[1](),
+    //  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[2]())
   const isTestDomRendering =  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.IsSomeRendererActing?.current
-  const isDomRendering = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6].current;
-  return   isDomRendering || isTestDomRendering;
+  const isDomRendering = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6]?.current;
+  return isDomRendering || isTestDomRendering;
 
 }
 
-export const isRendering = () => {
-  return isReactRendering() || isDomRendering();
-};
+export const isRendering = () => isReactRendering() || isDomRendering();
 
 // returns result of first call on every subsequent call
 export const first = (fn: Function) => {
@@ -119,7 +124,7 @@ export const getCascade = obj => {
 }
 
 
-export const defaultCascade = cb =>  PushCacheCascade.of(cb, DynamicScopeCascade.getDynamicScope() || (isReactRendering() ? {
+export const defaultCascade = cb =>  PushCacheCascade.of(cb, CacheScopeCascade.getCurrentScope() || (isReactRendering() ? {
   cache: getCacheForType(getCache),
   cacheCb: getCache,
 }: { cache: getCache(), cacheCb: getCache}))
