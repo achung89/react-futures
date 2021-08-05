@@ -4,7 +4,7 @@ test('should set dynamicScope', () => {
   expect(JSON.stringify(CacheScopeCascade.getCurrentScope())).toEqual(JSON.stringify(undefined));
   const cache = {
     cache: new Map(),
-    cacheCb: () => new Map()
+    getCache: () => new Map()
   };
 
   new CacheScopeCascade(() => {
@@ -19,7 +19,7 @@ test('should set dynamicScope if using point', () => {
   
   const cache = {
     cache: new Map(),
-    cacheCb: () => new Map()
+    getCache: () => new Map()
   };
 
   CacheScopeCascade.of(() => {
@@ -34,7 +34,7 @@ test('should set dynamicScope on map',() => {
   
   const cache = {
     cache: new Map(),
-    cacheCb: () => new Map()
+    getCache: () => new Map()
   };
   
   new CacheScopeCascade(() => {
@@ -50,13 +50,13 @@ test('should set dynamicScope on map',() => {
 
 test('should get value',() => {  
   {
-  const val = new CacheScopeCascade(() => 1, { cache: new Map(), cacheCb: () => new Map()})
+  const val = new CacheScopeCascade(() => 1, { cache: new Map(), getCache: () => new Map()})
     .map(one =>  one + 1)
     .get()
     expect(val).toEqual(2);
   }
   {
-    const val = new CacheScopeCascade(() => 1, { cache: new Map(), cacheCb: () => new Map()})
+    const val = new CacheScopeCascade(() => 1, { cache: new Map(), getCache: () => new Map()})
       .map(one => one + 1)
       .map(two => two + 1)
       .get()
