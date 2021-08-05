@@ -1,5 +1,5 @@
-import { PushCascade, CacheScopeCascade, composeFunctors } from "../internal";
+import { PushCascade } from "../internal";
 
-const PushCacheCascade = composeFunctors(PushCascade, CacheScopeCascade);
+const PushCacheCascade = PushCascade
 
 export { PushCacheCascade }

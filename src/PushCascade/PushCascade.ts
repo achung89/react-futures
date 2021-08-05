@@ -1,13 +1,36 @@
 
 import {  __internal,  isFuture, } from "../internal";
-import { isReactRendering } from "../utils";
+import { unstable_getCacheForType as getCacheForType } from "react";
+import { isReactRendering } from "../internal";
 
+type CacheScope = {
+  cache: Map<string, Promise<any>> | null;
+  getCache: () => Map<string, Promise<any>>;
+} | undefined;
 
+let globalCacheScope;
+const createCacheScope = (cb, cacheScope: CacheScope ) => {
+  let tempScopVal = globalCacheScope;
 
-const deepChain = async (prom, cb) => {
+  try {
+    globalCacheScope = isReactRendering()
+    ? {
+        cache: getCacheForType(cacheScope.getCache),
+        getCache: cacheScope.getCache,
+      }
+    : cacheScope;
+    
+    return cb();
+  } finally {
+    globalCacheScope = tempScopVal;
+  }
+}
+
+const deepChain = async (prom, cb, cacheScope) => {
   try {
     await prom;
-    let newVal = SuspenseCallback.of(cb);
+    let newVal = createCacheScope(() => SuspenseCallback.of(cb, cacheScope), cacheScope)
+    
     while(newVal instanceof SuspenseCallback) {
       if (newVal instanceof SuspenseJob) {
         const promise = jobMap.get(newVal);
@@ -39,25 +62,25 @@ const deepChain = async (prom, cb) => {
 abstract class SuspenseCallback {
   abstract map(fn: Function): SuspenseCallback;
   abstract get(): any;
-
   get functor() {
     return PushCascade.of
   }
-  static of = cb => {
+  static of = (cb, instanceCacheScope: CacheScope) => {
     try {
       __internal.suspenseHandlerCount++
-      const newVal = new SuspenseValue(cb());
+      const newVal = new SuspenseValue(createCacheScope(cb, instanceCacheScope), instanceCacheScope);
+      
       __internal.suspenseHandlerCount--;
       return newVal
     } catch (errOrProm) {
       __internal.suspenseHandlerCount--;
       if (typeof errOrProm.then === 'function') {
-
-        return new SuspenseJob(deepChain(errOrProm, cb));
+        
+        return new SuspenseJob(deepChain(errOrProm, cb, instanceCacheScope), instanceCacheScope);
       } else {
         throw errOrProm
       }
-    }
+    } 
   }
 }
 
@@ -65,12 +88,14 @@ const valueMap = new WeakMap;
 
 type genericFunc = (...args: any) => any
 
-class SuspenseValue<T = any> extends SuspenseCallback {
+export class SuspenseValue<T = any> extends SuspenseCallback {
   val: T;
   status: 'complete' | 'pending' | 'error';
   error: Error;
-  constructor(val) {
+  #cacheScope: CacheScope;
+  constructor(val, instanceCacheScope) {
     super()
+    this.#cacheScope = instanceCacheScope
     this.status = 'complete';
     valueMap.set(this, val)
   }
@@ -78,7 +103,7 @@ class SuspenseValue<T = any> extends SuspenseCallback {
   map<K extends genericFunc = genericFunc>(cb: K): SuspenseValue<ReturnType<K>> | SuspenseJob<K> {
     const val = valueMap.get(this)
 
-    return SuspenseCallback.of(() => cb(val));
+    return SuspenseCallback.of(() => cb(val), this.#cacheScope);
   }
 
   get() {
@@ -99,8 +124,11 @@ export class SuspenseJob<T> extends SuspenseCallback {
   status: 'pending' | 'complete' | 'error';
   val: any;
   error: Error;
-  constructor(promise) {
+  #cacheScope: CacheScope
+
+  constructor(promise, cacheScope) {
     super();
+    this.#cacheScope = cacheScope
     this.status = 'pending'
     promiseMap.set(promise,this)
     jobMap.set(this, this.createJob(promise))
@@ -124,7 +152,7 @@ export class SuspenseJob<T> extends SuspenseCallback {
       try {
         const val = await jobMap.get(this)
 
-        let newVal = SuspenseCallback.of(() => cb(val))
+        let newVal = SuspenseCallback.of(() => cb(val), this.#cacheScope)
 
         if(isFuture(newVal)) {
           return newVal
@@ -159,13 +187,13 @@ export class SuspenseJob<T> extends SuspenseCallback {
 
   map(cb) {
     if(this.status === 'complete') {
-      return SuspenseCallback.of(() => cb(this.val));
+      return SuspenseCallback.of(() => cb(this.val), this.#cacheScope);
     } 
     if (this.status === 'error') {
       throw this.error;
     }
     if(this.status === 'pending') {
-      return new SuspenseJob(this.mapJob(cb))
+      return new SuspenseJob(this.mapJob(cb), this.#cacheScope)
     }
     throw new Error("INVALID STATUS")
   }
@@ -188,12 +216,18 @@ export class SuspenseJob<T> extends SuspenseCallback {
   }
 }
 
+type ScopeVal = {
+  cache: Map<string, Promise<any>> | null;
+  getCache: () => Map<string, Promise<any>>;
+} | undefined;
 
 const PushCascade = {
-  of: cb => {
-    const suspenseTask = SuspenseCallback.of(cb)
+  of: (cb, instanceCacheScope: CacheScope) => {
+    const suspenseTask = SuspenseCallback.of(cb, instanceCacheScope)
     return suspenseTask
   },
-  
+  getCurrentScope() {
+    return globalCacheScope
+  }
 }
 export { PushCascade }

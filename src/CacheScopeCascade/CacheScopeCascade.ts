@@ -2,11 +2,11 @@ import { isReactRendering } from "../internal";
 import { unstable_getCacheForType as getCacheForType } from "react";
 type ScopeVal = {
   cache: Map<string, Promise<any>> | null;
-  cacheCb: () => Map<string, Promise<any>>;
+  getCache: () => Map<string, Promise<any>>;
 } | undefined;
 
 let cacheScope;
-const set = new Set();
+
 export class CacheScopeCascade {
   static getCurrentScope() {
 
@@ -15,7 +15,7 @@ export class CacheScopeCascade {
       ? isReactRendering()
         ? {
             cache: getCacheForType(cacheScope.cacheCb),
-            cacheCb: cacheScope.cacheCb,
+            getCache: cacheScope.cacheCb,
           }
         : cacheScope
       : undefined;
@@ -31,7 +31,7 @@ export class CacheScopeCascade {
       cacheScope = isReactRendering()
       ? {
           cache: getCacheForType(scopeValue.cacheCb),
-          cacheCb: scopeValue.cacheCb,
+          getCache: scopeValue.cacheCb,
         }
       : scopeValue;
       

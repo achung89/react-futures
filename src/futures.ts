@@ -32,7 +32,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
-      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), cacheCb: getCache }
+      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), getCache: getCache }
 
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
@@ -63,7 +63,7 @@ export const futureArray = <T>(promiseThunk) => {
       };
 
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
-      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), cacheCb: getCache }
+      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), getCache: getCache }
 
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
     }

@@ -126,7 +126,7 @@ export const getCascade = obj => {
 
 export const defaultCascade = cb =>  PushCacheCascade.of(cb, CacheScopeCascade.getCurrentScope() || (isReactRendering() ? {
   cache: getCacheForType(getCache),
-  cacheCb: getCache,
-}: { cache: getCache(), cacheCb: getCache}))
+  getCache: getCache,
+}: { cache: getCache(), getCache: getCache}))
 
 export const canSuspend = () => isRendering() || __internal.suspenseHandlerCount > 0;

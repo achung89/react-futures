@@ -11,12 +11,19 @@ import {
 import { render } from "../../test-utils/rtl-renderer";
 import waitForSuspense from "../../test-utils/waitForSuspense";
 import { unstable_useCacheRefresh as useCacheRefresh } from "react";
+import { SuspenseJob } from "../../PushCascade/PushCascade";
 
 describe("PushCacheCascade", () => {
   it("shouldnt throw suspense if promise is already resolved", async () => {
     const fn = jest.fn();
+    const getCache = () => new Map
+    const cacheScope = {
+      cache: getCache(),
+      getCache
+    }
 
-    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"));
+    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"), cacheScope);
+    expect(suspender).toBeInstanceOf(SuspenseJob)
 
     try {
       suspender.get();
@@ -29,16 +36,30 @@ describe("PushCacheCascade", () => {
     expect(() => suspender.get()).not.toThrow();
   });
   it("should return value if no promises throw", () => {
-    const suspense = PushCacheCascade.of(() => "johnny bravo");
+    const getCache = () => new Map
+
+    const cacheScope = () => ({
+      cache: getCache(),
+      getCache
+    })
+
+    const suspense = PushCacheCascade.of(() => "johnny bravo", cacheScope());
     expect(suspense.get()).toEqual("johnny bravo");
   });
   it("should map callbacks", () => {
+    const getCache = () => new Map
+
+    const cacheScope = () => ({
+      cache: getCache(),
+      getCache
+    });
+    
     {
-      const suspense = PushCacheCascade.of(() => "johnny bravo").map(upperCase);
+      const suspense = PushCacheCascade.of(() => "johnny bravo", cacheScope()).map(upperCase);
       expect(suspense.get()).toEqual("JOHNNY BRAVO");
     }
     {
-      const suspense = PushCacheCascade.of(() => "johnny bravo")
+      const suspense = PushCacheCascade.of(() => "johnny bravo", cacheScope())
         .map(upperCase)
         .map(spaceOut);
 
@@ -47,8 +68,14 @@ describe("PushCacheCascade", () => {
   });
   it("should throw suspense", async () => {
     const fn = jest.fn();
+    const getCache = () => new Map
 
-    let suspender = PushCacheCascade.of(() => "johnny bravo").map(
+    const cacheScope = () => ({
+      cache: getCache(),
+      getCache
+    })
+
+    let suspender = PushCacheCascade.of(() => "johnny bravo", cacheScope()).map(
       throwOnce(upperCase)
     );
     try {
@@ -64,10 +91,17 @@ describe("PushCacheCascade", () => {
 
   it("should throw suspense if first callback throws", async () => {
     const fn = jest.fn();
+    const getCache = () => new Map
 
-    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo")).map(
+    const cacheScope = () => ({
+      cache: getCache(),
+      getCache
+    })
+    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"), cacheScope()).map(
       upperCase
     );
+    expect(suspender).toBeInstanceOf(SuspenseJob)
+
     try {
       suspender.get();
     } catch (prom) {
@@ -81,10 +115,18 @@ describe("PushCacheCascade", () => {
   });
   it("should throw suspense if first and second callback throws", async () => {
     const fn = jest.fn();
+    const getCache = () => new Map
 
-    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo")).map(
+    const cacheScope = () => ({
+      cache: getCache(),
+      getCache
+    })
+    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"), cacheScope()).map(
       throwOnce(upperCase)
     );
+
+    expect(suspender).toBeInstanceOf(SuspenseJob)
+
 
     try {
       suspender.get();
@@ -102,7 +144,7 @@ describe("PushCacheCascade", () => {
       const getCache = () => new Map();
       const cache = getCache();
       let dynamicScope;
-      PushCacheCascade.of(() => undefined, { cache, getCache }).map(() => {
+      PushCacheCascade.of(() => undefined, { cache, getCache: getCache }).map(() => {
         dynamicScope = PushCacheCascade.getCurrentScope();
       });
       expect(cache).toBe(dynamicScope.cache);
@@ -133,7 +175,7 @@ describe("PushCacheCascade", () => {
       const getCache = () => new Map();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
       let a;
       const App = () => {
@@ -157,7 +199,7 @@ describe("PushCacheCascade", () => {
 
       const suspense = PushCacheCascade.of(
         throwOnce(() => "johnny bravo"),
-        { cache: getCache(), cacheCb: getCache }
+        { cache: getCache(), getCache: getCache }
       );
       let a;
       const App = () => {
@@ -185,7 +227,7 @@ describe("PushCacheCascade", () => {
 
       const suspense = PushCacheCascade.of(
         throwOnce(() => "johnny bravo"),
-        { cache: getCache(), cacheCb: getCache }
+        { cache: getCache(), getCache: getCache }
       );
       let a;
       const App = () => {
@@ -213,7 +255,7 @@ describe("PushCacheCascade", () => {
 
       const suspense = PushCacheCascade.of(
         throwOnce(() => "johnny bravo"),
-        { cache: getCache(), cacheCb: getCache }
+        { cache: getCache(), getCache: getCache }
       ).map(upperCase);
 
       let a;
@@ -245,7 +287,7 @@ describe("PushCacheCascade", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -253,7 +295,7 @@ describe("PushCacheCascade", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -349,7 +391,7 @@ describe("in DOM render", () => {
     const getCache = () => new Map();
     const suspense = PushCacheCascade.of(() => "johnny bravo", {
       cache: getCache(),
-      cacheCb: getCache,
+      getCache: getCache,
     });
     let domSuspendArr = new Proxy([1, 2], {
       get(target, p) {
@@ -382,7 +424,7 @@ describe("in DOM render", () => {
 
     const suspense = PushCacheCascade.of(
       throwOnce(() => "johnny bravo"),
-      { cache: getCache(), cacheCb: getCache }
+      { cache: getCache(), getCache: getCache }
     );
 
     let domSuspendArr = new Proxy([1, 2], {
@@ -420,7 +462,7 @@ describe("in DOM render", () => {
 
     let suspense = PushCacheCascade.of(
       throwOnce(() => "johnny bravo"),
-      { cache: getCache(), cacheCb: getCache }
+      { cache: getCache(), getCache: getCache }
     );
 
     let domSuspendArr = new Proxy([1, 2], {
@@ -459,7 +501,7 @@ describe("in DOM render", () => {
 
     const suspense = PushCacheCascade.of(
       throwOnce(() => "johnny bravo"),
-      { cache: getCache(), cacheCb: getCache }
+      { cache: getCache(), getCache: getCache }
     ).map(upperCase);
 
     let domSuspendArr = new Proxy([1, 2], {
@@ -520,7 +562,7 @@ describe("in render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       })
         .map((val) => {
           cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -568,7 +610,7 @@ describe("in render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender = PushCacheCascade.getCurrentScope();
         return val;
@@ -621,7 +663,7 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
         return val;
@@ -629,7 +671,7 @@ describe("in render with cache", () => {
 
       PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
         return val;
@@ -671,12 +713,12 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -728,12 +770,12 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache2(),
-        cacheCb: getCache2,
+        getCache: getCache2,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -786,7 +828,7 @@ describe("in render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       })
         .map((val) => {
           cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -850,7 +892,7 @@ describe("in render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender = PushCacheCascade.getCurrentScope();
         return val;
@@ -917,7 +959,7 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
         return val;
@@ -925,7 +967,7 @@ describe("in render with cache", () => {
 
       PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
         return val;
@@ -984,12 +1026,12 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -1053,12 +1095,12 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache2(),
-        cacheCb: getCache2,
+        getCache: getCache2,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -1122,12 +1164,12 @@ describe("in render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache2(),
-        cacheCb: getCache2,
+        getCache: getCache2,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -1217,7 +1259,7 @@ describe("in DOM render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       })
         .map((val) => {
           cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -1275,7 +1317,7 @@ describe("in DOM render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
         return val;
@@ -1331,7 +1373,7 @@ describe("in DOM render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
         return val;
@@ -1339,7 +1381,7 @@ describe("in DOM render with cache", () => {
 
       PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
         return val;
@@ -1388,12 +1430,12 @@ describe("in DOM render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache2(),
-        cacheCb: getCache2,
+        getCache: getCache2,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -1450,12 +1492,12 @@ describe("in DOM render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       expect(cacheInsideRender1).not.toBeTruthy();
@@ -1515,7 +1557,7 @@ describe("in DOM render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       })
         .map((val) => {
           cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -1586,7 +1628,7 @@ describe("in DOM render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender = PushCacheCascade.getCurrentScope();
         return val;
@@ -1660,7 +1702,7 @@ describe("in DOM render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
         return val;
@@ -1668,7 +1710,7 @@ describe("in DOM render with cache", () => {
 
       PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
         return val;
@@ -1736,12 +1778,12 @@ describe("in DOM render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache2(),
-        cacheCb: getCache2,
+        getCache: getCache2,
       });
 
       let refresh;
@@ -1814,12 +1856,12 @@ describe("in DOM render with cache", () => {
 
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       const suspense2 = PushCacheCascade.of(() => "johnny bravo", {
         cache: getCache(),
-        cacheCb: getCache,
+        getCache: getCache,
       });
 
       let val;
@@ -1921,7 +1963,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       )
         .map((val) => {
@@ -1970,7 +2012,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender = PushCacheCascade.getCurrentScope();
@@ -2026,7 +2068,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -2037,7 +2079,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
@@ -2081,7 +2123,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2089,7 +2131,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2144,7 +2186,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2152,7 +2194,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache2(),
-          cacheCb: getCache2,
+          getCache: getCache2,
         }
       );
 
@@ -2195,6 +2237,7 @@ describe("suspense in render with cache", () => {
 
       expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
     });
+    
   });
 
   describe("after refresh", () => {
@@ -2208,7 +2251,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       )
         .map((val) => {
@@ -2271,7 +2314,7 @@ describe("suspense in render with cache", () => {
       const cache = getCache();
       const suspense = PushCacheCascade.of(() => "johnny bravo", {
         cache,
-        cacheCb: getCache,
+        getCache: getCache,
       }).map((val) => {
         cacheOutsideRender = PushCacheCascade.getCurrentScope();
         return val;
@@ -2340,7 +2383,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -2351,7 +2394,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
@@ -2411,7 +2454,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2419,7 +2462,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2486,7 +2529,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2494,7 +2537,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache2(),
-          cacheCb: getCache2,
+          getCache: getCache2,
         }
       );
 
@@ -2561,7 +2604,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2569,7 +2612,7 @@ describe("suspense in render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache2(),
-          cacheCb: getCache2,
+          getCache: getCache2,
         }
       );
 
@@ -2639,12 +2682,13 @@ describe("suspense in render with cache", () => {
       let refresh;
       let suspense
       let val;
+      let throwJohnnyBravo = throwOnce(() => "johnny bravo")
       const App = () => {
         suspense = PushCacheCascade.of(
-          throwOnce(() => "johnny bravo"),
+          throwJohnnyBravo,
           {
             cache: getCache(),
-            cacheCb: getCache,
+            getCache: getCache,
           }
         ).map((val) => {
           cacheInsideRender1 = PushCacheCascade.getCurrentScope();
@@ -2653,8 +2697,6 @@ describe("suspense in render with cache", () => {
 
         val = suspense.get()
         refresh = useCacheRefresh();
-
-
 
         return <div>1</div>;
       };
@@ -2685,7 +2727,8 @@ describe("suspense in render with cache", () => {
       expect(cacheInsideRender1.cache).toBeTruthy();
       expect(val).toEqual('johnny bravo')
 
-      expect(tempCacheInsideRender.cache).toBe(cacheInsideRender1.cache);
+      expect(tempCacheInsideRender.cache).not.toBe(cacheInsideRender1.cache);
+      expect(tempCacheInsideRender.getCache).toBe(cacheInsideRender1.getCache);
     });
   });
 });
@@ -2719,7 +2762,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       )
         .map((val) => {
@@ -2777,7 +2820,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -2836,7 +2879,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -2847,7 +2890,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
@@ -2898,7 +2941,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2906,7 +2949,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache2(),
-          cacheCb: getCache2,
+          getCache: getCache2,
         }
       );
 
@@ -2966,7 +3009,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -2974,7 +3017,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -3037,7 +3080,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       )
         .map((val) => {
@@ -3109,7 +3152,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache,
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender = PushCacheCascade.getCurrentScope();
@@ -3186,7 +3229,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender1 = PushCacheCascade.getCurrentScope();
@@ -3197,7 +3240,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       ).map((val) => {
         cacheOutsideRender2 = PushCacheCascade.getCurrentScope();
@@ -3266,7 +3309,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -3274,7 +3317,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache2(),
-          cacheCb: getCache2,
+          getCache: getCache2,
         }
       );
 
@@ -3350,7 +3393,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -3358,7 +3401,7 @@ describe("suspense in DOM render with cache", () => {
         throwOnce(() => "johnny bravo"),
         {
           cache: getCache(),
-          cacheCb: getCache,
+          getCache: getCache,
         }
       );
 
@@ -3443,13 +3486,13 @@ describe("suspense in DOM render with cache", () => {
           return suspense.get();
         },
       });
-
+      const throwJohnnyBravo = throwOnce(() => "johnny bravo")
       const App = () => {
         suspense = PushCacheCascade.of(
-          throwOnce(() => "johnny bravo"),
+          throwJohnnyBravo,
           {
             cache: getCache(),
-            cacheCb: getCache,
+            getCache: getCache,
           }
         );
         refresh = useCacheRefresh();
@@ -3487,7 +3530,8 @@ describe("suspense in DOM render with cache", () => {
       await waitFor(() => getByText("johnny bravojohnny bravo"));
       expect(cacheInsideRender1.cache).toBeTruthy();
 
-      expect(tempCacheInsideRender.cache).toBe(cacheInsideRender1.cache);
+      expect(tempCacheInsideRender.cache).not.toBe(cacheInsideRender1.cache);
+      expect(tempCacheInsideRender.getCache).toBe(cacheInsideRender1.getCache);
     });
   });
 });
