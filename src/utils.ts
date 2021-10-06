@@ -7,7 +7,6 @@ import {
   run
 } from './internal';
 import ReactDOM from 'react-dom';
-import { CacheScopeCascade } from './CacheScopeCascade/CacheScopeCascade';
 import { getCache } from './futures';
 import React from 'react';
 export const metadataMap = new WeakMap();
@@ -124,7 +123,7 @@ export const getCascade = obj => {
 }
 
 
-export const defaultCascade = cb =>  PushCacheCascade.of(cb, CacheScopeCascade.getCurrentScope() || (isReactRendering() ? {
+export const defaultCascade = cb =>  PushCacheCascade.of(cb, PushCacheCascade.getCurrentScope() || (isReactRendering() ? {
   cache: getCacheForType(getCache),
   getCache: getCache,
 }: { cache: getCache(), getCache: getCache}))
