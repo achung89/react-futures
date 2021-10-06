@@ -4,10 +4,9 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
-import { CacheScopeCascade, LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
-import {unstable_getCacheForType as getCacheForType} from 'react'
-import { isDomRendering, isReactRendering } from './utils';
-
+import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
+import { isReactRendering } from './utils';
+import { unstable_getCacheForType as getCacheForType} from 'react';
 export const getCache = () => new Map();
 
 export const futureObject = <T extends object>(promiseThunk) => {
@@ -32,7 +31,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
-      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), getCache: getCache }
+      const cache = PushCacheCascade.getCurrentScope() ??  isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache }
 
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
@@ -63,7 +62,7 @@ export const futureArray = <T>(promiseThunk) => {
       };
 
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
-      const cache = CacheScopeCascade.getCurrentScope() ?? { cache: getCache(), getCache: getCache }
+      const cache = PushCacheCascade.getCurrentScope() ?? isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache }
 
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
     }
