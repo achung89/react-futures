@@ -62,7 +62,7 @@ describe("Nested future arrays", () => {
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
     await waitFor(() => getByText("34"));
   });
-  it.only("should suspend when rendering deeply nested future that has a nested prefetched array", async () => {
+  it("should suspend when rendering deeply nested future that has a nested prefetched array", async () => {
     const MiniApp = () => createMoreComplexNestedFuture(new FutureArr(5));
 
     const App = () => (
