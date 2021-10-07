@@ -34,7 +34,6 @@ export const isReactRendering = () => {
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
     .ReactCurrentDispatcher.current;
   const currentOwner = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner.current;
-
   return(( dispatcher !== null && dispatcher.useState.name !== 'throwInvalidHookError') || currentOwner)
 }
 
