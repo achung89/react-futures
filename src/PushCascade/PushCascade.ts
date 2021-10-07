@@ -61,8 +61,7 @@ const deepChain = async (prom, cb, cacheScope) => {
     throw err;
   }
 }
-const set = new Set()
-const setCb = new Set();
+
 abstract class PushCascade {
   abstract map(fn: Function): PushCascade;
   abstract get(): any;
@@ -70,9 +69,7 @@ abstract class PushCascade {
     return PushCascade.of
   }
   static of = (cb, instanceCacheScope: CacheScope) => {
-    if(set.size === 2) {
-      debugger;
-    }
+
     try {
       __internal.suspenseHandlerCount++
       const newVal = new SuspenseValue(createCacheScope(cb, instanceCacheScope), instanceCacheScope);
