@@ -8,7 +8,7 @@ import { waitFor } from '@testing-library/dom';
 export const testSuspenseWithLoader = async (
   el,
   expected,
-  suspenseTime = 100000
+  waitForRender
 ) => {
 
   let container;
@@ -23,12 +23,12 @@ export const testSuspenseWithLoader = async (
    act( () => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);
   });
-  waitForLoading();
+  await waitForSuspense(0)
+
   await waitFor(() => {
     expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
   });
-  
-  await waitForSuspense(suspenseTime);
+  await waitForRender()
 
   await waitFor(() => {
     expect(container.innerHTML).toEqual(expected);

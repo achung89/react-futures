@@ -6,6 +6,7 @@ import {
   testRenderWithoutSuspense,
 } from '../../../test-utils/testSuspense';
 import { reverseImm } from "../../../test-utils/reverseImm";
+import waitForSuspense from '../../../test-utils/waitForSuspense';
 
 jest.useFakeTimers();
 
@@ -23,7 +24,7 @@ beforeEach(() => {
             console.error(err);
             rej(err);
           }
-        }, 1000);
+        }, 100);
       })
   );
 });
@@ -45,14 +46,19 @@ describe('Caching arrays instantiated in render', () => {
     return <div>{nums}</div>;
   };
 
-  test('should cache shallow renders', async () => {
-    await testSuspenseWithLoader(<App />, `<div>8642</div>`);
-    await testRenderWithoutSuspense(<App />, `<div>8642</div>`);
+  test('should not cache shallow renders', async () => {
+    await testSuspenseWithLoader(<App />, `<div>8642</div>`, async () => {
+      await waitForSuspense(100);
+    });
+    await testRenderWithoutSuspense(<App />, `<div>Loading...</div>`);
   });
 
-  test('should cache deep renders', async () => {
-    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`);
-    await testRenderWithoutSuspense(<App nestedFuture />, `<div>99</div>`);
+  test.skip('should not cache deep renders', async () => {
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, async () => {
+      await waitForSuspense(100);
+      await waitForSuspense(100);
+    });
+    await testRenderWithoutSuspense(<App nestedFuture />, `<div>Loading...</div>`);
   });
 });
 

@@ -2,6 +2,7 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 import { Suspense } from "react";
 import { futureArray } from "../../../futures";
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
+import waitForSuspense from "../../../test-utils/waitForSuspense";
 import { lazyArray } from "../../../utils";
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
@@ -43,7 +44,11 @@ describe('Nested future arrays', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>34</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>34</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
 
   });
 
@@ -57,7 +62,11 @@ describe('Nested future arrays', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>46812</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>46812</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array', async () => {
     const MiniApp = () => createEvenMoreComplexNestedFuture(new FutureArr(5));
@@ -69,7 +78,11 @@ describe('Nested future arrays', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>612</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>612</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div', async () => {
     const MiniApp = () => <div>{createEvenMoreComplexNestedFuture(new FutureArr(5))}</div>
@@ -82,7 +95,11 @@ describe('Nested future arrays', () => {
       </Suspense>
     );
 
-    await testSuspenseWithLoader(<App />, `<div><div>612</div></div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div><div>612</div></div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
   });
 })
 
@@ -97,7 +114,10 @@ describe('Nested Future array instantiated in lazy array chain', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>34</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>34</div>`, async () => {
+      await waitForSuspense(100)
+
+    });
 
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array', async () => {
@@ -110,7 +130,11 @@ describe('Nested Future array instantiated in lazy array chain', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>46812</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>46812</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
 
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array', async () => {
@@ -123,7 +147,11 @@ describe('Nested Future array instantiated in lazy array chain', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>612</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>612</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
 
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div', async () => {
@@ -136,7 +164,11 @@ describe('Nested Future array instantiated in lazy array chain', () => {
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div><div>612</div></div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div><div>612</div></div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
 
   });
 })
@@ -155,7 +187,9 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>34</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>34</div>`, async () => {
+      await waitForSuspense(100)
+    });
   });
   it('should suspend when rendering lazyArray that uses a future in its callback', async () => {
     const lazyArr = lazyArray(() => [2,3,4,5])
@@ -168,7 +202,9 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>34</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>34</div>`, async () => {
+      await waitForSuspense(100)
+    });
 
   })
   it('should suspend when rendering deeply nested future that has a nested prefetched array', async () => {
@@ -182,7 +218,10 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>46812</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>46812</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+    });
 
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array', async () => {
@@ -197,7 +236,10 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div>612</div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div>612</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+    });
 
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div', async () => {
@@ -212,7 +254,10 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
         </div>
       </Suspense>
     );
-    await testSuspenseWithLoader(<App />, `<div><div>612</div></div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div><div>612</div></div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+    });
 
   });
 })
