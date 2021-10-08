@@ -4,6 +4,7 @@ import { futureArray } from '../../../futures';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
 import { reverseImm } from '../../../test-utils/reverseImm';
 import { FutureArray } from '../../FutureArray';
+import waitForSuspense from '../../../test-utils/waitForSuspense';
 jest.useFakeTimers();
 
 // test resetting value array prop with future array
@@ -41,7 +42,7 @@ const createFutureArray = () => futureArray(
           console.error(err);
           rej(err);
         }
-      }, 1000);
+      }, 100);
     })
 );
 
@@ -69,11 +70,17 @@ describe('Instantiate in render, deep render scenarios', () => {
       return <div>{nums}</div>;
     };
 
-    await testSuspenseWithLoader(<App />, `<div>8642</div>`);
+    await testSuspenseWithLoader(<App />, `<div>8642</div>`, async () => {
+      await waitForSuspense(100);
+
+    });
 
     StubFutureArray = createFutureArray()
 
-    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, 5000);
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, async () => {
+      await waitForSuspense(100);
+      await waitForSuspense(100);
+    });
   });
 
   test('should render deeply', async () => {
@@ -94,11 +101,17 @@ describe('Instantiate in render, deep render scenarios', () => {
       );
     };
 
-    await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`);
+    await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`, async () => {
+      await waitForSuspense(100);
+    });
     StubFutureArray = createFutureArray()
     await testSuspenseWithLoader(
       <App nestedFuture />,
-      `<div><div>99</div></div>`
+      `<div><div>99</div></div>`,
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
   });
 
@@ -122,28 +135,42 @@ describe('Instantiate in render, deep render scenarios', () => {
     };
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} />,
-      `<div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div>`
+      `<div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div>`,
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} nestedFuture />,
-      `<div><div><div><div><div><div><div>99</div></div></div></div></div></div></div>`
+      `<div><div><div><div><div><div><div>99</div></div></div></div></div></div></div>`,
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={200} />,
-      `<div>`.repeat(202) + '8642' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + '8642' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <AppVeryDeep nestedFuture level={200} />,
-      `<div>`.repeat(202) + '99' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + '99' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
   });
   test('should render with prop drilling', async () => {
@@ -161,24 +188,35 @@ describe('Instantiate in render, deep render scenarios', () => {
       return <PropDrill prop={nums} level={level} />;
     };
 
-    await testSuspenseWithLoader(<App level={10} />, '<div>8642</div>');
+    await testSuspenseWithLoader(<App level={10} />, '<div>8642</div>', async () => {
+      await waitForSuspense(100);
+    });
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
-      '<div>99</div>'
+      '<div>99</div>',
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray();
 
-    await testSuspenseWithLoader(<App level={200} />, `<div>8642</div>`);
+    await testSuspenseWithLoader(<App level={200} />, `<div>8642</div>`, async () => {
+      await waitForSuspense(100);
+    });
 
     StubFutureArray = createFutureArray();
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
-      `<div>99</div>`
+      `<div>99</div>`, async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
   });
   test('should render intermediate transformations', async () => {
@@ -205,28 +243,43 @@ describe('Instantiate in render, deep render scenarios', () => {
 
     await testSuspenseWithLoader(
       <App level={10} />,
-      '<div><div><div><div><div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100);
+
+      }
     );
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
-      <App level={10} nestedFuture={true} />,
-      '<div><div><div><div><div><div><div><div><div><div><div>99</div></div></div></div></div></div></div></div></div></div></div>'
+      <App level={10} nestedFuture/>,
+      '<div><div><div><div><div><div><div><div><div><div><div>99</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App level={200} />,
-      '<div>'.repeat(201) + '8642' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + '8642' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
-      <App level={200} nestedFuture={true} />,
-      '<div>'.repeat(201) + '99' + '</div>'.repeat(201)
+      <App level={200} nestedFuture/>,
+      '<div>'.repeat(201) + '99' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
   });
 });
@@ -247,13 +300,16 @@ describe('Instantiate outside render, deep render scenario', () => {
       return <div>{nums}</div>;
     };
     
-    await testSuspenseWithLoader(<App />, `<div>8642</div>`);
+    await testSuspenseWithLoader(<App />, `<div>8642</div>`, async () => {
+      await waitForSuspense(100);
+    });
 
     StubFutureArray = createFutureArray()
 
-    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, 5000);
-
-    StubFutureArray = createFutureArray()
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, async () => {
+      await waitForSuspense(100);
+      await waitForSuspense(100);
+    });
   });
 
   test('should render deeply', async () => {
@@ -272,17 +328,20 @@ describe('Instantiate outside render, deep render scenario', () => {
       );
     };
 
-    await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div><div>8642</div></div>`, async () => {
+      await waitForSuspense(100);
+    });
 
     StubFutureArray = createFutureArray()
 
     await testSuspenseWithLoader(
       <App nestedFuture />,
       `<div><div>99</div></div>`,
-      5000
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
-
-    StubFutureArray = createFutureArray()
   });
 
   test('should render very deeply', async () => {
@@ -307,7 +366,11 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} />,
-      '<div>'.repeat(7) + `8642` + '</div>'.repeat(7)
+      '<div>'.repeat(7) + `8642` + '</div>'.repeat(7),
+      async () => {
+        await waitForSuspense(100);
+
+      }
     );
 
     StubFutureArray = createFutureArray()
@@ -315,7 +378,11 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} nestedFuture />,
-      `<div><div><div><div><div><div><div>99</div></div></div></div></div></div></div>`
+      `<div><div><div><div><div><div><div>99</div></div></div></div></div></div></div>`, 
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
@@ -323,7 +390,10 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={200} />,
-      `<div>`.repeat(202) + '8642' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + '8642' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
@@ -331,10 +401,15 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <AppVeryDeep nestedFuture level={200} />,
-      `<div>`.repeat(202) + '99' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + '99' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+
+      }
     );
 
-    StubFutureArray = createFutureArray()
+
   });
 
   test('should render with prop drilling', async () => {
@@ -350,29 +425,42 @@ describe('Instantiate outside render, deep render scenario', () => {
       return <PropDrill prop={nums} level={level} />;
     };
 
-    await testSuspenseWithLoader(<App level={10} />, '<div>8642</div>');
+    await testSuspenseWithLoader(<App level={10} />, '<div>8642</div>', async () => {
+      await waitForSuspense(100);
+    });
 
     StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
-      '<div>99</div>'
+      '<div>99</div>',
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+
+      }
     );
 
     StubFutureArray = createFutureArray()
     numbers = getNumbers();
 
-    await testSuspenseWithLoader(<App level={200} />, `<div>8642</div>`);
+    await testSuspenseWithLoader(<App level={200} />, `<div>8642</div>`, async () => {
+      await waitForSuspense(100);
+
+    });
 
     StubFutureArray = createFutureArray()
     numbers = getNumbers();
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
-      `<div>99</div>`
+      `<div>99</div>`,
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
-    StubFutureArray = createFutureArray()
   });
 
   test('should render intermediate transformations', async () => {
@@ -400,7 +488,10 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <App level={10} />,
-      '<div><div><div><div><div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>8642</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
@@ -408,7 +499,10 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
-      '<div><div><div><div><div><div><div><div><div><div><div>99</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>99</div></div></div></div></div></div></div></div></div></div></div>', async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
@@ -416,7 +510,10 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <App level={200} />,
-      '<div>'.repeat(201) + '8642' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + '8642' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
@@ -424,7 +521,11 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
-      '<div>'.repeat(201) + '99' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + '99' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+      }
     );
 
     StubFutureArray = createFutureArray()
