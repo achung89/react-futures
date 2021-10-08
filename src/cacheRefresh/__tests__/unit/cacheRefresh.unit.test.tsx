@@ -526,11 +526,9 @@ describe("useCacheRefresh", () => {
     await waitFor(() => getByText("Loading..."));
     expect(Scheduler).toHaveYielded([]);
 
-    act(() => {
-      jest.runTimersToTime(150);
-    });
 
-    await waitForSuspense(0);
+    await waitForSuspense(150);
+    await waitForSuspense(150);
 
     expect(Scheduler).toHaveYielded([
       "Promise Resolved. value: test-key",
@@ -600,10 +598,9 @@ describe("useCacheRefresh", () => {
     await waitFor(() => getByText("Loading..."));
     expect(Scheduler).toHaveYielded([]);
 
-    act(() => {
-      jest.runTimersToTime(150);
-    });
-    await waitForSuspense(0);
+
+    await waitForSuspense(150);
+    await waitForSuspense(150);
 
     expect(Scheduler).toHaveYielded([
       "Promise Resolved. value: test-key",
@@ -665,10 +662,8 @@ describe("useCacheRefresh", () => {
     await waitFor(() => getByText("Loading..."));
     expect(Scheduler).toHaveYielded([]);
 
-    act(() => {
-      jest.runTimersToTime(150);
-    });
-    await waitForSuspense(0);
+    await waitForSuspense(150);
+    await waitForSuspense(150);
 
     expect(Scheduler).toHaveYielded([
       "Promise Resolved. value: test-key",
@@ -734,11 +729,9 @@ describe("useCacheRefresh", () => {
     await waitFor(() => getByText("Loading..."));
     expect(Scheduler).toHaveYielded([]);
 
-    act(() => {
-      jest.runTimersToTime(150);
-    });
 
-    await waitForSuspense(0);
+    await waitForSuspense(150);
+    await waitForSuspense(150);
 
     expect(Scheduler).toHaveYielded([
       "Promise Resolved. value: test-key",

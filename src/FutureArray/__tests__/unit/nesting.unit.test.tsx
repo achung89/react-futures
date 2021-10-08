@@ -19,6 +19,7 @@ let fetchArray = (val) =>
   new Promise((res, rej) => {
     setTimeout(() => {
       Scheduler.unstable_yieldValue("Promise Resolved");
+
       res([2, 3, 4, val]);
     }, 100);
   });
@@ -28,7 +29,8 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.appendChild(container);
 });
-afterEach(() => {
+afterEach(async () => {
+  await waitForSuspense(0)
   FutureArr = null;
   document.body.removeChild(container);
   container = null;
@@ -51,14 +53,16 @@ describe("Nested future arrays", () => {
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+
+    await waitForSuspense(0);
+    expect(Scheduler).toHaveYielded([]);
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    await waitForSuspense(0);
+    await waitForSuspense(100);
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
-    jest.runTimersToTime(100);
+
+    
+    await waitForSuspense(100);
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
     await waitFor(() => getByText("34"));
   });
@@ -80,10 +84,9 @@ describe("Nested future arrays", () => {
     jest.runOnlyPendingTimers();
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
+    await waitForSuspense(100);
     expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved"]);
 
-    await waitForSuspense(0);
     await waitFor(() => getByText("46812"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array", async () => {
@@ -101,12 +104,15 @@ describe("Nested future arrays", () => {
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved"]);
-    await waitForSuspense(0);
+    
+    await waitForSuspense(100);
+    await waitForSuspense(100);
+
+    expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved", "Promise Resolved"]);
     await waitFor(() => getByText("612"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div", async () => {
@@ -128,10 +134,11 @@ describe("Nested future arrays", () => {
     const { getByText } = renderer;
     jest.runOnlyPendingTimers();
     await waitFor(() => getByText("Loading..."));
+    
+    await waitForSuspense(100);
+    await waitForSuspense(100);
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved"]);
-    await waitForSuspense(0);
+    expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved", "Promise Resolved"]);
     await waitFor(() => getByText("612"));
   });
 });
@@ -203,9 +210,10 @@ describe("Nested Future arrays in lazy array", () => {
     jest.runOnlyPendingTimers();
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    await waitForSuspense(100);
+    await waitForSuspense(100);
+
+    expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved"]);
     await waitFor(() => getByText("612"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div", async () => {
@@ -227,12 +235,12 @@ describe("Nested Future arrays in lazy array", () => {
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    await waitForSuspense(100);
+    await waitForSuspense(100);
+    expect(Scheduler).toHaveYielded(["Promise Resolved","Promise Resolved"]);
     await waitFor(() => getByText("612"));
   });
 });
@@ -254,12 +262,11 @@ describe("Nested Future array in lazy array callback", () => {
       );
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
+    await waitForSuspense(100);
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
     await waitFor(() => getByText("2345"));
   });
   it("should render simple nested array", async () => {
@@ -282,14 +289,14 @@ describe("Nested Future array in lazy array callback", () => {
       );
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    await waitForSuspense(100);
+    await waitForSuspense(100);
+    expect(Scheduler).toHaveYielded(["Promise Resolved","Promise Resolved"]);
     await waitFor(() => getByText("46810"));
-  }, 999000);
+  });
   it("should suspend when instantiating lazy array in render", async () => {
     const MiniApp = () =>
       createNestedFuture(lazyArray(() => [...new FutureArr(5)]));
@@ -306,12 +313,13 @@ describe("Nested Future array in lazy array callback", () => {
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    
+    await waitForSuspense(100);
+    await waitForSuspense(100);
+    expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved"]);
     await waitFor(() => getByText("34"));
   });
   it("should suspend when instantiating lazy array outside render", async () => {
@@ -333,9 +341,9 @@ describe("Nested Future array in lazy array callback", () => {
     jest.runOnlyPendingTimers();
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    await waitForSuspense(100);
+    await waitForSuspense(100);
+    expect(Scheduler).toHaveYielded(["Promise Resolved","Promise Resolved"]);
     await waitFor(() => getByText("34"));
   }, 999000);
 });
@@ -356,12 +364,11 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
+    await waitForSuspense(100);
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
     await waitFor(() => getByText("34"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array", async () => {
@@ -383,9 +390,8 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
     jest.runOnlyPendingTimers();
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
+    await waitForSuspense(100);
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
     await waitFor(() => getByText("46812"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array", async () => {
@@ -405,12 +411,12 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0)
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    await waitForSuspense(100)
+    await waitForSuspense(100);
+    expect(Scheduler).toHaveYielded(["Promise Resolved","Promise Resolved"]);
     await waitFor(() => getByText("612"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div", async () => {
@@ -432,12 +438,16 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
       renderer = render(<App />, container);
     });
     const { getByText } = renderer;
-    jest.runOnlyPendingTimers();
+    await waitForSuspense(0);
+
     await waitFor(() => getByText("Loading..."));
 
-    jest.runTimersToTime(100);
-    expect(Scheduler).toHaveYielded(["Promise Resolved"]);
-    await waitForSuspense(0);
+    await waitForSuspense(100);
+    await waitForSuspense(100)
+    expect(Scheduler).toHaveYielded([
+      "Promise Resolved",
+      "Promise Resolved",
+    ]);
     await waitFor(() => getByText("612"));
   });
 });

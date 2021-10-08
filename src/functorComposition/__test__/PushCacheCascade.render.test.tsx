@@ -1,4 +1,4 @@
-jest.mock("scheduler", () =>  require("scheduler/unstable_mock"));
+jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { waitFor } from "@testing-library/dom";
 import { Suspense } from "react";
 import { act } from "react-dom/test-utils";
@@ -16,14 +16,17 @@ import { SuspenseJob } from "../../PushCascade/PushCascade";
 describe("PushCacheCascade", () => {
   it("shouldnt throw suspense if promise is already resolved", async () => {
     const fn = jest.fn();
-    const getCache = () => new Map
+    const getCache = () => new Map();
     const cacheScope = {
       cache: getCache(),
-      getCache
-    }
+      getCache,
+    };
 
-    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"), cacheScope);
-    expect(suspender).toBeInstanceOf(SuspenseJob)
+    let suspender = PushCacheCascade.of(
+      throwOnce(() => "johnny bravo"),
+      cacheScope
+    );
+    expect(suspender).toBeInstanceOf(SuspenseJob);
 
     try {
       suspender.get();
@@ -36,26 +39,29 @@ describe("PushCacheCascade", () => {
     expect(() => suspender.get()).not.toThrow();
   });
   it("should return value if no promises throw", () => {
-    const getCache = () => new Map
+    const getCache = () => new Map();
 
     const cacheScope = () => ({
       cache: getCache(),
-      getCache
-    })
+      getCache,
+    });
 
     const suspense = PushCacheCascade.of(() => "johnny bravo", cacheScope());
     expect(suspense.get()).toEqual("johnny bravo");
   });
   it("should map callbacks", () => {
-    const getCache = () => new Map
+    const getCache = () => new Map();
 
     const cacheScope = () => ({
       cache: getCache(),
-      getCache
+      getCache,
     });
-    
+
     {
-      const suspense = PushCacheCascade.of(() => "johnny bravo", cacheScope()).map(upperCase);
+      const suspense = PushCacheCascade.of(
+        () => "johnny bravo",
+        cacheScope()
+      ).map(upperCase);
       expect(suspense.get()).toEqual("JOHNNY BRAVO");
     }
     {
@@ -68,12 +74,12 @@ describe("PushCacheCascade", () => {
   });
   it("should throw suspense", async () => {
     const fn = jest.fn();
-    const getCache = () => new Map
+    const getCache = () => new Map();
 
     const cacheScope = () => ({
       cache: getCache(),
-      getCache
-    })
+      getCache,
+    });
 
     let suspender = PushCacheCascade.of(() => "johnny bravo", cacheScope()).map(
       throwOnce(upperCase)
@@ -91,16 +97,17 @@ describe("PushCacheCascade", () => {
 
   it("should throw suspense if first callback throws", async () => {
     const fn = jest.fn();
-    const getCache = () => new Map
+    const getCache = () => new Map();
 
     const cacheScope = () => ({
       cache: getCache(),
-      getCache
-    })
-    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"), cacheScope()).map(
-      upperCase
-    );
-    expect(suspender).toBeInstanceOf(SuspenseJob)
+      getCache,
+    });
+    let suspender = PushCacheCascade.of(
+      throwOnce(() => "johnny bravo"),
+      cacheScope()
+    ).map(upperCase);
+    expect(suspender).toBeInstanceOf(SuspenseJob);
 
     try {
       suspender.get();
@@ -115,18 +122,18 @@ describe("PushCacheCascade", () => {
   });
   it("should throw suspense if first and second callback throws", async () => {
     const fn = jest.fn();
-    const getCache = () => new Map
+    const getCache = () => new Map();
 
     const cacheScope = () => ({
       cache: getCache(),
-      getCache
-    })
-    let suspender = PushCacheCascade.of(throwOnce(() => "johnny bravo"), cacheScope()).map(
-      throwOnce(upperCase)
-    );
+      getCache,
+    });
+    let suspender = PushCacheCascade.of(
+      throwOnce(() => "johnny bravo"),
+      cacheScope()
+    ).map(throwOnce(upperCase));
 
-    expect(suspender).toBeInstanceOf(SuspenseJob)
-
+    expect(suspender).toBeInstanceOf(SuspenseJob);
 
     try {
       suspender.get();
@@ -144,9 +151,11 @@ describe("PushCacheCascade", () => {
       const getCache = () => new Map();
       const cache = getCache();
       let dynamicScope;
-      PushCacheCascade.of(() => undefined, { cache, getCache: getCache }).map(() => {
-        dynamicScope = PushCacheCascade.getCurrentScope();
-      });
+      PushCacheCascade.of(() => undefined, { cache, getCache: getCache }).map(
+        () => {
+          dynamicScope = PushCacheCascade.getCurrentScope();
+        }
+      );
       expect(cache).toBe(dynamicScope.cache);
       expect(getCache).toBe(dynamicScope.getCache);
     });
@@ -201,9 +210,9 @@ describe("PushCacheCascade", () => {
         throwOnce(() => "johnny bravo"),
         { cache: getCache(), getCache: getCache }
       );
-      let a;
+      let value;
       const App = () => {
-        a = suspense.get();
+        value = suspense.get();
         return <div>1</div>;
       };
       act(() => {
@@ -214,11 +223,17 @@ describe("PushCacheCascade", () => {
           container
         );
       });
-      expect(a).toEqual(undefined);
 
+      const { getByText } = renderer;
+      await waitForSuspense(0);
+      expect(value).toEqual(undefined);
+
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
       await waitForSuspense(0);
 
-      expect(a).toEqual("johnny bravo");
+      expect(value).toEqual("johnny bravo");
     });
 
     it("should be able get after map and suspend in render", async () => {
@@ -229,9 +244,9 @@ describe("PushCacheCascade", () => {
         throwOnce(() => "johnny bravo"),
         { cache: getCache(), getCache: getCache }
       );
-      let a;
+      let value;
       const App = () => {
-        a = suspense.map(upperCase).get();
+        value = suspense.map(upperCase).get();
         return <div>1</div>;
       };
       act(() => {
@@ -242,11 +257,17 @@ describe("PushCacheCascade", () => {
           container
         );
       });
-      expect(a).toEqual(undefined);
+      const { getByText } = renderer;
 
       await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
 
-      expect(a).toEqual("JOHNNY BRAVO");
+      expect(value).toEqual(undefined);
+      jest.advanceTimersByTime(50);
+      await waitForSuspense(0);
+      await waitFor(() => getByText("1"));
+
+      expect(value).toEqual("JOHNNY BRAVO");
     });
 
     it("should be able get after map outside render and suspend in render", async () => {
@@ -258,9 +279,9 @@ describe("PushCacheCascade", () => {
         { cache: getCache(), getCache: getCache }
       ).map(upperCase);
 
-      let a;
+      let value;
       const App = () => {
-        a = suspense.get();
+        value = suspense.get();
         return <div>1</div>;
       };
       act(() => {
@@ -271,11 +292,17 @@ describe("PushCacheCascade", () => {
           container
         );
       });
-      expect(a).toEqual(undefined);
+      const { getByText } = renderer;
 
       await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
 
-      expect(a).toEqual("JOHNNY BRAVO");
+      expect(value).toEqual(undefined);
+      jest.advanceTimersByTime(50);
+      await waitForSuspense(0);
+      await waitFor(() => getByText("1"));
+
+      expect(value).toEqual("JOHNNY BRAVO");
     });
     it("should have same cache in different chains inside render with same callback after refresh", async () => {
       let renderer;
@@ -337,9 +364,14 @@ describe("PushCacheCascade", () => {
         );
       });
 
+      const { getByText } = renderer;
+
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
       await waitForSuspense(0);
 
-      const { getByText } = renderer;
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheInsideRender1).toBeTruthy();
@@ -353,6 +385,9 @@ describe("PushCacheCascade", () => {
       act(() => {
         refresh();
       });
+
+
+      await waitForSuspense(0);
 
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
@@ -413,8 +448,11 @@ describe("in DOM render", () => {
       );
     });
     const { getByText } = renderer;
+
+
+    await waitForSuspense(0);
     await waitFor(() => {
-      expect(getByText("johnny bravojohnny bravo")).toBeTruthy();
+      getByText("johnny bravojohnny bravo")
     });
   });
 
@@ -450,7 +488,10 @@ describe("in DOM render", () => {
     const { getByText } = renderer;
 
     await waitForSuspense(0);
+    await waitFor(() => getByText("Loading..."));
 
+    jest.runTimersToTime(50);
+    await waitForSuspense(0);
     await waitFor(() => {
       expect(getByText("johnny bravojohnny bravo")).toBeTruthy();
     });
@@ -489,6 +530,10 @@ describe("in DOM render", () => {
     const { getByText } = renderer;
 
     await waitForSuspense(0);
+    await waitFor(() => getByText("Loading..."));
+
+    jest.runTimersToTime(50);
+    await waitForSuspense(0);
 
     await waitFor(() => {
       expect(getByText("JOHNNY BRAVOJOHNNY BRAVO")).toBeTruthy();
@@ -526,6 +571,10 @@ describe("in DOM render", () => {
 
     const { getByText } = renderer;
 
+    await waitForSuspense(0);
+    await waitFor(() => getByText("Loading..."));
+
+    jest.runTimersToTime(50);
     await waitForSuspense(0);
 
     await waitFor(() => {
@@ -577,9 +626,9 @@ describe("in render with cache", () => {
 
       expect(cacheOutsideRender1.cache).toBe(cacheOutsideRender2.cache);
       expect(cacheOutsideRender1.cache).toBe(cache);
-      let a;
+      let value;
       const App = () => {
-        a = suspense.get();
+        value = suspense.get();
         return <div>1</div>;
       };
       act(() => {
@@ -590,11 +639,12 @@ describe("in render with cache", () => {
           container
         );
       });
-      await waitForSuspense(0);
       const { getByText } = renderer;
+
+      await waitForSuspense(0);     
       await waitFor(() => getByText("1"));
 
-      expect(a).toEqual("johnny bravo");
+      expect(value).toEqual("johnny bravo");
       expect(cacheOutsideRender1.cache).toBeTruthy();
       expect(cacheOutsideRender2.cache).toBeTruthy();
 
@@ -618,9 +668,9 @@ describe("in render with cache", () => {
 
       expect(cacheOutsideRender.cache).toBeTruthy();
 
-      let a;
+      let value;
       const App = () => {
-        a = suspense
+        value = suspense
           .map((val) => {
             cacheInsideRender = PushCacheCascade.getCurrentScope();
             return val;
@@ -643,11 +693,12 @@ describe("in render with cache", () => {
 
       expect(cacheInsideRender.cache).toBeTruthy();
 
-      await waitForSuspense(0);
       const { getByText } = renderer;
+
+      await waitForSuspense(0);     
       await waitFor(() => getByText("1"));
 
-      expect(a).toEqual("johnny bravo");
+      expect(value).toEqual("johnny bravo");
       expect(cacheOutsideRender.cache).toBeTruthy();
       expect(cacheInsideRender.cache).toBeTruthy();
 
@@ -693,9 +744,10 @@ describe("in render with cache", () => {
           container
         );
       });
-      await waitForSuspense(0);
 
       const { getByText } = renderer;
+
+      await waitForSuspense(0);  
       await waitFor(() => getByText("1"));
 
       expect(val).toEqual("johnny bravo");
@@ -1929,7 +1981,6 @@ describe("in DOM render with cache", () => {
 
       expect(cacheInsideRender1.cache).toBe(cacheInsideRender1.cache);
     });
-    
   });
 });
 
@@ -1977,9 +2028,9 @@ describe("suspense in render with cache", () => {
       expect(cacheOutsideRender1).not.toBeTruthy();
       expect(cacheOutsideRender2).not.toBeTruthy();
 
-      let a;
+      let value;
       const App = () => {
-        a = suspense.get();
+        value = suspense.get();
         return <div>1</div>;
       };
       act(() => {
@@ -1990,11 +2041,16 @@ describe("suspense in render with cache", () => {
           container
         );
       });
-      await waitForSuspense(0);
+
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
-      expect(a).toEqual("johnny bravo");
+      expect(value).toEqual("johnny bravo");
       expect(cacheOutsideRender1.cache).toBeTruthy();
       expect(cacheOutsideRender2.cache).toBeTruthy();
 
@@ -2021,9 +2077,9 @@ describe("suspense in render with cache", () => {
 
       expect(cacheOutsideRender).not.toBeTruthy();
 
-      let a;
+      let value;
       const App = () => {
-        a = suspense
+        value = suspense
           .map((val) => {
             cacheInsideRender = PushCacheCascade.getCurrentScope();
             return val;
@@ -2046,11 +2102,16 @@ describe("suspense in render with cache", () => {
 
       expect(cacheInsideRender).not.toBeTruthy();
 
-      await waitForSuspense(0);
+
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
-      expect(a).toEqual("johnny bravo");
+      expect(value).toEqual("johnny bravo");
       expect(cacheOutsideRender.cache).toBeTruthy();
       expect(cacheInsideRender.cache).toBeTruthy();
 
@@ -2101,9 +2162,14 @@ describe("suspense in render with cache", () => {
           container
         );
       });
-      await waitForSuspense(0);
+
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
       expect(val).toEqual("johnny bravo");
@@ -2166,6 +2232,11 @@ describe("suspense in render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
       expect(val).toEqual("johnny bravo");
@@ -2229,6 +2300,11 @@ describe("suspense in render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
       expect(val).toEqual("johnny bravo");
@@ -2237,7 +2313,6 @@ describe("suspense in render with cache", () => {
 
       expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
     });
-    
   });
 
   describe("after refresh", () => {
@@ -2283,8 +2358,13 @@ describe("suspense in render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
       let tempCacheOutsideRender1 = cacheOutsideRender1;
       let tempCacheOutsideRender2 = cacheOutsideRender2;
@@ -2322,10 +2402,10 @@ describe("suspense in render with cache", () => {
 
       expect(cacheOutsideRender.cache).toBeTruthy();
 
-      let a;
+      let value;
       let refresh;
       const App = () => {
-        a = suspense
+        value = suspense
           .map((val) => {
             cacheInsideRender = PushCacheCascade.getCurrentScope();
             return val;
@@ -2361,7 +2441,7 @@ describe("suspense in render with cache", () => {
 
       await waitFor(() => getByText("1"));
 
-      expect(a).toEqual("johnny bravo");
+      expect(value).toEqual("johnny bravo");
       expect(cacheOutsideRender.cache).toBeTruthy();
       expect(cacheInsideRender.cache).toBeTruthy();
 
@@ -2420,9 +2500,14 @@ describe("suspense in render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
       let tempCacheOutsideRender = cacheOutsideRender1;
@@ -2496,9 +2581,14 @@ describe("suspense in render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
       let tempCacheInsideRender = cacheInsideRender1;
       let tempCacheInsideRender2 = cacheInsideRender2;
@@ -2571,9 +2661,14 @@ describe("suspense in render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
       let tempCacheInsideRender = cacheInsideRender1;
       let tempCacheInsideRender2 = cacheInsideRender2;
@@ -2649,9 +2744,14 @@ describe("suspense in render with cache", () => {
       expect(cacheInsideRender1).not.toBeTruthy();
       expect(cacheInsideRender2).not.toBeTruthy();
 
-      await waitForSuspense(0);
+
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
       expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
@@ -2673,29 +2773,26 @@ describe("suspense in render with cache", () => {
 
       expect(cacheInsideRender1.cache).not.toBe(cacheInsideRender2.cache);
     });
-    
+
     it("should have same cache for futures instantiated in render before and after refresh", async () => {
       let renderer;
       const getCache = () => new Map();
       let cacheInsideRender1;
 
       let refresh;
-      let suspense
+      let suspense;
       let val;
-      let throwJohnnyBravo = throwOnce(() => "johnny bravo")
+      let throwJohnnyBravo = throwOnce(() => "johnny bravo");
       const App = () => {
-        suspense = PushCacheCascade.of(
-          throwJohnnyBravo,
-          {
-            cache: getCache(),
-            getCache: getCache,
-          }
-        ).map((val) => {
+        suspense = PushCacheCascade.of(throwJohnnyBravo, {
+          cache: getCache(),
+          getCache: getCache,
+        }).map((val) => {
           cacheInsideRender1 = PushCacheCascade.getCurrentScope();
           return val;
         });
 
-        val = suspense.get()
+        val = suspense.get();
         refresh = useCacheRefresh();
 
         return <div>1</div>;
@@ -2710,22 +2807,27 @@ describe("suspense in render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("1"));
 
       expect(cacheInsideRender1).toBeTruthy();
-      
+
       let tempCacheInsideRender = cacheInsideRender1;
-      expect(val).toEqual('johnny bravo')
+      expect(val).toEqual("johnny bravo");
       act(() => {
         refresh();
       });
 
       await waitFor(() => getByText("1"));
       expect(cacheInsideRender1.cache).toBeTruthy();
-      expect(val).toEqual('johnny bravo')
+      expect(val).toEqual("johnny bravo");
 
       expect(tempCacheInsideRender.cache).not.toBe(cacheInsideRender1.cache);
       expect(tempCacheInsideRender.getCache).toBe(cacheInsideRender1.getCache);
@@ -2798,9 +2900,13 @@ describe("suspense in DOM render with cache", () => {
           container
         );
       });
-      await waitForSuspense(0);
+      
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
 
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheOutsideRender1.cache).toBeTruthy();
@@ -2829,18 +2935,18 @@ describe("suspense in DOM render with cache", () => {
 
       expect(cacheOutsideRender1).not.toBeTruthy();
 
-      let a;
+      let value;
       let domSuspendArr = new Proxy([1, 2], {
         get(target, p) {
           if (p === "length") {
             return 2;
           }
-          return a.get();
+          return value.get();
         },
       });
 
       const App = () => {
-        a = suspense.map((val) => {
+        value = suspense.map((val) => {
           cacheInsideRender = PushCacheCascade.getCurrentScope();
           return val;
         });
@@ -2858,8 +2964,13 @@ describe("suspense in DOM render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheOutsideRender1.cache).toBeTruthy();
@@ -2922,6 +3033,11 @@ describe("suspense in DOM render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheOutsideRender1.cache).toBeTruthy();
@@ -2991,6 +3107,11 @@ describe("suspense in DOM render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheInsideRender1.cache).toBeTruthy();
@@ -3060,6 +3181,11 @@ describe("suspense in DOM render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheInsideRender1.cache).toBeTruthy();
@@ -3119,13 +3245,19 @@ describe("suspense in DOM render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
+
       const { getByText } = renderer;
 
+
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
+      await waitFor(() => getByText("johnny bravojohnny bravo"));
+      
       let tempCacheOutsideRender1 = cacheOutsideRender1;
       let tempCacheOutsideRender2 = cacheOutsideRender2;
-      await waitFor(() => getByText("johnny bravojohnny bravo"));
-
       act(() => {
         refresh();
       });
@@ -3161,7 +3293,7 @@ describe("suspense in DOM render with cache", () => {
 
       expect(cacheOutsideRender).not.toBeTruthy();
 
-      let a;
+      let value;
       let refresh;
 
       let domSuspendArr = new Proxy([1, 2], {
@@ -3174,7 +3306,7 @@ describe("suspense in DOM render with cache", () => {
       });
 
       const App = () => {
-        a = suspense
+        value = suspense
           .map((val) => {
             cacheInsideRender = PushCacheCascade.getCurrentScope();
             return val;
@@ -3195,8 +3327,12 @@ describe("suspense in DOM render with cache", () => {
         );
       });
 
-      await waitForSuspense(0);
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
       expect(cacheInsideRender.cache).toBeTruthy();
 
@@ -3278,6 +3414,11 @@ describe("suspense in DOM render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       let tempCacheOutsideRender = cacheOutsideRender1;
@@ -3360,6 +3501,11 @@ describe("suspense in DOM render with cache", () => {
       await waitForSuspense(0);
 
       const { getByText } = renderer;
+            await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheInsideRender1).toBeTruthy();
@@ -3443,9 +3589,13 @@ describe("suspense in DOM render with cache", () => {
         );
       });
 
+      const { getByText } = renderer;
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
       await waitForSuspense(0);
 
-      const { getByText } = renderer;
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheInsideRender1).toBeTruthy();
@@ -3459,6 +3609,7 @@ describe("suspense in DOM render with cache", () => {
       act(() => {
         refresh();
       });
+      await waitForSuspense(0);
 
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
@@ -3486,15 +3637,12 @@ describe("suspense in DOM render with cache", () => {
           return suspense.get();
         },
       });
-      const throwJohnnyBravo = throwOnce(() => "johnny bravo")
+      const throwJohnnyBravo = throwOnce(() => "johnny bravo");
       const App = () => {
-        suspense = PushCacheCascade.of(
-          throwJohnnyBravo,
-          {
-            cache: getCache(),
-            getCache: getCache,
-          }
-        );
+        suspense = PushCacheCascade.of(throwJohnnyBravo, {
+          cache: getCache(),
+          getCache: getCache,
+        });
         refresh = useCacheRefresh();
 
         suspense.map((val) => {
@@ -3513,10 +3661,14 @@ describe("suspense in DOM render with cache", () => {
           container
         );
       });
+      const { getByText } = renderer;
 
       await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
 
-      const { getByText } = renderer;
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
+
       await waitFor(() => getByText("johnny bravojohnny bravo"));
 
       expect(cacheInsideRender1).toBeTruthy();
