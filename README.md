@@ -53,7 +53,7 @@ Manipulate asynchronous data synchronously
       </li>
       <li>
         <a href="#lazyobject-and-lazyarray-in-reassignment">
-          eventualObject and eventualArray reassignment
+          lazyObject and lazyArray reassignment
         </a>
       </li>
       </ul>
@@ -94,30 +94,18 @@ React Futures is a collection of types that allow manipulation of asynchronous d
 For example:
 
 ```javascript
-import { FutureArray, useFutureArray } from 'react-futures';
+import { futureArray } from 'react-futures';
 
+const FutureBlogs = futureArray( user => fetch(`/blogs?user=${user}`).then(res => res.json()))
 
-const blogs =  new FutureArray('/blogs') // fetch here, same parameters as 'window.fetch'
-                  .filter(...) // lazy
-                  .slice(...)  // lazy
+const Blogs = ({ user }) => {
+  const blogs =  new FutureBlogs(user)// fetch here
+                  .filter( blog => blog.tags.includes('sports')) // lazy
+                  .slice(0,10) // lazy
 
-const Blogs = () => {
   const featured = blogs[0] //suspend!
-  return  ...
-}
 
-
-```
-this is the same example fetching inside render
-```javascript
-
-const Blogs = ({user}) => {
-  const blogs = useFutureArray('/blogs') // fetch here, same parameters as 'window.fetch'
-                    .filter(...) // lazy
-                    .slice(...)    // lazy
-
-  const featured = blogs[0] // suspend!
-  return ...;
+  return ...
 }
 ```
 
@@ -160,14 +148,15 @@ const ActiveGroups = () => {
 And here is the same example using React Futures:
 
 ```javascript
-import { FutureArray, FutureObject } from "react-futures";
+import { futureArray } from "react-futures";
 
-// TODO: explain 'new' verse 'use'
-const activeGroups = new FutureArray('/groups')
-                       .filter(group => {
-                         const groupPosts = new FutureArray(group); //fetch posts
-                         return groupPosts.some(post => post.daysAgoPosted < 3);
-                       });
+const FutureGroups = futureArray(fetchGroupsBelongingToUser);
+const FuturePosts = futureArray(fetchGroupPosts);
+
+const activeGroups = new FutureGroups('Tom').filter(group => {
+  const groupPosts = new FuturePosts(group); //fetch posts
+  return groupPosts.some(post => post.daysAgoPosted < 3);
+});
 
 const ActiveGroups = () => {
   const [groups, setGroups] = useState(activeGroups);
@@ -191,12 +180,12 @@ There are 3 constraints that you should be aware of and their workarounds.
 Due to how Concurrent Mode works, suspense operations (i.e. getters) are only allowed in the render function. For example: 
 
 ```javascript
-const blogs = new FutureBlogs()
+const blogs = FutureBlogs()
 
 const first = blogs[0] // Error: suspense not allowed outside render
 
 const App = () => {
-  
+
   const first = blogs[0] // suspend!
 
   return ...
@@ -205,7 +194,7 @@ const App = () => {
 ```
 Keep in mind that `on` handlers are not considered a part of render, even though they may be located within the render function.
 
-To work around this, React Futures provides utilities that  defer evaluation of getters until suspense (see [Suspense operations outside render](#suspense-operations-outside-render) and [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc)). In brief, you should wrap getters performed  outside render in `eventualArray` or `eventualObject`.
+To work around this, React Futures provides utilities that  defer evaluation of getters until suspense (see [Suspense operations outside render](#suspense-operations-outside-render) and [Using React Futures with third party libraries](#using-with-third-party-libraries-ramda-lodash-etc)). In brief, you should wrap getters performed  outside render in `lazyArray` or `lazyObject`.
 
 ### 2. No mutable calls inside of render
 
@@ -270,19 +259,19 @@ dave.props = dave.props // Error: suspense operations not allowed outside render
                .sort((a, b) => a - b);
 ```
 
-To achieve this, use `eventualArray` or `eventualObject` to suspend evaluation.
+To achieve this, use `lazyArray` or `lazyObject` to suspend evaluation.
 
 ```javascript
-import { futureObject, eventualArray } from "react-futures";
+import { futureObject, lazyArray } from "react-futures";
 
 const FutureUser = futureObject(fetchUser);
 const dave = new FutureUser("Dave");
 
-dave.props = eventualArray(() => dave.props) //=> future array
+dave.props = lazyArray(() => dave.props) //=> future array
                .sort((a, b) => a - b); // lazy
 ```
 
-The above snippet suspends evaluation of the `dave.props` getter until a suspense operation is performed on `dave.props` inside render. `eventualArray` returns a future array and an `eventualObject` returns a future object.
+The above snippet suspends evaluation of the `dave.props` getter until a suspense operation is performed on `dave.props` inside render. `lazyArray` returns a future array and an `lazyObject` returns a future object.
 
 Sometimes performing a suspense operation is inside an `on` handler is desired, but suspense operations are illegal in `on` handlers as well.
 
@@ -305,10 +294,10 @@ const App = () => {
 };
 ```
 
-To accomplish this, we can use the `eventualObject` from above.
+To accomplish this, we can use the `lazyObject` from above.
 
 ```javascript
-// Using `eventualObject`
+// Using `lazyObject`
 const dave = new FutureUser('Dave');
 
 const App = () => {
@@ -316,7 +305,7 @@ const App = () => {
 
   return <>
   <input type="text" onChange={e => {
-    const newUser = eventualObject(() => ({...user, name: e.target.value}))) //=> future object
+    const newUser = lazyObject(() => ({...user, name: e.target.value}))) //=> future object
     setUser(newUser)
   }} />
   </>
@@ -347,7 +336,7 @@ const App = () => {
 
 ### Using with third party libraries (ramda, lodash, etc.)
 
-Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `eventualArray` and `eventualObject`. These methods lazily evaluate array and object returning functions respectively.
+Third party libraries that inspect the contents of input parameters will suspend if passed in a future. To prevent this use `lazyArray` and `lazyObject`. These methods lazily evaluate array and object returning functions respectively.
 
 Lets take a look at an example using lodash's `_.cloneDeep`. If you pass a future in the function, it would suspend since `_.cloneDeep` iterates through the properties of the future.
 
@@ -361,29 +350,29 @@ const dave = new FutureUser('Dave');
 const daveTwin = _.cloneDeep(dave); // Error: can not suspend outside render
 ```
 
-To allow this, use the `eventualObject` to defer evaluation of `_.cloneDeep`
+To allow this, use the `lazyObject` to defer evaluation of `_.cloneDeep`
 
 ```javascript
 import _ from 'lodash'
-import {eventualObject, futureObject} from 'react-futures'
+import {lazyObject, futureObject} from 'react-futures'
 
 const FutureUser = futureObject(...);
 
 const dave = new FutureUser('Dave');
 
-const daveTwin = eventualObject(() => _.cloneDeep(dave)) //=> future object
+const daveTwin = lazyObject(() => _.cloneDeep(dave)) //=> future object
 
 // continue iterating as you would a future
 const result = FutureUser.entries(daveTwin) 
                        .map(...)
 ```
 
-`eventualObject` defers the evaluation of the object returning operation until a suspense operation takes place.
+`lazyObject` defers the evaluation of the object returning operation until a suspense operation takes place.
 
-`eventualArray` works the same way for arrays. Here's an example using ramda's `zip` function:
+`lazyArray` works the same way for arrays. Here's an example using ramda's `zip` function:
 
 ```javascript
-import { eventualArray, futureArray } from 'react-futures'
+import { lazyArray, futureArray } from 'react-futures'
 import { zip } from 'ramda'
 
 const FutureFriends = futureArray(...)
@@ -391,18 +380,18 @@ const FutureGroups = futureArray(...)
 
 const [friends, groups] = [new FutureFriends, new FutureGroups];
 
-const friendsAndGroups = eventualArray(() => zip(friends, groups)) //=> future array
+const friendsAndGroups = lazyArray(() => zip(friends, groups)) //=> future array
 ```
 
-To defer function composition, you can use ramda's `pipeWith` or `composeWith` functions and wrap callbacks in `eventualObject` and `eventualArray`:
+To defer function composition, you can use ramda's `pipeWith` or `composeWith` functions and wrap callbacks in `lazyObject` and `lazyArray`:
 
 ```javascript
 import { pipeWith, filter, sort } from 'ramda';
-import { futureArray, eventualArray } from 'react-futures';
+import { futureArray, lazyArray } from 'react-futures';
 
 const FutureFriends = futureArray(() => fetch(...))
 
-const pipeFuture = pipeWith((fn, futr) => eventualArray(() => fn(futr)))
+const pipeFuture = pipeWith((fn, futr) => lazyArray(() => fn(futr)))
 
 const lazyInternationalFriendsByGrade = pipeFuture(
   filter(friend => friend.nationality !== 'USA'),
@@ -670,28 +659,28 @@ Other operations are tbd since it is uncertain what the use cases for these meth
   futureArray.unshift &nbsp;&nbsp;# both mutable and requires sync get of unshifted value<br />
   delete futureObject &nbsp;&nbsp;# both mutable and requires knowledge of object property descriptors, since it returns true or false depending on whether operation succeeded<br />
   Object.preventExtensions(future) &nbsp;&nbsp;# Causes problems in proxy<br />
-  futureArray.forEach() &nbsp;&nbsp;# Requires react futures to resolve a future without suspense, which is not yet implemented. Not even sure this is a good since deferred side-effects can cause unexpected behavior, plus what benefit would this have over a for loop in `eventualArray` or 'eventualObject'? <br />
+  futureArray.forEach() &nbsp;&nbsp;# Requires react futures to resolve a future without suspense, which is not yet implemented. Not even sure this is a good since deferred side-effects can cause unexpected behavior, plus what benefit would this have over a for loop in `lazyArray` or 'lazyObject'? <br />
 
 </ul>
 
 </p>
 </details>
 
-### eventualObject and eventualArray in reassignment
+### lazyObject and lazyArray in reassignment
 
-Using `eventualObject` and `eventualArray` to perform a reassignment inside a loop can lead to an unexpected error. This is because the right hand side does not evaluate first since `eventualObject` and `eventualArray` is deferred.  
+Using `lazyObject` and `lazyArray` to perform a reassignment inside a loop can lead to an unexpected error. This is because the right hand side does not evaluate first since `lazyObject` and `lazyArray` is deferred.  
 
 ```javascript
 const arr = [];
 for(const futureItem of items) {
-  arr = eventualArray(() => [...arr, ...futureItem]) // leads to getter loop of `arr` on suspense
+  arr = lazyArray(() => [...arr, ...futureItem]) // leads to getter loop of `arr` on suspense
 }
 ```
 
-to avoid this bug, encapsulate the whole block in `eventualObject`/`eventualArray`
+to avoid this bug, encapsulate the whole block in `lazyObject`/`lazyArray`
 
 ```javascript
-const arr = eventualArray(() => {
+const arr = lazyArray(() => {
   let temp = []
   for(const futureItem of items) {
     temp = [...temp, ...futureItem]
