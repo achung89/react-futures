@@ -41,7 +41,6 @@
     "delay": "^4.3.0",
     "jest-react": "^0.11.1",
     "react-test-renderer": "0.0.0-experimental-01be61c12",
-    "recast": "^0.20.4",
     "regenerator-runtime": "^0.13.3",
     "rollup": "^2.7.2",
     "rollup-plugin-babel": "^4.3.3",
@@ -51,8 +50,6 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "add": "^2.0.6",
-    "cd": "^0.3.3",
     "jest": "^26.6.1",
     "lru-cache": "^5.1.1",
     "react": "0.0.0-experimental-01be61c12",
