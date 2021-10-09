@@ -53,7 +53,7 @@ describe('Caching arrays instantiated in render', () => {
     await testRenderWithoutSuspense(<App />, `<div>Loading...</div>`);
   });
 
-  test.skip('should not cache deep renders', async () => {
+  test('should not cache deep renders', async () => {
     await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, async () => {
       await waitForSuspense(100);
       await waitForSuspense(100);
