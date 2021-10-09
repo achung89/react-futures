@@ -1,18 +1,19 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { futureArray } from '../../../index';
+import { futureArray } from '../../../futures';
 
-import React from 'react';
 import {
   testSuspenseWithLoader,
   testRenderWithoutSuspense,
 } from '../../../test-utils/testSuspense';
-import { reverseImm } from './deep-render.test';
+import { reverseImm } from "../../../test-utils/reverseImm";
+import waitForSuspense from '../../../test-utils/waitForSuspense';
 
 jest.useFakeTimers();
 
 let StubFutureArray;
-
+// TODO: write more tests
 beforeEach(() => {
+  
   StubFutureArray = futureArray(
     val =>
       new Promise((res, rej) => {
@@ -23,35 +24,41 @@ beforeEach(() => {
             console.error(err);
             rej(err);
           }
-        }, 1000);
+        }, 100);
       })
   );
 });
 
 afterEach(() => {
-  StubFutureArray.reset();
   StubFutureArray = null;
 });
 
 describe('Caching arrays instantiated in render', () => {
-  test('should cache shallow renders', async () => {
-    const App = ({ nestedFuture = false }) => {
-      let numbers = reverseImm(new StubFutureArray(4)
-        .map(val => val + 1) // [2,3,4,5]
-        .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
-        .filter(val => val % 2 === 0) // [2,4,6,8]
-      ); // [8,6,4,2]
+  const App = ({ nestedFuture = false }) => {
+    let numbers = reverseImm(new StubFutureArray(4)
+      .map(val => val + 1) // [2,3,4,5]
+      .concat([6, 7, 8]) // [2,3,4,5,6,7,8]
+      .filter(val => val % 2 === 0) // [2,4,6,8]
+    ); // [8,6,4,2]
 
-      const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
+    const nums = nestedFuture ? createNestedFuture(numbers) : numbers; // [9,9]
 
-      return <div>{nums}</div>;
-    };
+    return <div>{nums}</div>;
+  };
 
-    await testSuspenseWithLoader(<App />, `<div>8642</div>`);
-    await testRenderWithoutSuspense(<App />, `<div>8642</div>`);
-    await testRenderWithoutSuspense(<App nestedFuture />, `<div>99</div>`);
+  test('should not cache shallow renders', async () => {
+    await testSuspenseWithLoader(<App />, `<div>8642</div>`, async () => {
+      await waitForSuspense(100);
+    });
+    await testRenderWithoutSuspense(<App />, `<div>Loading...</div>`);
+  });
 
-    StubFutureArray.reset();
+  test('should not cache deep renders', async () => {
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>99</div>`, async () => {
+      await waitForSuspense(100);
+      await waitForSuspense(100);
+    });
+    await testRenderWithoutSuspense(<App nestedFuture />, `<div>Loading...</div>`);
   });
 });
 

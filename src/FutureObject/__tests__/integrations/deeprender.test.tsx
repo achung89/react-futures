@@ -1,8 +1,8 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { futureObject } from '../../../index';
+import { futureObject } from '../../../futures';
 
-import React from 'react';
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
+import waitForSuspense from '../../../test-utils/waitForSuspense';
 
 jest.useFakeTimers();
 const expectedJSON = value => ({
@@ -55,7 +55,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  StubFutureObject.reset();
   StubFutureObject = null;
 });
 
@@ -76,11 +75,16 @@ describe('Instantiate in render, deep render scenarios', () => {
       return <div>{makeRender(rendered)}</div>;
     };
 
-    await testSuspenseWithLoader(<App />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`);
+    await testSuspenseWithLoader(<App />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`, async () => {
+        await waitForSuspense(100);
+    });
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
-    await testSuspenseWithLoader(<App nestedFuture />, `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, 5000);
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, async () =>{
+      await waitForSuspense(100);
+      await waitForSuspense(100);
+    });
   });
 
   test('should render deeply', async () => {
@@ -103,11 +107,19 @@ describe('Instantiate in render, deep render scenarios', () => {
       );
     };
 
-    await testSuspenseWithLoader(<App />, `<div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div>`);
-    StubFutureObject.reset();
+    await testSuspenseWithLoader(<App />, `<div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div>`, async () => {
+      await waitForSuspense(100);
+
+    });
+    StubFutureObject = futureObject(fetchJson);
     await testSuspenseWithLoader(
       <App nestedFuture />,
-      `<div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div>`
+      `<div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div>`,
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+
+      }
     );
   });
 
@@ -133,28 +145,43 @@ describe('Instantiate in render, deep render scenarios', () => {
     };
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} />,
-      `<div><div><div><div><div><div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div></div></div></div></div></div>`
+      `<div><div><div><div><div><div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div></div></div></div></div></div>`,
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} nestedFuture />,
-      `<div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div>`
+      `<div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div>`,
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={200} />,
-      `<div>`.repeat(202) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + `</div>`.repeat(202),
+      async () => {        await waitForSuspense(100);
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <AppVeryDeep nestedFuture level={200} />,
-      `<div>`.repeat(202) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100);
+        await waitForSuspense(100);
+
+      }
     );
   });
   test('should render with prop drilling', async () => {
@@ -172,24 +199,37 @@ describe('Instantiate in render, deep render scenarios', () => {
       return <PropDrill prop={makeRender(result)} level={level} />;
     };
 
-    await testSuspenseWithLoader(<App level={10} />, '<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>');
+    await testSuspenseWithLoader(<App level={10} />, '<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>', async () =>{
+      await waitForSuspense(100)
+    });
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
-      '<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>'
+      '<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>', async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
-    await testSuspenseWithLoader(<App level={200} />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`);
+    await testSuspenseWithLoader(<App level={200} />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`, async () =>{
+      await waitForSuspense(100)
 
-    StubFutureObject.reset();
+    });
+
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
-      `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`
+      `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
   });
   test('should render intermediate transformations', async () => {
@@ -216,28 +256,45 @@ describe('Instantiate in render, deep render scenarios', () => {
 
     await testSuspenseWithLoader(
       <App level={10} />,
-      '<div><div><div><div><div><div><div><div><div><div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100)
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture={true} />,
-      '<div><div><div><div><div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={200} />,
-      '<div>'.repeat(201) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture={true} />,
-      '<div>'.repeat(201) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
   });
 });
@@ -257,13 +314,19 @@ describe('Instantiate outside render, deep render scenario', () => {
       return <div>{makeRender(result)}</div>;
     };
 
-    await testSuspenseWithLoader(<App />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`);
+    await testSuspenseWithLoader(<App />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`, async () => {
+      await waitForSuspense(100)
 
-    StubFutureObject.reset();
+    });
 
-    await testSuspenseWithLoader(<App nestedFuture />, `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, 5000);
+    StubFutureObject = futureObject(fetchJson);
 
-    StubFutureObject.reset();
+    await testSuspenseWithLoader(<App nestedFuture />, `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, async () => {
+      await waitForSuspense(100)
+      await waitForSuspense(100)
+
+    });
+
   });
 
   test('should render deeply', async () => {
@@ -283,17 +346,22 @@ describe('Instantiate outside render, deep render scenario', () => {
       );
     };
 
-    await testSuspenseWithLoader(<App />, `<div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div>`, 5000);
+    await testSuspenseWithLoader(<App />, `<div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div>`, async () => {
+      await waitForSuspense(100)
+    });
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
 
     await testSuspenseWithLoader(
       <App nestedFuture />,
       `<div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div>`,
-      5000
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
   });
 
   test('should render very deeply', async () => {
@@ -318,34 +386,50 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} />,
-      '<div>'.repeat(7) + `foobarbazzvaluea futona barcandya bazzeritaa 4` + '</div>'.repeat(7)
+      '<div>'.repeat(7) + `foobarbazzvaluea futona barcandya bazzeritaa 4` + '</div>'.repeat(7),
+      async () => {
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} nestedFuture />,
-      `<div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div>`
+      `<div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div>`,
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={200} />,
-      `<div>`.repeat(202) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <AppVeryDeep nestedFuture level={200} />,
-      `<div>`.repeat(202) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + `</div>`.repeat(202)
+      `<div>`.repeat(202) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + `</div>`.repeat(202),
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+      }
     );
 
-    StubFutureObject.reset();
   });
 
   test('should render with prop drilling', async () => {
@@ -361,29 +445,43 @@ describe('Instantiate outside render, deep render scenario', () => {
       return <PropDrill prop={makeRender(result)} level={level} />;
     };
 
-    await testSuspenseWithLoader(<App level={10} />, '<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>');
+    await testSuspenseWithLoader(<App level={10} />, '<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>', async () => {
+      await waitForSuspense(100)
 
-    StubFutureObject.reset();
+    });
+
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
-      '<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>'
+      '<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>',
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
-    await testSuspenseWithLoader(<App level={200} />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`);
+    await testSuspenseWithLoader(<App level={200} />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`, async () => {
+      await waitForSuspense(100)
 
-    StubFutureObject.reset();
+    });
+
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
-      `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`
+      `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
   });
 
   test('should render intermediate transformations', async () => {
@@ -412,34 +510,50 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     await testSuspenseWithLoader(
       <App level={10} />,
-      '<div><div><div><div><div><div><div><div><div><div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>foobarbazzvaluea futona barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100);
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
-      '<div><div><div><div><div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>'
+      '<div><div><div><div><div><div><div><div><div><div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div></div></div></div></div></div></div></div></div></div>',
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <App level={200} />,
-      '<div>'.repeat(201) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + 'foobarbazzvaluea futona barcandya bazzeritaa 4' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
+    StubFutureObject = futureObject(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
-      '<div>'.repeat(201) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + '</div>'.repeat(201)
+      '<div>'.repeat(201) + '7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4' + '</div>'.repeat(201),
+      async () => {
+        await waitForSuspense(100)
+        await waitForSuspense(100)
+
+      }
     );
 
-    StubFutureObject.reset();
   });
 });
 
