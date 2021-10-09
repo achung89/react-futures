@@ -1,13 +1,16 @@
 import waitForSuspense from './waitForSuspense';
 import waitForLoading from './waitForLoading';
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
+import Scheduler from 'scheduler/unstable_mock';
+import { waitFor } from '@testing-library/dom';
 export const testSuspenseWithLoader = async (
   el,
   expected,
-  suspenseTime = 2000
+  waitForRender
 ) => {
+
   let container;
   let root;
   act(() => {
@@ -17,17 +20,17 @@ export const testSuspenseWithLoader = async (
   act(() => {
     root = ReactDOM.createRoot(container);
   });
-  await act(async () => {
+   act( () => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);
   });
-  waitForLoading();
-  await act(async () => {
+  await waitForSuspense(0)
+
+  await waitFor(() => {
     expect(container.innerHTML).toEqual(`<div>Loading...</div>`);
   });
-  await act(async () => {
-    await waitForSuspense(suspenseTime);
-  });
-  await act(async () => {
+  await waitForRender()
+
+  await waitFor(() => {
     expect(container.innerHTML).toEqual(expected);
   });
 };
@@ -46,6 +49,8 @@ export const testRenderWithoutSuspense = async (el, expected) => {
     root.render(<Suspense fallback={<div>Loading...</div>}>{el}</Suspense>);
   });
   await waitForSuspense(0);
+  Scheduler.unstable_advanceTime(0);
+  Scheduler.unstable_flushExpired();
   await act(async () => {
     expect(container.innerHTML).toEqual(expected);
   });

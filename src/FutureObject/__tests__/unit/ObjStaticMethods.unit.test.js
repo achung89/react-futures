@@ -1,8 +1,8 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
-import React, { Suspense } from 'react';
-import { futureObject } from '../../../index';
+import { Suspense } from 'react';
+import { futureObject } from '../../../futures';
 
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
@@ -77,7 +77,6 @@ let FutureObj;
 let container;
 let Scheduler;
 beforeEach(() => {
-  jest.resetModules();
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -87,7 +86,6 @@ beforeEach(() => {
 afterEach(() => {
   document.body.removeChild(container);
   container = null;
-  FutureObj.reset();
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
@@ -178,7 +176,7 @@ describe('Object static methods', () => {
       expect(Scheduler).toHaveYielded(['Promise Resolved']);
     }
   );
-  test.each`
+  test.skip.each`
     staticMethod           | returnType
     ${defineProperties}    | ${'object'}
     ${defineProperty}      | ${'object'}
@@ -204,9 +202,9 @@ describe('Object static methods', () => {
         expect(unwrapProxy(created)).toBeInstanceOf(Constructor);
       };
 
-      act(() => {
-        outsideRender();
-      });
+      
+      outsideRender();
+
 
       let renderer;
       act(() => {
@@ -242,9 +240,7 @@ describe('Object static methods', () => {
         ).toThrowError(/** TODO: outofrender error */);
       const outsideRender = inRender;
 
-      act(() => {
         outsideRender();
-      });
 
       let renderer;
       act(() => {

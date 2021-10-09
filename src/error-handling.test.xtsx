@@ -1,0 +1,111 @@
+import { futureObject } from "./futures";
+import { render } from "./test-utils/rtl-renderer";
+import { act } from "react-dom/test-utils";
+jest.useFakeTimers()
+const { default: waitForSuspense } = require("./test-utils/waitForSuspense");
+const delay = require('delay');
+const fetchJson = val =>
+  new Promise((res, rej) => {
+    setTimeout(() => {
+      try {
+        res(expectedJSON(val));
+      } catch (err) {
+        rej(err);
+      }
+    }, 100);
+  }).catch(err => {
+    throw err;
+  });
+
+let warn;
+let StubFutureObject;
+let container;
+beforeEach(() => {
+  warn = jest.spyOn(global.console, 'warn');
+  StubFutureObject = futureObject(fetchJson);
+  container = document.createElement('div');
+  document.body.appendChild(container);
+});
+afterEach(() => {
+  document.body.removeChild(container);
+  container = null;
+  warn.mockRestore();
+  StubFutureObject.reset();
+  StubFutureObject = null;
+});
+
+const Child = futureObject(
+  parent =>
+    new Promise((res, rej) => {
+      setTimeout(() => {
+        try {
+          res({ foos: parent.value });
+        } catch (err) {
+          throw err;
+        }
+      }, 150);
+    })
+);
+test("passing in future from outside render is fine", async () => {
+  const futureObj = new StubFutureObject([5, 4, 3, 2]);
+
+  const App = () => {
+    const child = Child.entries(new Child(2,3, futureObj, "hi"));
+
+    return <div>{child}</div>;
+  };
+  await delay(2000);
+  await waitForSuspense(100);
+  expect(warn).not.toHaveBeenCalled();
+});
+
+test("passing in object from outside render is fine", async () => {
+  const obj = {};
+
+  const App = () => {
+    const child = Child.entries(new Child(2,3, obj, "hi"));
+
+    return <div>{child}</div>;
+  };
+  let renderer;
+  act(() => {
+    renderer = render(<App />, container);
+  });
+  const { getByText } = renderer;
+  await delay(2000);
+  await waitForSuspense(100);
+  expect(container.innerHTML).toEqual(`<div></div>`);
+  expect(warn).not.toHaveBeenCalled();
+});
+
+test("passing in object from outside render is fine", async () => {
+  const obj = {};
+
+  const App = () => {
+    const child = Child.entries(new Child(2,3, obj, "hi"));
+
+    return <div>{child}</div>;
+  };
+  await waitForSuspense(100);
+  expect(warn).not.toHaveBeenCalled();
+});
+// test.skip("one out one in", async () => {
+//   const futureObj = new StubFutureObject([5, 4, 3, 2]);
+
+//   const App = () => {
+//     const child = Child.entries(new Child(futureObj));
+
+//     return <div>{child}</div>;
+//   };
+//   await testSuspenseWithLoader(<App />, "<div>foos5432</div>");
+// });
+// test.skip("both in", async () => {
+//   const init = [5, 4, 3, 2];
+//   let fut;
+//   const App = () => {
+//     const [futureObj] = useState(new StubFutureObject(init));
+//     const child = Child.entries(new Child(futureObj));
+//     return <div>{child}</div>;
+//   };
+//   await testSuspenseWithLoader(<App />, "<div>foos5432</div>", 200);
+// });
