@@ -1,19 +1,20 @@
 
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-jest.useFakeTimers();
 
 import React, { Suspense } from 'react';
-import { futureObject, futureArray } from './index';
-import {isEffect, LazyArray, LazyObject} from './internal'
+import { futureObject, futureArray } from './futures';
+import { LazyObject } from './internal'
 import waitForSuspense from './test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from './test-utils/rtl-renderer';
 import { waitFor, wait } from '@testing-library/dom';
 import { unwrapProxy, toPromise, lazyObject, lazyArray } from './utils';
 import extractValue from './test-utils/extractValue';
-import { reverseImm } from './FutureArray/__tests__/integrations/deep-render.test';
+import { reverseImm } from "./test-utils/reverseImm";
 expect.extend(require('./test-utils/renderer-extended-expect'));
 
+
+// TODO: test basic cache behaviour in and out of render
 // TODO: test error handling
 const expectedJSON = value => ({
   foo: 'futon',
@@ -84,7 +85,6 @@ beforeEach(() => {
 afterEach(() => {
   document.body.removeChild(container);
   container = null;
-  FutureObj.reset();
   FutureObj = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
@@ -149,11 +149,10 @@ describe('toPromise', () => {
   })
   
   test('inside render', async () => {
-    expect.assertions(1)    
+    let result
     const inRender = async () => {
       const futureObj = new FutureObj(3);
-      const result = await toPromise(futureObj);
-      expect(result).toEqual(expectedJSON(3));
+      result = await toPromise(futureObj);
     }
     let renderer;
     act(() => {
@@ -162,19 +161,17 @@ describe('toPromise', () => {
     const {getByText} = renderer;
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
+    expect(result).toEqual(expectedJSON(3));
+
   })  
   test('inside render multiple', async () => {
-    expect.assertions(1)    
+    let transformedResult
     const inRender = async () => {
       const makeFuture = val => new FutureObj(val);
 
-
       const transformed = FutureObj.assign(makeFuture(5), lazyObject(() => invert(makeFuture(4))));
                             
-      const transformedExpected = Object.assign(expectedJSON(5), invert(expectedJSON(4)))
-      const transformedResult = await toPromise(transformed);
-
-      expect(transformedResult).toEqual(transformedExpected);
+      transformedResult = await toPromise(transformed);
     }
     let renderer;
     act(() => {
@@ -183,6 +180,10 @@ describe('toPromise', () => {
     const {getByText} = renderer;
     await waitForSuspense(150);
     await waitFor(() => getByText('foo'))
+    
+    const transformedExpected = Object.assign(expectedJSON(5), invert(expectedJSON(4)))
+    expect(transformedResult).toEqual(transformedExpected);
+
   })
 })
 
@@ -206,9 +207,9 @@ test.each([
   null,
   undefined
 ])('lazyObject should throw if given %s', async val => {
-  const obj = lazyObject(() => val)
+  
   expect((async () => {
-    await toPromise(obj);
+    lazyObject(() => val)
   })()).rejects.toBeInstanceOf(Error)
 })
 
@@ -219,9 +220,8 @@ test.each([
   null,
   undefined
 ])('lazyObject should throw if given %s', async val => {
-  const obj = lazyArray(() => val)
   expect((async () => {
-    await toPromise(obj);
+    lazyArray(() => val)
   })()).rejects.toBeInstanceOf(Error)
 })
 test('lazyArray should defer ', async () => {
@@ -238,3 +238,4 @@ test('lazyArray should defer ', async () => {
 
   expect(await value2).toEqual([2,3,4,2].reverse());
 });
+

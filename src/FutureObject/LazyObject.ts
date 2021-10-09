@@ -1,170 +1,138 @@
+import { createProxy, run } from '../Effect/Effect';
 import { isRendering, thisMap } from '../internal';
-import { ObjectEffect } from '../internal';
 import { LazyArray, getRaw } from '../internal';
-import { species } from '../internal';
+import { species, createCascadeMap, getCascade, cascadeMap } from '../internal';
+import { __internal } from '../utils';
 
-const memoize = fn => {
-  const cache = new WeakMap();
-  const cached = function(val) {
-    return cache.has(val) ? cache.get(val) : cache.set(val, fn.call(this, val)) && cache.get(val);
-  };
-  cached.cache = cache;
-  return cached;
-};
-
-export const cloneFuture = memoize(target => {
-  const descriptors = Object.getOwnPropertyDescriptors(getRaw(target));
-  return Object.defineProperties(Array.isArray(target) ? [] : {}, descriptors);
-})
-export const isEffect = futr => thisMap.has(futr);
-
-class MutableOperationInRenderError extends Error {
+export class NotSupportedError extends Error {
   constructor(methodName) {
-    super(`Mutable operation ${methodName} detected in render`);
-    this.name ='InvalidMutableOperationException';
+    super(`"${methodName}" is not supported`);
+    this.name ='Invalid Operation';
   } 
 }
-class SuspendOperationOutsideRenderError extends Error {
+
+export const cloneFuture = target => {
+  const descriptors = Object.getOwnPropertyDescriptors(getRaw(target));
+  return Object.defineProperties(Array.isArray(target) ? [] : {}, descriptors);
+}
+
+export const isEffect = futr => thisMap.has(futr);
+
+
+export class SuspendOperationOutsideRenderError extends Error {
   constructor(methodName) {
     super(`Suspend operation ${methodName} can not be completed outside render`);
     this.name = 'InvalidSuspendOperationException';
   }
 }
-const staticMutableOperation = (target, cb, methodName) => {
-  if (isEffect(target)) {
-    const klass = target.constructor[species];
-    return klass.tap(cb, methodName, target);
-  } else {
-    if (isRendering()) {
-      throw new MutableOperationInRenderError(methodName);
-    }
-    if (Array.isArray(target)) {
-      return new LazyArray(() => cb(target));
-    } else {
-      return new LazyObject(() => cb(target));
-    }
-  }
-};
+// const staticMutableOperation = (target, cb, methodName) => {
+//   if (isEffect(target)) {
+//     const klass = target.constructor[species];
+//     return klass.tap(cb, methodName, target);
+//   } else {
+//     if (isRendering()) {
+//       throw new MutableOperationInRenderError(methodName);
+//     }
+//     if (Array.isArray(target)) {
+//       return new LazyArray(() => cb(target));
+//     } else {
+//       return new LazyObject(() => cb(target));
+//     }
+//   }
+// };
 const staticMutableToImmutableOperation = (target, cb) => {
-
+  const createCascade = getCascade(target)
   if (Array.isArray(target)) {
-    return new LazyArray(() => cb(cloneFuture(target)));
+    
+    return  new LazyArray(() => cb(cloneFuture(target)), createCascade);
   } else {
-    return new LazyObject(() =>  cb(cloneFuture(target)));
+    return new LazyObject(() =>  cb(cloneFuture(target)), createCascade);
   }
 }
+
 const staticSuspendOperation = (target, cb, methodName) => {
+  if(!(isRendering() || __internal.suspenseHandlerCount > 0)) {
+    throw new SuspendOperationOutsideRenderError(methodName)
+  }
   if (isEffect(target)) {
-    const Klass = target.constructor[species];
-    return Klass.run(cb, target);
+    return run(cb, target, cascadeMap.get(target));
   } else {
     if (!isRendering())
       throw new SuspendOperationOutsideRenderError(methodName);
     return cb(target);
   }
 };
-const staticImmutableOperation = (target, cb, constructor = undefined) => {
-  if (isEffect(target)) {
-    const klass = constructor || target.constructor[species];
-    return klass.map(cb, target);
-  } else {
-    if (Array.isArray(target)) {
-      return new LazyArray(() => cb(target));
-    } else {
-      return new LazyObject(() => cb(target));
-    }
-  }
-}
-// TODO test non future params
-export class LazyObject<T extends object> extends ObjectEffect<T> {
+
+export class LazyObject {
   static get [species]() {
     return LazyObject;
   }
 
-  constructor(fn) {
-    super(fn);
+  constructor(cb, createCascade) {
+    const cascade = createCascade(cb);
+    const proxy = createProxy(this, cascade)
+
+    thisMap.set(proxy, this);
+    cascadeMap.set(proxy, cascade)
+    createCascadeMap.set(proxy, createCascade);
+    return proxy;
   }
-  // mutable methods
-  // static mutableAssign(obj, ...rest) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.assign(obj, ...rest),
-  //     'FutureObject.mutableAssign'
-  //   );
-  // }
-  // static mutableSeal(obj) {
-  //   return staticMutableOperation(obj, Object.seal, 'FutureObject.seal');
-  // }
-  // static mutablePreventExtensions(obj) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     Object.preventExtensions,
-  //     'FutureObject.mutablePreventExtensions'
-  //   );
-  // }
-  // static mutableDefineProperties(obj, descs) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.defineProperties(obj, descs),
-  //     'FutureObject.mutableDefineProperties'
-  //   );
-  // }
-  // static mutableDefineProperty(obj, prop, desc) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.defineProperty(obj, prop, desc),
-  //     'FutureObject.mutableDefineProperty'
-  //   );
-  // }
-  // static mutableFreeze(obj) {
-  //   return staticMutableOperation(obj, Object.freeze, 'FutureObject.freeze');
-  // }
-  // static mutableSetPrototypeOf(obj, proto) {
-  //   return staticMutableOperation(
-  //     obj,
-  //     obj => Object.setPrototypeOf(obj, proto),
-  //     'FutureObject.mutableSetPrototypeOf'
-  //   );
-  // }
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {
-
-    return new LazyObject(() => Object.getOwnPropertyDescriptor(obj, property));
+    const createCascade = getCascade(obj)
+    return new LazyObject(() => Object.getOwnPropertyDescriptor(obj, property), createCascade);
   }
   static getOwnPropertyDescriptors(obj) {
-    return new LazyObject(() => Object.getOwnPropertyDescriptors(obj));
+    const createCascade = getCascade(obj)
+    return new LazyObject(() => Object.getOwnPropertyDescriptors(obj), createCascade);
   }
   static getOwnPropertyNames(obj) {
-    return new LazyArray(() => Object.getOwnPropertyNames(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.getOwnPropertyNames(obj), createCascade);
   }
   static getOwnPropertySymbols(obj) {
-    return new LazyArray(() => Object.getOwnPropertySymbols(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.getOwnPropertySymbols(obj), createCascade);
   }
   static getPrototypeOf(obj) {
-    return new LazyObject(() => Object.getPrototypeOf(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyObject(() => Object.getPrototypeOf(obj), createCascade);
   }
   static keys(obj) {
-    return new LazyArray(() => Object.keys(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.keys(obj), createCascade);
   }
   static entries(obj) {
-    return new LazyArray(() => Object.entries(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.entries(obj), createCascade)
   }
   //TODO: write test for fromEntries
   static fromEntries(obj) {
-    return new LazyObject(() => Object.fromEntries(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyObject(() => Object.fromEntries(obj), createCascade);
   }
   static values(obj) {
-    return new LazyArray(() => Object.values(obj));
+    const createCascade = getCascade(obj)
+
+    return new LazyArray(() => Object.values(obj), createCascade);
   }
 
   // mutable methods made immutable
   static assign(obj, ...rest) {
     return staticMutableToImmutableOperation(
       obj,
-      obj => Object.assign(obj, ...rest),
+      obj => 
+      Object.assign(obj, ...rest),
     );
   }
+
   static seal(obj) {
     if(thisMap.has(obj)) {
       Object.seal(thisMap.get(obj));
@@ -227,10 +195,10 @@ export class LazyObject<T extends object> extends ObjectEffect<T> {
   //invalid method
   static create() {
     // TODO: think through why this shouldn't be allowed
-    throw Error('FutureObject.create not supported');
+    throw new NotSupportedError('FutureObject.create');
   }
   // forward
   static is(obj1, obj2) {
-    throw Error('FutureObject.is not supported');
+    throw new NotSupportedError('FutureObject.is');
   }
 }
