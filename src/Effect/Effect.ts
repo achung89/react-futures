@@ -1,4 +1,4 @@
-import { pipe, first, isRendering } from '../internal';
+import { pipe, first } from '../internal';
 import { LazyArray, cloneFuture } from '../internal';
 import { isFuture, getRaw, lazyArray } from '../internal';
 import { cascadeMap, createCascadeMap } from '../utils';
@@ -63,10 +63,7 @@ export const tap = (fn: Function, futr, cascade, name: string,) => {
     // TODO: change
     throw new Error('NOT INSTANCE');
   }
-  if (isRendering()) {
-    // TODO: implement custom error message per method
-    throw new MutableOperationInRenderError(name)
-  }
+
   if (name === 'splice') {
     return splice(fn, cascade)
   }
