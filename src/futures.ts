@@ -1,4 +1,3 @@
-import { isRendering } from './internal';
 import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
@@ -12,7 +11,7 @@ export const getCache = () => new Map();
 
 export const futureObject = <T extends object>(promiseThunk) => {
   const getCache = () => new Map();
-  if (isRendering()) {
+  if (isReactRendering()) {
     // TODO: add custom error message per method
     throw new Error('cannot create future outside render');
   }
@@ -28,7 +27,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
     
 
     constructor(...keys) {
-      if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
+      if (keys.some(key => typeof key === 'object' && key !== null) && isReactRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
       const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
@@ -43,7 +42,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
 export const futureArray = <T>(promiseThunk) => {
   const getCache = () => new Map();
 
-  if (isRendering()) {
+  if (isReactRendering()) {
     // TODO: add custom error message per method
     throw new Error('cannot create cache in render');
   }
@@ -58,7 +57,7 @@ export const futureArray = <T>(promiseThunk) => {
     }
 
     constructor(...keys) {
-      if (keys.some(key => typeof key === 'object' && key !== null) && isRendering()) {
+      if (keys.some(key => typeof key === 'object' && key !== null) && isReactRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
 

@@ -1,4 +1,5 @@
 import { species,cascadeMap, map, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap } from '../internal';
+import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
 
 
 
@@ -46,7 +47,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return newArr;
     }, this, cascadeMap.get(this));
@@ -72,7 +73,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return newArr;
     }, this, cascadeMap.get(this))
@@ -106,7 +107,7 @@ export class LazyArray<T> extends Array<T> {
       }
 
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
 
       return newArr.flat();
@@ -137,7 +138,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return target.sort(comparator)
     }, this, cascadeMap.get(this), 'sort');
@@ -193,7 +194,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return foundItem;
     }, this, cascadeMap.get(this));
@@ -217,7 +218,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return every;
     }, this, cascadeMap.get(this));
@@ -240,7 +241,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return false;
     }, this, cascadeMap.get(this));
@@ -263,7 +264,7 @@ export class LazyArray<T> extends Array<T> {
         }
       }
       if (promises.length > 0) {
-        throw Promise.all(promises);
+        throw new ThrowablePromise(Promise.all(promises));
       }
       return -1;
     }, this, cascadeMap.get(this));

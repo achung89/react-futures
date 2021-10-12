@@ -1,10 +1,10 @@
-import { isRendering } from './internal';
 import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 
 import {  isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
 import { useRef, useReducer } from 'react';
+import { futureArray, futureObject } from './futures';
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
@@ -25,44 +25,48 @@ export class RenderOperationError extends Error {
   }
 };
 
-export const fetchArray = url => {
+// export const fetchArray = url => {
   
-}
+// }
 
-export const useFetchArray = (requestInfo: RequestInfo, init: RequestInit = {}) => {
-  return useFuture(FutureArray, requestInfo, init);
-}
+// export const useFetchArray = (requestInfo: RequestInfo, init: RequestInit = {}) => {
+//   return useFuture(FutureArray, requestInfo, init);
+// }
 
-export const useFetchObject = (requestInfo: RequestInfo, init: RequestInit = {}) => {
-  return useFuture(FutureObject, requestInfo, init);
-}
+// export const useFetchObject = (requestInfo: RequestInfo, init: RequestInit = {}) => {
+//   return useFuture(FutureObject, requestInfo, init);
+// }
 
-const fetchWithArgs = async (requestInfo: RequestInfo, init: RequestInit = {}) => (await fetch(requestInfo, init)).json()
+// const fetchWithArgs = async (requestInfo: RequestInfo, init: RequestInit = {}) => (await fetch(requestInfo, init)).json()
 const throwIfNotGET = method => { if (method !== 'GET') { throw new RenderOperationError('Only GET permitted in render') } }
 
-// TODO: test caching/unmounting logic
-const useFuture = (FutureConstructor, requestInfo, requestInit) => {
-  const futureCache = useRef({})
+// // TODO: test caching/unmounting logic
+// const useFuture = (FutureConstructor, requestInfo, requestInit) => {
+//   const futureCache = useRef({})
 
-  const key = getFetchKey(requestInfo, requestInit);
-  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
+//   const key = getFetchKey(requestInfo, requestInit);
+//   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);
 
-  const refetch = () => {
-    for (const key of Object.keys(futureCache.current)) {
-      futureCache.current[key] = undefined;
-    }
-    forceUpdate();
-  }
+//   const refetch = () => {
+//     for (const key of Object.keys(futureCache.current)) {
+//       futureCache.current[key] = undefined;
+//     }
+//     forceUpdate();
+//   }
 
-  if (!futureCache.current[key]) {
-    const promise = initializePromise(fetchWithArgs(requestInfo, requestInit))
-    const future = new FutureConstructor(promise)
+//   if (!futureCache.current[key]) {
+//     const promise = initializePromise(fetchWithArgs(requestInfo, requestInit))
+//     const future = new FutureConstructor(promise)
 
-    futureCache.current[key] = future;
-  }
+//     futureCache.current[key] = future;
+//   }
   
-  return [futureCache.current[key], refetch] 
-}
+//   return [futureCache.current[key], refetch] 
+// }
+
+
+export const fetchArray = (...args) => (new futureArray(window.fetch))(...args)
+export const fetchObject = futureObject(window.fetch)
 
 function getFetchKey(requestInfo: RequestInfo, requestInit: RequestInit) {
   if (requestInfo instanceof Request) {

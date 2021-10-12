@@ -1,7 +1,7 @@
 import { pipe, first, isRendering } from '../internal';
 import { LazyArray, cloneFuture } from '../internal';
-import { isFuture, getRaw, lazyArray, SuspendOperationOutsideRenderError } from '../internal';
-import { cascadeMap, createCascadeMap, __internal } from '../utils';
+import { isFuture, getRaw, lazyArray } from '../internal';
+import { cascadeMap, createCascadeMap } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 
@@ -48,10 +48,7 @@ export const map = <T>(fn: Function, futr: LazyArray<T>, cascade, Klass = thisMa
 }
 
 export const run = (fn: Function, futr, cascade) => {
-  if(!(isRendering() || __internal.suspenseHandlerCount > 0)) {
-    // TODO: make messgae specific to method
-    throw new SuspendOperationOutsideRenderError('suspend operation invalid')
-  }
+
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
@@ -61,7 +58,7 @@ export const run = (fn: Function, futr, cascade) => {
 }
 
 export const tap = (fn: Function, futr, cascade, name: string,) => {
-  throw new Error('Mutable operations not allowed in render')
+  throw new Error('Mutable operations not allowed')
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');

@@ -1,7 +1,7 @@
 import { promiseStatusStore } from '../shared-properties';
 import { LazyArray } from '../internal';
-import { isRendering, species } from '../internal';
-import { __internal, SuspendOperationOutsideRenderError } from '../internal';
+import {  species } from '../internal';
+import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
 
 export class FutureArray<T> extends LazyArray<T> {
   static get [species]() {
@@ -11,10 +11,6 @@ export class FutureArray<T> extends LazyArray<T> {
   constructor(promise, createCascade) {
     super(() => {
 
-      if (!(isRendering() || __internal.suspenseHandlerCount > 0)) {
-          // TODO: add custom error message per method
-        throw new SuspendOperationOutsideRenderError(`suspend`);
-      }
 
       let promiseFSM = promiseStatusStore.get(promise);
 
@@ -35,7 +31,7 @@ export class FutureArray<T> extends LazyArray<T> {
       }
 
       if (status === 'pending') {
-        throw promise;
+        throw new ThrowablePromise(promise);
       }
 
       if (status === 'error') {

@@ -1,4 +1,5 @@
 import { PushCascade } from "../internal";
+import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 
 
@@ -13,7 +14,7 @@ describe('PushCascade', () => {
       suspender.get();
     } catch (prom) {
       fn()
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom
     }
     expect(fn).toHaveBeenCalled()
@@ -48,7 +49,7 @@ describe('PushCascade', () => {
       suspender.get();
     } catch (prom) {
       fn()
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom
     }
     expect(fn).toHaveBeenCalled()
@@ -66,7 +67,7 @@ describe('PushCascade', () => {
       suspender.get();
     } catch (prom) {
       fn()
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom
     }
     expect(fn).toHaveBeenCalled()
@@ -83,7 +84,7 @@ describe('PushCascade', () => {
       suspender.get();
     } catch (prom) {
       fn()
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom
     }
     expect(fn).toHaveBeenCalled()
@@ -101,14 +102,14 @@ describe('PushCascade', () => {
     } catch (prom) {
       promise1 = prom;
       fn()
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
     }
 
     try {
       suspender.map(() => {}).get();
     } catch (prom) {
       fn()
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       expect(prom === promise1).toEqual(true)
       await prom;
     }
