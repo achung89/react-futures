@@ -40,13 +40,17 @@
     "@types/react-test-renderer": "^16.9.2",
     "delay": "^4.3.0",
     "jest-react": "^0.11.1",
+<<<<<<< HEAD
     "react-test-renderer": "0.0.0-experimental-01be61c12",
     "recast": "^0.20.4",
+=======
+    "react-test-renderer": "0.0.0-experimental-55d75005b-20211011",
+>>>>>>> a37fd81... upgrade react, implement throwable promises to account for new reactdom behaviour
     "regenerator-runtime": "^0.13.3",
     "rollup": "^2.7.2",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-terser": "^5.3.0",
-    "scheduler": "0.0.0-experimental-01be61c12",
+    "scheduler": "0.0.0-experimental-55d75005b-20211011",
     "tslib": "^1.11.0",
     "typescript": "^3.8.3"
   },
@@ -55,8 +59,8 @@
     "cd": "^0.3.3",
     "jest": "^26.6.1",
     "lru-cache": "^5.1.1",
-    "react": "0.0.0-experimental-01be61c12",
-    "react-dom": "0.0.0-experimental-01be61c12",
+    "react": "^0.0.0-experimental-55d75005b-20211011",
+    "react-dom": "^0.0.0-experimental-55d75005b-20211011",
     "why-is-node-running": "^2.2.0",
     "yarn": "^1.22.10"
   },

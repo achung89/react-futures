@@ -1,8 +1,7 @@
 import { promiseStatusStore } from '../shared-properties';
 import { LazyObject } from '../internal';
-import { isRendering } from '../internal';
-import {  __internal } from '../utils';
 import { species } from '../internal';
+import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
 
 export class FutureObject<T extends object, K extends object | null> extends LazyObject<T, K> {
   static get [species]() {
@@ -11,9 +10,6 @@ export class FutureObject<T extends object, K extends object | null> extends Laz
 
   constructor(promise, createCascade) {
     super(() => {
-      if ( !(isRendering() || __internal.suspenseHandlerCount > 0) ) {
-        throw new Error('cannot suspend outside render');
-      }
 
       let meta = promiseStatusStore.get(promise);
 
@@ -33,7 +29,7 @@ export class FutureObject<T extends object, K extends object | null> extends Laz
       }
 
       if (status === 'pending') {
-        throw promise;
+        throw new ThrowablePromise(promise);
       }
 
       if (status === 'error') {

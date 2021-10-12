@@ -1,8 +1,7 @@
 import { createProxy, run } from '../Effect/Effect';
-import { isRendering, thisMap } from '../internal';
+import {  thisMap } from '../internal';
 import { LazyArray, getRaw } from '../internal';
 import { species, createCascadeMap, getCascade, cascadeMap } from '../internal';
-import { __internal } from '../utils';
 
 export class NotSupportedError extends Error {
   constructor(methodName) {
@@ -25,21 +24,7 @@ export class SuspendOperationOutsideRenderError extends Error {
     this.name = 'InvalidSuspendOperationException';
   }
 }
-// const staticMutableOperation = (target, cb, methodName) => {
-//   if (isEffect(target)) {
-//     const klass = target.constructor[species];
-//     return klass.tap(cb, methodName, target);
-//   } else {
-//     if (isRendering()) {
-//       throw new MutableOperationInRenderError(methodName);
-//     }
-//     if (Array.isArray(target)) {
-//       return new LazyArray(() => cb(target));
-//     } else {
-//       return new LazyObject(() => cb(target));
-//     }
-//   }
-// };
+
 const staticMutableToImmutableOperation = (target, cb) => {
   const createCascade = getCascade(target)
   if (Array.isArray(target)) {
@@ -51,14 +36,9 @@ const staticMutableToImmutableOperation = (target, cb) => {
 }
 
 const staticSuspendOperation = (target, cb, methodName) => {
-  if(!(isRendering() || __internal.suspenseHandlerCount > 0)) {
-    throw new SuspendOperationOutsideRenderError(methodName)
-  }
   if (isEffect(target)) {
     return run(cb, target, cascadeMap.get(target));
   } else {
-    if (!isRendering())
-      throw new SuspendOperationOutsideRenderError(methodName);
     return cb(target);
   }
 };
