@@ -8,8 +8,11 @@ import { isReactRendering } from './utils';
 import React from 'react';
 import {unstable_getCacheForType as getCacheForType} from 'react';
 export const getCache = () => new Map();
+//TODO: consider if this the best type signature for this function when it becomes generic
+const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + fromArgsToCacheKey(keys);
 
-export const futureObject = <T extends object>(promiseThunk) => {
+// customizeable cache callback
+export const futureObject = <T extends object>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
   if (isReactRendering()) {
     // TODO: add custom error message per method
@@ -30,7 +33,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
       if (keys.some(key => typeof key === 'object' && key !== null) && isReactRendering()) {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       }
-      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Object'
+      const cacheKey = getCacheKey(promiseThunk, keys)
       const cache = PushCacheCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
@@ -39,7 +42,7 @@ export const futureObject = <T extends object>(promiseThunk) => {
   };
 };
 
-export const futureArray = <T>(promiseThunk) => {
+export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
 
   if (isReactRendering()) {
@@ -61,7 +64,7 @@ export const futureArray = <T>(promiseThunk) => {
         throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
       };
 
-      const cacheKey = getObjectId(promiseThunk) + fromArgsToCacheKey(keys) + 'Array';
+      const cacheKey = getCacheKey(promiseThunk, keys)
       const cache = PushCacheCascade.getCurrentScope() ?? (isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));

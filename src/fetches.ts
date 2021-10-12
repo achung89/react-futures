@@ -63,18 +63,19 @@ const throwIfNotGET = method => { if (method !== 'GET') { throw new RenderOperat
   
 //   return [futureCache.current[key], refetch] 
 // }
+const FetchArray = futureArray(globalThis.fetch, getFetchKey);
+const FetchObject = futureObject(globalThis.fetch, getFetchKey);
+export const fetchArray = (...args) => new FetchArray(...args);
 
+export const fetchObject = (...args) => new FetchObject(...args);
 
-export const fetchArray = (...args) => (new futureArray(window.fetch))(...args)
-export const fetchObject = futureObject(window.fetch)
-
-function getFetchKey(requestInfo: RequestInfo, requestInit: RequestInit) {
+function getFetchKey(_promise, [requestInfo, requestInit]) {
   if (requestInfo instanceof Request) {
     throwIfNotGET(requestInfo.method);
     return requestInfo.url;
   }
   else if (typeof requestInfo === 'string') {
-    throwIfNotGET(requestInit.method || 'GET');
+    throwIfNotGET(requestInit?.method || 'GET');
     return requestInfo;
   }
   else {

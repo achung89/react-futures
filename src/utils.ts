@@ -31,9 +31,6 @@ export const isReactRendering = () => {
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
       .ReactCurrentDispatcher.current;
 
-  const hasCurrenReactQueue =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-      .ReactCurrentActQueue?.current?.[0];
 
   const currentOwner =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
@@ -42,8 +39,7 @@ export const isReactRendering = () => {
   return (
     (dispatcher !== null &&
       dispatcher.useState.name !== "throwInvalidHookError") ||
-    currentOwner ||
-    hasCurrenReactQueue
+    currentOwner 
   );
 };
 
@@ -62,7 +58,6 @@ export const isDomRendering = () => {
   return isDomRendering || isTestDomRendering;
 };
 
-export const isRendering = () => isReactRendering() || isDomRendering();
 
 // returns result of first call on every subsequent call
 export const first = (fn: Function) => {
