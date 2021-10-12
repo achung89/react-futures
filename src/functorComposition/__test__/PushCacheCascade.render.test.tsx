@@ -12,6 +12,7 @@ import { render } from "../../test-utils/rtl-renderer";
 import waitForSuspense from "../../test-utils/waitForSuspense";
 import { unstable_useCacheRefresh as useCacheRefresh } from "react";
 import { SuspenseJob } from "../../PushCascade/PushCascade";
+import { ThrowablePromise } from "../../ThrowablePromise/ThrowablePromise";
 
 describe("PushCacheCascade", () => {
   it("shouldnt throw suspense if promise is already resolved", async () => {
@@ -32,7 +33,7 @@ describe("PushCacheCascade", () => {
       suspender.get();
     } catch (prom) {
       fn();
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom;
     }
     expect(fn).toHaveBeenCalled();
@@ -88,7 +89,7 @@ describe("PushCacheCascade", () => {
       suspender.get();
     } catch (prom) {
       fn();
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise)
       await prom;
     }
     expect(fn).toHaveBeenCalled();
@@ -113,7 +114,7 @@ describe("PushCacheCascade", () => {
       suspender.get();
     } catch (prom) {
       fn();
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom;
     }
     expect(fn).toHaveBeenCalled();
@@ -139,7 +140,7 @@ describe("PushCacheCascade", () => {
       suspender.get();
     } catch (prom) {
       fn();
-      expect(prom).toBeInstanceOf(Promise);
+      expect(prom).toBeInstanceOf(ThrowablePromise);
       await prom;
     }
     expect(fn).toHaveBeenCalledTimes(1);

@@ -12,6 +12,7 @@ import { unwrapProxy, suspend, FutureArray,SuspendOperationOutsideRenderError } 
 import { FutureObject, LazyArray, NotSupportedError } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
 import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'
+import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
@@ -119,7 +120,7 @@ describe('FutureObject static methods', () => {
       const outsideRender = () => {
         expect(() =>
           method(futureObj)
-        ).toThrowError(SuspendOperationOutsideRenderError);
+        ).toThrowError(ThrowablePromise);
       }
 
       outsideRender();

@@ -10,9 +10,10 @@ import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
 
-import { unwrapProxy, lazyArray, isRendering } from '../../../utils';
+import { unwrapProxy, lazyArray } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
 import delay from 'delay';
+import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 // TODO: setter should not suspend
@@ -341,7 +342,7 @@ describe('Array operations', () => {
       const outsideRender = () =>
         expect(() =>
           method(futureArr)
-        ).toThrowError(SuspendOperationOutsideRenderError);
+        ).toThrowError(ThrowablePromise);
 
       outsideRender();
 

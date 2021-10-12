@@ -47,7 +47,6 @@ describe('Nested future arrays', () => {
     await testSuspenseWithLoader(<App />, `<div>34</div>`, async () => {
       await waitForSuspense(100)
       await waitForSuspense(100)
-
     });
 
   });

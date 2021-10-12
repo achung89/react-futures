@@ -11,6 +11,8 @@ import { waitFor, wait } from '@testing-library/dom';
 import { unwrapProxy, toPromise, lazyObject, lazyArray } from './utils';
 import extractValue from './test-utils/extractValue';
 import { reverseImm } from "./test-utils/reverseImm";
+import ReactDOM from 'react-dom';
+
 expect.extend(require('./test-utils/renderer-extended-expect'));
 
 
@@ -239,3 +241,18 @@ test('lazyArray should defer ', async () => {
   expect(await value2).toEqual([2,3,4,2].reverse());
 });
 
+// useEffect: false
+// in render: true
+// outside render: false
+// on click: false
+// 
+describe('isReactRendering', () => {
+  let container;
+  let root;
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = ReactDOM.createRoot(container);
+});
+
+})

@@ -1,7 +1,8 @@
 
-import {  __internal,  isFuture, } from "../internal";
+import {    isFuture} from "../internal";
 import { unstable_getCacheForType as getCacheForType } from "react";
 import { isReactRendering } from "../internal";
+import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
 
 type CacheScope = {
   cache: Map<string, Promise<any>> | null;
@@ -40,11 +41,8 @@ const deepChain = async (prom, cb, cacheScope) => {
         newVal = await promise
       } else if (newVal instanceof SuspenseValue) {
         try{
-          __internal.suspenseHandlerCount++
           newVal = newVal.get();
-          __internal.suspenseHandlerCount--
         } catch(errOrProm) {
-          __internal.suspenseHandlerCount--
           if(typeof errOrProm.then === 'function') {
             await errOrProm;
             continue;
@@ -71,13 +69,9 @@ abstract class PushCascade {
   static of = (cb, instanceCacheScope: CacheScope) => {
 
     try {
-      __internal.suspenseHandlerCount++
       const newVal = new SuspenseValue(createCacheScope(cb, instanceCacheScope), instanceCacheScope);
-      
-      __internal.suspenseHandlerCount--;
       return newVal
     } catch (errOrProm) {
-      __internal.suspenseHandlerCount--;
       if (typeof errOrProm.then === 'function') {
         
         return new SuspenseJob(deepChain(errOrProm, cb, instanceCacheScope), instanceCacheScope);
@@ -121,7 +115,7 @@ export class SuspenseValue<T = any> extends PushCascade {
     if(this.status === 'complete') {
       return valueMap.get(this)
     } else if(this.status === 'pending') {
-      throw jobMap.get(this)
+      throw new ThrowablePromise(jobMap.get(this));
     } else if(this.status === 'error') {
       throw this.error
     }
@@ -179,7 +173,6 @@ export class SuspenseJob<T> extends PushCascade {
           while(true) {
 
             try {
-              __internal.suspenseHandlerCount++;
               return newVal.get();
             } catch (errOrProm) {
               if(errOrProm.then === 'function') {
@@ -187,9 +180,7 @@ export class SuspenseJob<T> extends PushCascade {
                 continue;
               }
               throw errOrProm
-            } finally {
-              __internal.suspenseHandlerCount--;
-            }
+            } 
           }
         } else {
           throw new Error('INTERNAL ERROR')
@@ -216,7 +207,7 @@ export class SuspenseJob<T> extends PushCascade {
   get() {
 
     if (this.status === 'pending') {
-      throw jobMap.get(this)
+      throw new ThrowablePromise(jobMap.get(this))
     }
 
     if (this.status === 'complete') {
