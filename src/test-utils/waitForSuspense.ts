@@ -22,6 +22,7 @@ const waitForSuspense = async (waitTime) => {
       jest.runAllTicks();
       jest.runAllImmediates();
     } catch (err) {
+      console.error(err);
       throw err
     }
   }
