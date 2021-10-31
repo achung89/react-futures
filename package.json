@@ -62,11 +62,11 @@
     "react": "^0.0.0-experimental-55d75005b-20211011",
     "react-dom": "^0.0.0-experimental-55d75005b-20211011",
     "why-is-node-running": "^2.2.0",
+    "why-is-node-still-running": "^1.0.0",
     "yarn": "^1.22.10"
   },
-  "peerDependencies": {},
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--unhandled-rejections=warn node --trace-warnings node_modules/.bin/jest",
     "test:file": "func() { jest \"$@\" &> output.txt; }; func",
     "build": "rollup -c"
   }
