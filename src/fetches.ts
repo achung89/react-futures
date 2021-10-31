@@ -1,21 +1,9 @@
-import { promiseStatusStore } from './shared-properties';
-import { FutureObject } from './internal';
-import { FutureArray } from './internal';
 
 import {  isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
-import { useRef, useReducer } from 'react';
 import { futureArray, futureObject } from './futures';
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
-const initializePromise = promise => {
-  promise.then(res => {
-    promiseStatusStore.set(promise, { value: res, status: 'complete' });
-  });
-
-  promiseStatusStore.set(promise, { value: null, status: 'pending' });
-  return promise
-}
 
 export class RenderOperationError extends Error {
   constructor(message) {
@@ -63,23 +51,61 @@ const throwIfNotGET = method => { if (method !== 'GET') { throw new RenderOperat
   
 //   return [futureCache.current[key], refetch] 
 // }
-const FetchArray = futureArray(globalThis.fetch, getFetchKey);
-const FetchObject = futureObject(globalThis.fetch, getFetchKey);
-export const fetchArray = (...args) => new FetchArray(...args);
+// TODO: create then continuation
+// TODO: accept callback into requestInfo or requestInit
+const glob = window || global || globalThis;
+const createFetchJson = () => async (requestInfo, requestInit = {}) => {
+  try {
+    const res = await glob.fetch(requestInfo, requestInit);
+    const body = await res.json();
+    return body;
+  } catch(err) {
+    console.error(err);
+    throw err;    
+  }
 
-export const fetchObject = (...args) => new FetchObject(...args);
+}
+
+const FetchArray = futureArray(createFetchJson(), getFetchKey);
+const FetchObject = futureObject(createFetchJson(), getFetchKey);
+
+export const fetchArray = (requestInfo, requestInit = {}) => {
+  return lazyArray(() => {
+    if(typeof requestInfo === 'function') {
+      requestInfo = requestInfo()
+    }
+    const val = FetchArray.of(requestInfo, requestInit); 
+    return val;
+  })
+}
+
+export const fetchObject =  (requestInfo, requestInit = {}) => {
+  return lazyObject(() => {
+
+    if(typeof requestInfo === 'function') {
+      requestInfo = requestInfo()
+    }
+
+    return FetchObject.of(requestInfo, requestInit); 
+  })
+}
 
 function getFetchKey(_promise, [requestInfo, requestInit]) {
-  if (requestInfo instanceof Request) {
-    throwIfNotGET(requestInfo.method);
-    return requestInfo.url;
-  }
-  else if (typeof requestInfo === 'string') {
-    throwIfNotGET(requestInit?.method || 'GET');
-    return requestInfo;
-  }
-  else {
+  try {
+    if (requestInfo instanceof Request) {
+      throwIfNotGET(requestInfo.method);
+      return requestInfo.url;
+    }
+    else if (typeof requestInfo === 'string') {
+      throwIfNotGET(requestInit?.method || 'GET');
+      return requestInfo;
+    }
+
     throw TypeError(`Invalid type provided for request info`);
+
+  } catch(err) {
+    console.error(err);
+    throw err;
   }
 }
 
