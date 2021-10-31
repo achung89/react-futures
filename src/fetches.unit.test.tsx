@@ -11,7 +11,6 @@ import extractValue from "./test-utils/extractValue";
 import { fetchArray, fetchObject } from "./fetches";
 import { FutureArray } from "./internal";
 import delay from "delay";
-const { whyIsNodeStillRunning } = require('why-is-node-still-running');
 
 expect.extend(require("./test-utils/renderer-extended-expect"));
 

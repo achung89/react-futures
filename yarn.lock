@@ -5392,11 +5392,6 @@ why-is-node-running@^2.2.0:
     siginfo "^2.0.0"
     stackback "0.0.2"
 
-why-is-node-still-running@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/why-is-node-still-running/-/why-is-node-still-running-1.0.0.tgz"
-  integrity sha512-oLjSBpYU0cY77XUJZzu0acNMaM/23dncjWsMcvSt45ZyyBEUuVXGDV2rH3XOg85xobxIIp1jcrq91r74XT1QDg==
-
 word-wrap@~1.2.3:
   version "1.2.3"
   resolved "https://registry.npmjs.org/word-wrap/-/word-wrap-1.2.3.tgz"
