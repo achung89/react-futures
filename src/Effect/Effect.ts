@@ -99,7 +99,7 @@ export function createProxy<T extends object = object>(that, cascade) {
       return run(target => {
         Object.defineProperty(_target, prop, Object.getOwnPropertyDescriptor(target, prop) || {})
 
-        return Reflect.getOwnPropertyDescriptor(_target, prop);
+        return Reflect.getOwnPropertyDescriptor(target, prop);
       }, proxy, cascade)
     },
     getPrototypeOf: _target => {

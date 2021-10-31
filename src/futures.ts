@@ -11,20 +11,7 @@ export const getCache = () => new Map();
 //TODO: consider if this the best type signature for this function when it becomes generic
 const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + fromArgsToCacheKey(keys);
 
-const retryPromiseThrow = (promiseThunk) => async () => {
-  while(true){
-    try {
-      return await promiseThunk();
-    } catch (errOrProm) {
-      if(typeof errOrProm.then === 'function') {
-        await errOrProm;
-        continue;
-      }
 
-      throw errOrProm;
-    }
-  }
-}
 // customizeable cache callback
 export const futureObject = <T extends object>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
@@ -48,7 +35,7 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
       const cacheKey = getCacheKey(promiseThunk, keys)
       const cache = PushCacheCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
-      const promise = getCachedPromise(retryPromiseThrow(() => promiseThunk(...keys)), cacheKey, cache.cache)
+      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(promise, cb => PushCacheCascade.of(cb, cache));
     }
   };
@@ -77,7 +64,7 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
       const cacheKey = getCacheKey(promiseThunk, keys)
       const cache = PushCacheCascade.getCurrentScope() ?? (isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
-      super(getCachedPromise(retryPromiseThrow(() => promiseThunk(...keys)), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
+      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
     }
   };
 };
