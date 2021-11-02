@@ -40,6 +40,9 @@ export class SuspenseJobQueue implements SuspenseJobQueueType {
               value
             }
           })
+          .catch(err => {
+            throw err;
+          })
         }
       } else {
         this.#job = {

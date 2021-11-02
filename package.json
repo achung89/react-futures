@@ -64,9 +64,8 @@
     "why-is-node-running": "^2.2.0",
     "yarn": "^1.22.10"
   },
-  "peerDependencies": {},
   "scripts": {
-    "test": "jest",
+    "test": "NODE_OPTIONS=--unhandled-rejections=warn node --trace-warnings node_modules/.bin/jest",
     "test:file": "func() { jest \"$@\" &> output.txt; }; func",
     "build": "rollup -c"
   }
