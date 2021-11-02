@@ -348,7 +348,7 @@ describe('Array operations', () => {
 
         
       let created;
-      expect(() => method(resource)).toThrow(); //TODO: specify error
+      expect(() => method(futureArr)).toThrow(); //TODO: specify error
       act(() => {
         renderer = render(
           <Suspense fallback={<div>Loading...</div>}>

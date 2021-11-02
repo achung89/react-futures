@@ -1,5 +1,6 @@
 import { species,cascadeMap, map, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap } from '../internal';
 import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
+import { getRaw, isFuture } from '../utils';
 
 
 
@@ -28,6 +29,9 @@ export class LazyArray<T> extends Array<T> {
   }
   filter(callback, thisArg) {
     return map(arr => {
+      if(isFuture(arr)) {
+        arr = getRaw(arr);
+      }
       const Species = arr.constructor[Symbol.species];
       const newArr = new Species;
       const promises: Promise<any[]>[] = [];
@@ -57,7 +61,10 @@ export class LazyArray<T> extends Array<T> {
   }
   map(callback, thisArg) {
     return map(arr => {
-      const Species = arr.constructor[Symbol.species];
+      if(isFuture(arr)) {
+        arr = getRaw(arr);
+      }
+      const Species =  arr.constructor[Symbol.species];
       const newArr = new Species;
       const promises: Promise<any[]>[] = [];
       for (let i = 0; i < arr.length; i++) {
@@ -89,6 +96,9 @@ export class LazyArray<T> extends Array<T> {
   }
   flatMap(callback, thisArg) {
     return map(arr => {
+      if(isFuture(arr)) {
+        arr = getRaw(arr);
+      }
       const Species = arr.constructor[Symbol.species];
       const newArr = new Species;
       const promises: Promise<any[]>[] = [];
@@ -176,6 +186,7 @@ export class LazyArray<T> extends Array<T> {
   }
   find(callback, thisArg) {
     return run(arr => {
+
       const promises: Promise<any[]>[] = [];
       let foundItem;
       let found = false;
