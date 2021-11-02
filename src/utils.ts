@@ -25,7 +25,7 @@ export const isFuture = (proxy) => thisMap.has(proxy);
 
 export const unwrapProxy = (proxy) => thisMap.get(proxy);
 
-
+// TODO: write tests
 export const isReactRendering = () => {
   const dispatcher =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -43,22 +43,6 @@ export const isReactRendering = () => {
   );
 };
 
-export const isDomRendering = () => {
-  // console.log('===================', ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED)
-  // console.log('===================',
-  // ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[0](),
-  // ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[1](),
-  //  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[2]())
-  const isTestDomRendering =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-      ?.IsSomeRendererActing?.current;
-  const isDomRendering =
-    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events[6]
-      ?.current;
-  return isDomRendering || isTestDomRendering;
-};
-
-
 // returns result of first call on every subsequent call
 export const first = (fn: Function) => {
   let ran = false;
@@ -75,6 +59,7 @@ export const first = (fn: Function) => {
   };
 };
 
+// TODO: should accept promise function
 export const lazyArray = (fn) =>
   new LazyArray(() => {
     const result = fn();
@@ -84,6 +69,8 @@ export const lazyArray = (fn) =>
       );
     return result;
   }, defaultCascade);
+
+// TODO: should accept promise function
 
 export const lazyObject = (fn) =>
   new LazyObject(() => {
@@ -95,6 +82,7 @@ export const lazyObject = (fn) =>
     }
     return result;
   }, defaultCascade);
+
 
 export const getRaw = (future) => {
   if (!isFuture(future)) {
