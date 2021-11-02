@@ -91,7 +91,8 @@ export function createProxy<T extends object = object>(that, cascade) {
         return Reflect.get(target, key, receiver);
       }
       
-      return run(target => Reflect.get(target, key, target), proxy, cascade);
+      return run(target => {
+        return Reflect.get(target, key, target)}, proxy, cascade);
     },
     getOwnPropertyDescriptor: (_target, prop) => {
       // that is to not violate invariants for non-configurable properties

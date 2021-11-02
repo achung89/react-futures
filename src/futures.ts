@@ -11,6 +11,7 @@ export const getCache = () => new Map();
 //TODO: consider if this the best type signature for this function when it becomes generic
 const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + fromArgsToCacheKey(keys);
 
+
 // customizeable cache callback
 export const futureObject = <T extends object>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
@@ -30,9 +31,7 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
     
 
     constructor(...keys) {
-      if (keys.some(key => typeof key === 'object' && key !== null) && isReactRendering()) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
-      }
+
       const cacheKey = getCacheKey(promiseThunk, keys)
       const cache = PushCacheCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
@@ -60,9 +59,7 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
     }
 
     constructor(...keys) {
-      if (keys.some(key => typeof key === 'object' && key !== null) && isReactRendering()) {
-        throw new Error(`TypeError: key expected to be of type number, string, or undefined inside render, received array or object`)
-      };
+
 
       const cacheKey = getCacheKey(promiseThunk, keys)
       const cache = PushCacheCascade.getCurrentScope() ?? (isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
@@ -74,14 +71,17 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
 
 export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
+export const promiseThunkValue = Symbol('promise-thunk')
 function getCachedPromise(promiseThunk: any, key, cache) { 
   if (cache.has(key)) {
     return cache.get(key);
   }
 
-  cache.set(key, promiseThunk());
+  const promise = promiseThunk()
+  // for debugging promise
+  promise[promiseThunkValue] = promiseThunk;
+  cache.set(key, promise);
 
-  const promise = cache.get(key);
   promise.then(res => {
     promiseStatusStore.set(promise, { value: res, status: 'complete' });
   }).catch(err => { throw err });
