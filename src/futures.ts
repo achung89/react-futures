@@ -3,15 +3,16 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray, species,  } from './internal';
-import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, PushCacheCascade } from './internal';
+import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, SuspenseCascade } from './internal';
 import { isReactRendering } from './utils';
 import React from 'react';
 import {unstable_getCacheForType as getCacheForType} from 'react';
+
 export const getCache = () => new Map();
 //TODO: consider if this the best type signature for this function when it becomes generic
 const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + fromArgsToCacheKey(keys);
-
-
+// TODO: strongly type
+// futures should handle suspense 
 // customizeable cache callback
 export const futureObject = <T extends object>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
@@ -33,10 +34,10 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
     constructor(...keys) {
 
       const cacheKey = getCacheKey(promiseThunk, keys)
-      const cache = PushCacheCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
+      const cache = SuspenseCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
-      super(promise, cb => PushCacheCascade.of(cb, cache));
+      super(promise, cb => SuspenseCascade.of(cb, cache));
     }
   };
 };
@@ -62,9 +63,9 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
 
 
       const cacheKey = getCacheKey(promiseThunk, keys)
-      const cache = PushCacheCascade.getCurrentScope() ?? (isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
+      const cache = SuspenseCascade.getCurrentScope() ?? (isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
-      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => PushCacheCascade.of(cb, cache));
+      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => SuspenseCascade.of(cb, cache));
     }
   };
 };

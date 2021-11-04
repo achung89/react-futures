@@ -34,9 +34,9 @@ const createCacheScope = (cb, cacheScope: CacheScope) => {
 const deepChain = async (prom, cb, cacheScope) => {
   try {
     await prom;
-    let newVal = PushCascade.of(cb, cacheScope);
+    let newVal = SuspenseCascade.of(cb, cacheScope);
 
-    while (newVal instanceof PushCascade) {
+    while (newVal instanceof SuspenseCascade) {
       if (newVal instanceof SuspenseJob) {
         const promise = jobMap.get(newVal);
         newVal = await promise;
@@ -61,11 +61,11 @@ const deepChain = async (prom, cb, cacheScope) => {
   }
 };
 
-abstract class PushCascade {
-  abstract map(fn: Function): PushCascade;
+abstract class SuspenseCascade {
+  abstract map(fn: Function): SuspenseCascade;
   abstract get(): any;
   get functor() {
-    return PushCascade.of;
+    return SuspenseCascade.of;
   }
   static of = (cb, instanceCacheScope: CacheScope) => {
     try {
@@ -93,7 +93,7 @@ abstract class PushCascade {
 
 type genericFunc = (...args: any) => any;
 
-export class SuspenseValue<T = any> extends PushCascade {
+export class SuspenseValue<T = any> extends SuspenseCascade {
   val: T;
   status: "complete" | "pending" | "error";
   error: Error;
@@ -114,7 +114,7 @@ export class SuspenseValue<T = any> extends PushCascade {
 
     const val = this.value;
 
-    return PushCascade.of(() => cb(val), cacheScope);
+    return SuspenseCascade.of(() => cb(val), cacheScope);
   }
 
   get() {
@@ -130,7 +130,7 @@ export class SuspenseValue<T = any> extends PushCascade {
 }
 
 const jobMap = new WeakMap();
-export class SuspenseJob<T> extends PushCascade {
+export class SuspenseJob<T> extends SuspenseCascade {
   status: "pending" | "complete" | "error";
   val: any;
   error: Error;
@@ -175,7 +175,7 @@ export class SuspenseJob<T> extends PushCascade {
   async mapJob(cb, cacheScope) {
     try {
       const val = await jobMap.get(this);
-      const newVal = PushCascade.of(() => cb(val), cacheScope);
+      const newVal = SuspenseCascade.of(() => cb(val), cacheScope);
 
       if (isFuture(newVal)) {
         return newVal;
@@ -206,7 +206,7 @@ export class SuspenseJob<T> extends PushCascade {
   map(cb) {
     const cacheScope = getCache(this.#cacheScope);
     if (this.status === "complete") {
-      return PushCascade.of(() => cb(this.val), cacheScope);
+      return SuspenseCascade.of(() => cb(this.val), cacheScope);
     }
 
     if (this.status === "error") {
@@ -240,4 +240,4 @@ export class SuspenseJob<T> extends PushCascade {
 }
 
 
-export { PushCascade };
+export { SuspenseCascade  };

@@ -628,3 +628,9 @@ test("lazyArray should handle nested future array inside render", async () => {
 // });
 
 // })
+
+describe('setConfig', () => {
+  it('should set error config', () => {
+    
+  })
+})

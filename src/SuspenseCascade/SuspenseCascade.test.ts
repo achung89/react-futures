@@ -1,14 +1,14 @@
-import { PushCascade } from "../internal";
+import { SuspenseCascade } from "../internal";
 import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 
 
 
-describe('PushCascade', () => {
+describe('SuspenseCascade', () => {
   it('shouldnt throw suspense if promise is already resolved', async () => {
     const fn = jest.fn()
 
-    let suspender = PushCascade.of(throwOnce(() => 'johnny bravo'))
+    let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(throwOnce(upperCase))
     try {
       suspender.get();
@@ -22,17 +22,17 @@ describe('PushCascade', () => {
 
   })
   it('should return value if no promises throw', () => {
-    const suspense = PushCascade.of(() => 'johnny bravo')
+    const suspense = SuspenseCascade.of(() => 'johnny bravo')
     expect(suspense.get()).toEqual('johnny bravo')
   })
   it('should map callbacks', () => {
     {
-      const suspense = PushCascade.of(() => 'johnny bravo')
+      const suspense = SuspenseCascade.of(() => 'johnny bravo')
         .map(upperCase);
       expect(suspense.get()).toEqual('JOHNNY BRAVO')
     }
     {
-      const suspense = PushCascade.of(() => 'johnny bravo')
+      const suspense = SuspenseCascade.of(() => 'johnny bravo')
         .map(upperCase)
         .map(spaceOut)
 
@@ -43,7 +43,7 @@ describe('PushCascade', () => {
     const fn = jest.fn()
 
 
-    let suspender = PushCascade.of(() => 'johnny bravo')
+    let suspender = SuspenseCascade.of(() => 'johnny bravo')
       .map(throwOnce(upperCase))
     try {
       suspender.get();
@@ -61,7 +61,7 @@ describe('PushCascade', () => {
   it('should throw suspense if first callback throws', async () => {
     const fn = jest.fn()
 
-    let suspender = PushCascade.of(throwOnce(() => 'johnny bravo'))
+    let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(upperCase)
     try {
       suspender.get();
@@ -78,7 +78,7 @@ describe('PushCascade', () => {
   it('should throw suspense if first and second callback throws', async () => {
     const fn = jest.fn()
 
-    let suspender = PushCascade.of(throwOnce(() => 'johnny bravo'))
+    let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(throwOnce(upperCase))
     try {
       suspender.get();
@@ -94,7 +94,7 @@ describe('PushCascade', () => {
   it.skip('should throw same promise on subsequent throw', async () => {
     const fn = jest.fn()
 
-    let suspender = PushCascade.of(throwTwice(() => 'johnny bravo'))
+    let suspender = SuspenseCascade.of(throwTwice(() => 'johnny bravo'))
     
     let promise1
     try {
