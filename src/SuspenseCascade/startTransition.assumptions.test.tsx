@@ -2,7 +2,6 @@ jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { act } from "react-dom/test-utils";
 import { Suspense } from "react";
 
-import { PushCascade } from "../internal";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 import { startTransition, unstable_getCacheForType } from "react";
 import { render } from "../test-utils/rtl-renderer";

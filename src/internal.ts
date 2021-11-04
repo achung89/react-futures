@@ -7,7 +7,7 @@ export * from './FutureObject/FutureObject';
 export * from './CacheScopeCascade/CacheScopeCascade'
 export * from './utils';
 export * from './PullCascade/PullCascade'
-export * from './PushCascade/PushCascade'
+export * from './SuspenseCascade/SuspenseCascade'
 export * from './functorComposition/composeFunctors'
 export * from './functorComposition/PullCacheCascade'
-export * from './functorComposition/PushCacheCascade'
+export * from './SuspenseCascade/SuspenseCascade'

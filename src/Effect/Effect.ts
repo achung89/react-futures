@@ -1,6 +1,5 @@
-import { pipe, first } from '../internal';
-import { LazyArray, cloneFuture } from '../internal';
-import { isFuture, getRaw, lazyArray } from '../internal';
+import { LazyArray } from '../internal';
+import { lazyArray } from '../internal';
 import { cascadeMap, createCascadeMap } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');

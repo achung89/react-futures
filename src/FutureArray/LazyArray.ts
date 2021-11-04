@@ -17,9 +17,11 @@ export class LazyArray<T> extends Array<T> {
 
     return proxy;
   }
+
   static get [species]() {
     return Species
   }
+
   static isArray = Array.isArray
 
   // immutable methods
@@ -85,6 +87,7 @@ export class LazyArray<T> extends Array<T> {
       return newArr;
     }, this, cascadeMap.get(this))
   }
+  // cant do reduce because we don't know what the result type is
   // reduce(...args) {
   //   return map(target => target.reduce(...args), this);
   // }

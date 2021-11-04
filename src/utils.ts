@@ -3,18 +3,13 @@ import {
   thisMap,
   LazyObject,
   LazyArray,
-  PushCacheCascade,
+  SuspenseCascade,
   run,
 } from "./internal";
 import ReactDOM from "react-dom";
 import { getCache } from "./futures";
 import React from "react";
 export const metadataMap = new WeakMap();
-
-export const pipe =
-  (...fns: Function[]) =>
-  (val: any = undefined) =>
-    fns.reduce((val, fn) => fn(val), val);
 
 export const tapper = (fn: Function) => (val: any) => {
   fn(val);
@@ -121,9 +116,9 @@ export const getCascade = (obj) => {
 };
 
 export const defaultCascade = (cb) =>
-  PushCacheCascade.of(
+  SuspenseCascade.of(
     cb,
-    PushCacheCascade.getCurrentScope() ||
+    SuspenseCascade.getCurrentScope() ||
       (isReactRendering()
         ? {
             cache: getCacheForType(getCache),
