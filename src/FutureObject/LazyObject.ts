@@ -48,6 +48,7 @@ export class LazyObject {
     return LazyObject;
   }
 
+
   constructor(cb, createCascade) {
     const cascade = createCascade(cb);
     const proxy = createProxy(this, cascade)
