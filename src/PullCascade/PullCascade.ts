@@ -17,9 +17,7 @@ const PullCascade = cb => {
       
     //   return this.map(tapper(fn));
     // },
-    get functor() {
-      return PullCascade.of
-    }
+
   }
 }
 

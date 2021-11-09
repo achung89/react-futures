@@ -56,19 +56,19 @@ export const first = (fn: Function) => {
 
 // TODO: should accept promise function
 export const lazyArray = (fn) =>
-  new LazyArray(() => {
+  new LazyArray(defaultCascade(() => {
     const result = fn();
     if (!Array.isArray(result))
       throw new Error(
         "Type Error: expected result of lazyArray to be of type array"
       );
     return result;
-  }, defaultCascade);
+  }));
 
 // TODO: should accept promise function
 
 export const lazyObject = (fn) =>
-  new LazyObject(() => {
+  new LazyObject(defaultCascade(() => {
     const result = fn();
     if (typeof result !== "object" || result === null) {
       throw new Error(
@@ -76,7 +76,7 @@ export const lazyObject = (fn) =>
       );
     }
     return result;
-  }, defaultCascade);
+  }));
 
 
 export const getRaw = (future) => {

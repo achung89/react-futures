@@ -29,12 +29,12 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
     static of(...args) {
       return new FutureObjectCache(...args);
     }
-    
+
 
     constructor(...keys) {
+      const cache = SuspenseCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       const cacheKey = getCacheKey(promiseThunk, keys)
-      const cache = SuspenseCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(promise, cb => SuspenseCascade.of(cb, cache));
@@ -61,9 +61,9 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
 
     constructor(...keys) {
 
+      const cache = SuspenseCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       const cacheKey = getCacheKey(promiseThunk, keys)
-      const cache = SuspenseCascade.getCurrentScope() ?? (isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => SuspenseCascade.of(cb, cache));
     }

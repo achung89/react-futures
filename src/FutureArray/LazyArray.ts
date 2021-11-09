@@ -1,19 +1,18 @@
-import { species,cascadeMap, map, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap } from '../internal';
+import { species,cascadeMap, map, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap, SuspenseCascade } from '../internal';
 import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
 import { getRaw, isFuture } from '../utils';
 
 
 
 export class LazyArray<T> extends Array<T> {
-
-  constructor(cb, createCascade) {
+  #cascade: SuspenseCascade;
+  constructor(cascade: SuspenseCascade) {
     super();
-    const cascade = createCascade(cb);
+    this.#cascade = cascade;
     const proxy = createProxy(this, cascade)
 
     thisMap.set(proxy, this);
     cascadeMap.set(proxy, cascade);
-    createCascadeMap.set(proxy, createCascade);
 
     return proxy;
   }
@@ -130,39 +129,53 @@ export class LazyArray<T> extends Array<T> {
 
 
   // mutable methods
-  splice(...args) {
-    return tap(target => target.splice(...args), this, cascadeMap.get(this),'splice');
+  splice(...args): never {
+    // TODO: better error message;
+    throw new Error('splice is not supported');
+    // return tap(target => target.splice(...args), this, cascadeMap.get(this),'splice');
   }
-  copyWithin(...args) {
-    return tap(target => target.copyWithin(...args), this, cascadeMap.get(this), 'copyWithin');
+  copyWithin(...args): never {
+        // TODO: better error message;
+
+    throw new Error('copyWithin not supported')
+    // return tap(target => target.copyWithin(...args), this, cascadeMap.get(this), 'copyWithin');
   }
-  sort(comparator) {
-    return tap(target => {
-      const promises: Promise<any[]>[] = []
-      for (let i = 1; i < target.length; i++) {
-        try {
-          comparator(target[i - 1], target[i])
-        } catch (errOrProm) {
-          if (typeof errOrProm.then === 'function') {
-            promises.push(errOrProm);
-            continue;
-          }
-          throw errOrProm;
-        }
-      }
-      if (promises.length > 0) {
-        throw new ThrowablePromise(Promise.all(promises));
-      }
-      return target.sort(comparator)
-    }, this, cascadeMap.get(this), 'sort');
+  sort(comparator): never {
+            // TODO: better error message;
+
+    throw new Error('sort is not supported');
+    // return tap(target => {
+    //   const promises: Promise<any[]>[] = []
+    //   for (let i = 1; i < target.length; i++) {
+    //     try {
+    //       comparator(target[i - 1], target[i])
+    //     } catch (errOrProm) {
+    //       if (typeof errOrProm.then === 'function') {
+    //         promises.push(errOrProm);
+    //         continue;
+    //       }
+    //       throw errOrProm;
+    //     }
+    //   }
+    //   if (promises.length > 0) {
+    //     throw new ThrowablePromise(Promise.all(promises));
+    //   }
+    //   return target.sort(comparator)
+    // }, this, cascadeMap.get(this), 'sort');
   }
 
-  reverse(...args) {
-    return tap(target => target.reverse(...args), this, cascadeMap.get(this), 'reverse');
+  reverse(...args): never {
+                // TODO: better error message;
+
+    throw new Error('reverse is not supported');
+    // return tap(target => target.reverse(...args), this, cascadeMap.get(this), 'reverse');
   }
 
-  fill(...args) {
-    return tap(target => target.fill(...args), this, cascadeMap.get(this), 'fill');
+  fill(...args): never {
+                    // TODO: better error message;
+
+    throw new Error('fill is not supported');
+    // return tap(target => target.fill(...args), this, cascadeMap.get(this), 'fill');
   }
 
   //suspend methods
@@ -300,7 +313,7 @@ export class LazyArray<T> extends Array<T> {
   }
 
   static of(arrayReturningCb) {
-    return new LazyArray(arrayReturningCb, defaultCascade);
+    return new LazyArray( defaultCascade(arrayReturningCb))
   }
 
   // suspend on iterator access
@@ -324,13 +337,11 @@ export class LazyIterator {
     return LazyIterator;
   }
   
-  constructor(cb, createCascade) {
-    const cascade = createCascade(cb);
+  constructor(cascade) {
     const proxy = createProxy(this, cascade)
 
     thisMap.set(proxy, this);
     cascadeMap.set(proxy, cascade)
-    createCascadeMap.set(proxy, createCascade);
 
     return proxy;
   }
