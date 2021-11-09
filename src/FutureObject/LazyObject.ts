@@ -29,9 +29,9 @@ const staticMutableToImmutableOperation = (target, cb) => {
   const createCascade = getCascade(target)
   if (Array.isArray(target)) {
     
-    return  new LazyArray(() => cb(cloneFuture(target)), createCascade);
+    return  new LazyArray(createCascade(() => cb(cloneFuture(target))));
   } else {
-    return new LazyObject(() =>  cb(cloneFuture(target)), createCascade);
+    return new LazyObject(createCascade(() =>  cb(cloneFuture(target))));
   }
 }
 
@@ -49,60 +49,58 @@ export class LazyObject {
   }
 
 
-  constructor(cb, createCascade) {
-    const cascade = createCascade(cb);
+  constructor(cascade) {
     const proxy = createProxy(this, cascade)
 
     thisMap.set(proxy, this);
     cascadeMap.set(proxy, cascade)
-    createCascadeMap.set(proxy, createCascade);
     return proxy;
   }
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {
     const createCascade = getCascade(obj)
-    return new LazyObject(() => Object.getOwnPropertyDescriptor(obj, property), createCascade);
+    return new LazyObject(createCascade(() => Object.getOwnPropertyDescriptor(obj, property)));
   }
   static getOwnPropertyDescriptors(obj) {
     const createCascade = getCascade(obj)
-    return new LazyObject(() => Object.getOwnPropertyDescriptors(obj), createCascade);
+    return new LazyObject(createCascade(() => Object.getOwnPropertyDescriptors(obj)));
   }
   static getOwnPropertyNames(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyArray(() => Object.getOwnPropertyNames(obj), createCascade);
+    return new LazyArray(createCascade(() => Object.getOwnPropertyNames(obj)));
   }
   static getOwnPropertySymbols(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyArray(() => Object.getOwnPropertySymbols(obj), createCascade);
+    return new LazyArray(createCascade(() => Object.getOwnPropertySymbols(obj)));
   }
   static getPrototypeOf(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyObject(() => Object.getPrototypeOf(obj), createCascade);
+    return new LazyObject(createCascade(() => Object.getPrototypeOf(obj)));
   }
   static keys(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyArray(() => Object.keys(obj), createCascade);
+    return new LazyArray(createCascade(() => Object.keys(obj)));
   }
   static entries(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyArray(() => Object.entries(obj), createCascade)
+    return new LazyArray(createCascade(() => Object.entries(obj)))
   }
   //TODO: write test for fromEntries
   static fromEntries(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyObject(() => Object.fromEntries(obj), createCascade);
+    return new LazyObject(createCascade(() => Object.fromEntries(obj)));
   }
   static values(obj) {
     const createCascade = getCascade(obj)
 
-    return new LazyArray(() => Object.values(obj), createCascade);
+    return new LazyArray(createCascade(() => Object.values(obj)));
   }
 
   // mutable methods made immutable
@@ -178,7 +176,7 @@ export class LazyObject {
     // TODO: think through why this shouldn't be allowed
     throw new NotSupportedError('FutureObject.create');
   }
-  // forward
+  // TODO: forward?
   static is(obj1, obj2) {
     throw new NotSupportedError('FutureObject.is');
   }

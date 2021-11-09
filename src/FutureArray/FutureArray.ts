@@ -9,7 +9,7 @@ export class FutureArray<T> extends LazyArray<T> {
   }
 
   constructor(promise, createCascade) {
-    super(() => {
+    super(createCascade(() => {
 
 
       let promiseFSM = promiseStatusStore.get(promise);
@@ -39,7 +39,7 @@ export class FutureArray<T> extends LazyArray<T> {
         //TODO: should I put error here?
         throw new Error('Unhandled promise exception');
       }
-    }, createCascade);
+    }));
 
   }
 }

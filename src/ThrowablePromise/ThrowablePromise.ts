@@ -1,17 +1,29 @@
 
+const unwrapPromise = (promOrThrowable: any): any => {
+
+    if (promOrThrowable instanceof Promise) {
+        return promOrThrowable;
+    }
+
+    if (promOrThrowable instanceof ThrowablePromise) {
+        return promOrThrowable.prom;
+    }
+
+    if (promOrThrowable instanceof Error) {
+        return new ThrowablePromise(promOrThrowable);
+    }
+
+    return new ThrowablePromise(new Error(`${promOrThrowable} is not a promise or a ThrowablePromise`));
+}
 
 export class ThrowablePromise extends Error {
   prom: Promise<any>;
   cause: ThrowablePromise;
   constructor(promOrThrowablePromise) {
     super();
-    if(promOrThrowablePromise instanceof ThrowablePromise) {
-      this.prom = promOrThrowablePromise.prom
-      this.cause = promOrThrowablePromise;
+    this.prom = unwrapPromise(promOrThrowablePromise);
+    this.cause = promOrThrowablePromise;
 
-    } else {
-      this.prom = promOrThrowablePromise;
-    }
 
     this.message = "Suspend detected outside a permitted zone, this may be caused by accessing a property on a future outside of react or of a suspend zone";
     this.name = "SuspendOutsideReactError";
