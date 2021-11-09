@@ -2,7 +2,7 @@ import { isFuture } from "../internal";
 import { unstable_getCacheForType as getCacheForType } from "react";
 import { isReactRendering } from "../internal";
 import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
-
+type GetCache = () => Map<string, Promise<any>>;
 type CacheScope =
   | {
       cache: Map<string, Promise<any>> | null;
@@ -64,21 +64,20 @@ const deepChain = async (prom, cb, cacheScope) => {
 abstract class SuspenseCascade {
   abstract map(fn: Function): SuspenseCascade;
   abstract get(): any;
-  get functor() {
-    return SuspenseCascade.of;
-  }
-  static of = (cb, instanceCacheScope: CacheScope) => {
+
+  static of = (cb, cacheScope: CacheScope) => {
+
     try {
       const newVal = new SuspenseValue(
-        createCacheScope(cb, instanceCacheScope),
-        instanceCacheScope
+        createCacheScope(cb, cacheScope),
+        cacheScope
       );
       return newVal;
     } catch (errOrProm) {
       if (typeof errOrProm.then === "function") {
         return new SuspenseJob(() =>
-          deepChain(errOrProm, cb, instanceCacheScope),
-          instanceCacheScope
+          deepChain(errOrProm, cb, cacheScope),
+          cacheScope
         );
       }
 

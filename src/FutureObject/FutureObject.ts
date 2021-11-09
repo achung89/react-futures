@@ -9,7 +9,7 @@ export class FutureObject<T extends object, K extends object | null> extends Laz
   }
 
   constructor(promise, createCascade) {
-    super(() => {
+    super(createCascade(() => {
 
       let meta = promiseStatusStore.get(promise);
 
@@ -37,6 +37,6 @@ export class FutureObject<T extends object, K extends object | null> extends Laz
         //TODO: should I put error here?
         throw new Error('Unhandled promise exception');
       }
-    }, createCascade);
+    }))
   }
 }

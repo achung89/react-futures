@@ -1,6 +1,6 @@
 import { LazyArray } from '../internal';
 import { lazyArray } from '../internal';
-import { cascadeMap, createCascadeMap } from '../utils';
+import { cascadeMap, createCascadeMap, defaultCascade } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 
@@ -43,7 +43,7 @@ export const map = <T>(fn: Function, futr: LazyArray<T>, cascade, Klass = thisMa
     // TODO: change
     throw new Error('NOT INSTANCE');
   }
-  return new Klass(fn, cb => cascade.map(cb));
+  return new Klass(cascade.map(fn));
 }
 
 export const run = (fn: Function, futr, cascade) => {
@@ -111,10 +111,9 @@ export function createProxy<T extends object = object>(that, cascade) {
       throw new InvalidObjectStaticMethod(['isExtensible', 'isFrozen', 'isSealed']);
     },
     ownKeys: _target => {
-      const createCascade = createCascadeMap.get(proxy)
       // TODO: is that right?
 
-      return new LazyArray(() => run(target => Reflect.ownKeys(target), proxy, cascade), createCascade);
+      return new LazyArray(cascade.map(target => Reflect.ownKeys(target)));
     },
     preventExtensions: _target => {
       throw new InvalidObjectStaticMethod(['preventExtensions', 'seal'])

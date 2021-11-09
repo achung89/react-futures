@@ -13,8 +13,6 @@ export class RenderOperationError extends Error {
   }
 };
 
-const throwIfNotGET = method => { if (method !== 'GET') { throw new RenderOperationError('Only GET permitted in render') } }
-
 
 // TODO: create then continuation
 // TODO: accept callback into requestInfo or requestInit
@@ -54,6 +52,8 @@ export const fetchObject =  (requestInfo, requestInit = {}, config) => {
     return FetchObject.of(requestInfo, requestInit); 
   })
 }
+
+const throwIfNotGET = method => { if (method !== 'GET') { throw new RenderOperationError('Only GET permitted in render') } }
 
 function getFetchKey(_promise, [requestInfo, requestInit]) {
   try {
