@@ -1,7 +1,7 @@
 import { createProxy, run } from '../Effect/Effect';
-import {  thisMap } from '../internal';
+import {  SuspenseCascade, thisMap } from '../internal';
 import { LazyArray, getRaw } from '../internal';
-import { species, createCascadeMap, getCascade, cascadeMap } from '../internal';
+import { species,  getCascade, cascadeMap } from '../internal';
 
 export class NotSupportedError extends Error {
   constructor(methodName) {
@@ -26,12 +26,12 @@ export class SuspendOperationOutsideRenderError extends Error {
 }
 
 const staticMutableToImmutableOperation = (target, cb) => {
-  const createCascade = getCascade(target)
+  const cascade = getCascade(target)
   if (Array.isArray(target)) {
     
-    return  new LazyArray(createCascade(() => cb(cloneFuture(target))));
+    return  new LazyArray(cascade.map(() => cb(cloneFuture(target))));
   } else {
-    return new LazyObject(createCascade(() =>  cb(cloneFuture(target))));
+    return new LazyObject(cascade.map(() =>  cb(cloneFuture(target))));
   }
 }
 
@@ -42,65 +42,69 @@ const staticSuspendOperation = (target, cb, methodName) => {
     return cb(target);
   }
 };
-
+ let getObjectCascade: (instance: LazyObject) => SuspenseCascade;
+ let isLazyObject: (value: any) => value is LazyObject;
 export class LazyObject {
   static get [species]() {
     return LazyObject;
   }
+  static {
+    isLazyObject = (instance): instance is LazyObject => thisMap.has(instance) && thisMap.get(instance) instanceof LazyArray
+    getObjectCascade = (instance: LazyObject) => thisMap.get(instance).#cascade; 
+  }
 
-
+  #cascade: SuspenseCascade;
   constructor(cascade) {
     const proxy = createProxy(this, cascade)
-
+    this.#cascade = cascade;
     thisMap.set(proxy, this);
-    cascadeMap.set(proxy, cascade)
     return proxy;
   }
 
   // immutable methods
   static getOwnPropertyDescriptor(obj, property) {
-    const createCascade = getCascade(obj)
-    return new LazyObject(createCascade(() => Object.getOwnPropertyDescriptor(obj, property)));
+    const cascade = getCascade(obj)
+    return new LazyObject(cascade.map(() => Object.getOwnPropertyDescriptor(obj, property)));
   }
   static getOwnPropertyDescriptors(obj) {
-    const createCascade = getCascade(obj)
-    return new LazyObject(createCascade(() => Object.getOwnPropertyDescriptors(obj)));
+    const cascade = getCascade(obj)
+    return new LazyObject(cascade.map(() => Object.getOwnPropertyDescriptors(obj)));
   }
   static getOwnPropertyNames(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyArray(createCascade(() => Object.getOwnPropertyNames(obj)));
+    return new LazyArray(cascade.map(() => Object.getOwnPropertyNames(obj)));
   }
   static getOwnPropertySymbols(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyArray(createCascade(() => Object.getOwnPropertySymbols(obj)));
+    return new LazyArray(cascade.map(() => Object.getOwnPropertySymbols(obj)));
   }
   static getPrototypeOf(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyObject(createCascade(() => Object.getPrototypeOf(obj)));
+    return new LazyObject(cascade.map(() => Object.getPrototypeOf(obj)));
   }
   static keys(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyArray(createCascade(() => Object.keys(obj)));
+    return new LazyArray(cascade.map(() => Object.keys(obj)));
   }
   static entries(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyArray(createCascade(() => Object.entries(obj)))
+    return new LazyArray(cascade.map(() => Object.entries(obj)))
   }
   //TODO: write test for fromEntries
   static fromEntries(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyObject(createCascade(() => Object.fromEntries(obj)));
+    return new LazyObject(cascade.map(() => Object.fromEntries(obj)));
   }
   static values(obj) {
-    const createCascade = getCascade(obj)
+    const cascade = getCascade(obj)
 
-    return new LazyArray(createCascade(() => Object.values(obj)));
+    return new LazyArray(cascade.map(() => Object.values(obj)));
   }
 
   // mutable methods made immutable
@@ -181,3 +185,6 @@ export class LazyObject {
     throw new NotSupportedError('FutureObject.is');
   }
 }
+
+
+export {isLazyObject, getObjectCascade}

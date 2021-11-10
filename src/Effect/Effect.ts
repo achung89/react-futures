@@ -38,7 +38,7 @@ const splice = (fn, cascade) => {
   return result;
 }
 
-export const map = <T>(fn: Function, futr: LazyArray<T>, cascade, Klass = thisMap.get(futr).constructor[species]) => {
+export const map = <T>(fn: Function, futr: LazyArray<T>, cascade) => {
   if (!thisMap.has(futr)) {
     // TODO: change
     throw new Error('NOT INSTANCE');
