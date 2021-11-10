@@ -4,7 +4,6 @@ import {
   LazyObject,
   LazyArray,
   SuspenseCascade,
-  run,
   isLazyArray,
   getArrayCascade,
   isLazyIterator,
@@ -89,14 +88,14 @@ export const getRaw = (future) => {
   if (!isFuture(future)) {
     return future;
   }
-  
+
   const cascade = getCascade(future);
   return cascade.map(getRaw).get();
 };
 
 export const toPromise = async (future) => {
   if (!isFuture(future)) {
-    return Promise.resolve(future);
+    return future;
   }
   try {
     const val = getRaw(future);
@@ -111,8 +110,6 @@ export const toPromise = async (future) => {
   }
 };
 
-export const createCascadeMap = new WeakMap();
-export const cascadeMap = new WeakMap();
 
 export const getCascade = (obj) => {
   if (isLazyArray(obj)) {
