@@ -1,4 +1,4 @@
-import { species,cascadeMap, map, createCascadeMap, tap, run, createProxy, defaultCascade, thisMap, SuspenseCascade } from '../internal';
+import { species, createProxy, defaultCascade, thisMap, SuspenseCascade } from '../internal';
 import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
 import { getRaw, isFuture } from '../utils';
 
@@ -19,7 +19,7 @@ export class LazyArray<T> extends Array<T> {
   }
 
   static {
-    isLazyArray = (instance): instance is LazyArray => thisMap.has(instance) && thisMap.get(instance) instanceof LazyArray
+    isLazyArray = (instance): instance is LazyArray<any> => thisMap.has(instance) && (thisMap.get(instance) instanceof LazyArray)
     getArrayCascade = (instance: LazyArray<any>) => thisMap.get(instance).#cascade; 
   }
 
@@ -35,6 +35,7 @@ export class LazyArray<T> extends Array<T> {
       if(isFuture(arr)) {
         arr = getRaw(arr);
       }
+
       const Species = arr.constructor[Symbol.species];
       const newArr = new Species;
       const promises: Promise<any[]>[] = [];
@@ -99,7 +100,7 @@ export class LazyArray<T> extends Array<T> {
     return new LazyArray(thisMap.get(this).#cascade.map(target => target.flat(...args)));
   }
   flatMap(callback, thisArg) {
-    return new LazyArray(arr => {
+    return new LazyArray(thisMap.get(this).#cascade.map(arr => {
       if(isFuture(arr)) {
         arr = getRaw(arr);
       }
@@ -125,7 +126,7 @@ export class LazyArray<T> extends Array<T> {
       }
       // TODO: improve performance by not creating a new array
       return newArr.flat();
-    });
+    }))
   }
 
 
@@ -335,8 +336,9 @@ export class LazyArray<T> extends Array<T> {
   }
 }
 
- let getIteratorCascade: (instance: LazyIterator) => SuspenseCascade;
- let isLazyIterator: (value: any) => value is LazyIterator;
+let getIteratorCascade: (instance: LazyIterator) => SuspenseCascade;
+let isLazyIterator: (value: any) => value is LazyIterator;
+
 export class LazyIterator {
   static get [species]() {
     return LazyIterator;
@@ -352,7 +354,7 @@ export class LazyIterator {
   
  
   static {
-    isLazyIterator = (instance): instance is LazyIterator => thisMap.has(instance) && thisMap.get(instance) instanceof LazyArray
+    isLazyIterator = (instance): instance is LazyIterator => thisMap.has(instance) && (thisMap.get(instance) instanceof LazyIterator);
     getIteratorCascade = (instance: LazyIterator) => thisMap.get(instance).#cascade; 
   }
 

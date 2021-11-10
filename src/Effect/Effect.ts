@@ -1,6 +1,5 @@
 import { LazyArray } from '../internal';
 import { lazyArray } from '../internal';
-import { cascadeMap, createCascadeMap, defaultCascade } from '../utils';
 export const thisMap = new WeakMap();
 export const species = Symbol('species');
 
@@ -38,24 +37,6 @@ const splice = (fn, cascade) => {
   return result;
 }
 
-export const map = <T>(fn: Function, futr: LazyArray<T>, cascade) => {
-  if (!thisMap.has(futr)) {
-    // TODO: change
-    throw new Error('NOT INSTANCE');
-  }
-  return new Klass(cascade.map(fn));
-}
-
-export const run = (fn: Function, futr, cascade) => {
-
-  if (!thisMap.has(futr)) {
-    // TODO: change
-    throw new Error('NOT INSTANCE');
-  }
-  const val = cascade.map(fn).get()
-  return val
-}
-
 export const tap = (fn: Function, futr, cascade, name: string,) => {
   throw new Error('Mutable operations not allowed')
   if (!thisMap.has(futr)) {
@@ -68,7 +49,6 @@ export const tap = (fn: Function, futr, cascade, name: string,) => {
   }
 
 
-  cascadeMap.set(futr, cascade.tap(fn))
   return futr;
 }
 
@@ -90,22 +70,22 @@ export function createProxy<T extends object = object>(that, cascade) {
         return Reflect.get(target, key, receiver);
       }
       
-      return run(target => {
-        return Reflect.get(target, key, target)}, proxy, cascade);
+      return cascade.map(target => {
+        return Reflect.get(target, key, target)}).get();
     },
     getOwnPropertyDescriptor: (_target, prop) => {
       // that is to not violate invariants for non-configurable properties
-      return run(target => {
+      return cascade.map(target => {
         Object.defineProperty(_target, prop, Object.getOwnPropertyDescriptor(target, prop) || {})
 
         return Reflect.getOwnPropertyDescriptor(target, prop);
-      }, proxy, cascade)
+      }).get();
     },
     getPrototypeOf: _target => {
-      return run(target => Reflect.getPrototypeOf(target), proxy, cascade)
+      return cascade.map(target => Reflect.getPrototypeOf(target)).get();
     },
     has: (_target, key) => {
-      return run(target => Reflect.has(target, key), proxy, cascade);
+      return cascade.map(target => Reflect.has(target, key)).get();
     },
     isExtensible: _target => {
       throw new InvalidObjectStaticMethod(['isExtensible', 'isFrozen', 'isSealed']);
