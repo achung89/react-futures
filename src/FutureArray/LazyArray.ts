@@ -3,22 +3,24 @@ import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
 import { getRaw, isFuture } from '../utils';
 
 
-
+let getArrayCascade: (instance: LazyArray<any>) => SuspenseCascade;
+let isLazyArray: (value: any) => value is LazyArray<any>
 export class LazyArray<T> extends Array<T> {
   #cascade: SuspenseCascade;
   constructor(cascade: SuspenseCascade) {
     super();
+
     this.#cascade = cascade;
     const proxy = createProxy(this, cascade)
-
+    
     thisMap.set(proxy, this);
-    cascadeMap.set(proxy, cascade);
 
     return proxy;
   }
 
-  static get [species]() {
-    return Species
+  static {
+    isLazyArray = (instance): instance is LazyArray => thisMap.has(instance) && thisMap.get(instance) instanceof LazyArray
+    getArrayCascade = (instance: LazyArray<any>) => thisMap.get(instance).#cascade; 
   }
 
   static isArray = Array.isArray
@@ -26,10 +28,10 @@ export class LazyArray<T> extends Array<T> {
   // immutable methods
   // TODO: pass memoized methods on each subsequent iter
   concat(...args) {
-    return map(target => target.concat(...args), this, cascadeMap.get(this));
+    return new LazyArray(thisMap.get(this).#cascade.map(target => target.concat(...args)));
   }
   filter(callback, thisArg) {
-    return map(arr => {
+    return new LazyArray(thisMap.get(this).#cascade.map(arr => {
       if(isFuture(arr)) {
         arr = getRaw(arr);
       }
@@ -55,13 +57,13 @@ export class LazyArray<T> extends Array<T> {
         throw new ThrowablePromise(Promise.all(promises));
       }
       return newArr;
-    }, this, cascadeMap.get(this));
+    }));
   }
   slice(...args) {
-    return map(target => target.slice(...args), this, cascadeMap.get(this));
+    return new LazyArray(thisMap.get(this).#cascade.map(target => target.slice(...args)));
   }
   map(callback, thisArg) {
-    return map(arr => {
+    return new LazyArray(thisMap.get(this).#cascade.map(arr => {
       if(isFuture(arr)) {
         arr = getRaw(arr);
       }
@@ -84,7 +86,7 @@ export class LazyArray<T> extends Array<T> {
         throw new ThrowablePromise(Promise.all(promises));
       }
       return newArr;
-    }, this, cascadeMap.get(this))
+    }))
   }
   // cant do reduce because we don't know what the result type is
   // reduce(...args) {
@@ -94,10 +96,10 @@ export class LazyArray<T> extends Array<T> {
   //   return map(target => target.reduceRight(...args), this);
   // }
   flat(...args) {
-    return map(target => target.flat(...args), this, cascadeMap.get(this));
+    return new LazyArray(thisMap.get(this).#cascade.map(target => target.flat(...args)));
   }
   flatMap(callback, thisArg) {
-    return map(arr => {
+    return new LazyArray(arr => {
       if(isFuture(arr)) {
         arr = getRaw(arr);
       }
@@ -121,9 +123,9 @@ export class LazyArray<T> extends Array<T> {
       if (promises.length > 0) {
         throw new ThrowablePromise(Promise.all(promises));
       }
-
+      // TODO: improve performance by not creating a new array
       return newArr.flat();
-    }, this, cascadeMap.get(this));
+    });
   }
 
 
@@ -180,28 +182,28 @@ export class LazyArray<T> extends Array<T> {
 
   //suspend methods
   indexOf(...args) {
-    return run(target => target.indexOf(...args), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target.indexOf(...args)).get();
   }
   includes(...args) {
-    return run(target => target.includes(...args), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target.includes(...args)).get();
   }
   join(...args) {
-    return run(target => target.join(...args), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map((target => target.join(...args))).get();
   }
   lastIndexOf(...args) {
-    return run(target => target.lastIndexOf(...args), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target.lastIndexOf(...args)).get();
   }
   toString(...args) {
-    return run(target => target.toString(...args), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target.toString(...args)).get();
   }
   toLocaleString(...args) {
-    return run(target => target.toLocaleString(...args), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target.toLocaleString(...args)).get();
   }
   forEach(): never {
     throw new Error('forEach implementation TBD')
   }
   find(callback, thisArg) {
-    return run(arr => {
+    return thisMap.get(this).#cascade.map(arr => {
 
       const promises: Promise<any[]>[] = [];
       let foundItem;
@@ -224,10 +226,10 @@ export class LazyArray<T> extends Array<T> {
         throw new ThrowablePromise(Promise.all(promises));
       }
       return foundItem;
-    }, this, cascadeMap.get(this));
+    }).get();
   }
   every(callback, thisArg) {
-    return run(arr => {
+    return thisMap.get(this).#cascade.map(arr => {
       const promises: Promise<any[]>[] = [];
       let every = true;
       for (let i = 0; i < arr.length; i++) {
@@ -248,10 +250,10 @@ export class LazyArray<T> extends Array<T> {
         throw new ThrowablePromise(Promise.all(promises));
       }
       return every;
-    }, this, cascadeMap.get(this));
+    }).get();
   }
   some(callback, thisArg) {
-    return run(arr => {
+    return thisMap.get(this).#cascade.map(arr => {
       const promises: Promise<any[]>[] = [];
       for (let i = 0; i < arr.length; i++) {
         try {
@@ -271,10 +273,11 @@ export class LazyArray<T> extends Array<T> {
         throw new ThrowablePromise(Promise.all(promises));
       }
       return false;
-    }, this, cascadeMap.get(this));
+    }).get();
   }
   findIndex(callback, thisArg) {
-    return run(arr => {
+
+    return thisMap.get(this).#cascade.map(arr => {
       const promises: Promise<any[]>[] = [];
       for (let i = 0; i < arr.length; i++) {
         try {
@@ -294,7 +297,7 @@ export class LazyArray<T> extends Array<T> {
         throw new ThrowablePromise(Promise.all(promises));
       }
       return -1;
-    }, this, cascadeMap.get(this));
+    }).get();
   }
 
   // Invalid methods
@@ -319,40 +322,49 @@ export class LazyArray<T> extends Array<T> {
   // suspend on iterator access
   [Symbol.iterator]() {
     // TODO: turn this to `map` without it crashing
-    return run(target => target[Symbol.iterator](), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target[Symbol.iterator]()).get();
   }
   values() {
-    return map(target => target.values(), this, cascadeMap.get(this), LazyIterator);
+    return new LazyIterator(thisMap.get(this).#cascade.map(target => target.values()))
   }
   keys() {
-    return map(target => target.keys(), this, cascadeMap.get(this), LazyIterator);
+    return new LazyIterator(thisMap.get(this).#cascade.map(target => target.keys()));
   }
   entries() {
-    return map(target => target.entries(), this, cascadeMap.get(this), LazyIterator);
+    return new LazyIterator(thisMap.get(this).#cascade.map(target => target.entries()));
   }
 }
 
+ let getIteratorCascade: (instance: LazyIterator) => SuspenseCascade;
+ let isLazyIterator: (value: any) => value is LazyIterator;
 export class LazyIterator {
   static get [species]() {
     return LazyIterator;
   }
-  
+  #cascade: SuspenseCascade;
   constructor(cascade) {
     const proxy = createProxy(this, cascade)
-
+    this.#cascade = cascade;
     thisMap.set(proxy, this);
-    cascadeMap.set(proxy, cascade)
 
     return proxy;
   }
+  
+ 
+  static {
+    isLazyIterator = (instance): instance is LazyIterator => thisMap.has(instance) && thisMap.get(instance) instanceof LazyArray
+    getIteratorCascade = (instance: LazyIterator) => thisMap.get(instance).#cascade; 
+  }
+
+
   next(...args) {
-    return run(target => {
+    return thisMap.get(this).#cascade.map(target => {
       return target.next(...args);
-    }, this, cascadeMap.get(this));
+    }).get();
   }
   [Symbol.iterator]() {
-    return run(target => target[Symbol.iterator](), this, cascadeMap.get(this));
+    return thisMap.get(this).#cascade.map(target => target[Symbol.iterator]()).get();
   }
 }
 
-const Species = LazyArray
+export {getArrayCascade, isLazyArray, getIteratorCascade, isLazyIterator}
