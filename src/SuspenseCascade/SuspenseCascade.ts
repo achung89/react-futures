@@ -2,7 +2,6 @@ import { isFuture } from "../internal";
 import { unstable_getCacheForType as getCacheForType } from "react";
 import { isReactRendering } from "../internal";
 import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
-type GetCache = () => Map<string, Promise<any>>;
 type CacheScope =
   | {
       cache: Map<string, Promise<any>> | null;

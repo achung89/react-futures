@@ -1,7 +1,7 @@
-import { createProxy, run } from '../Effect/Effect';
+import { createProxy } from '../Effect/Effect';
 import {  SuspenseCascade, thisMap } from '../internal';
 import { LazyArray, getRaw } from '../internal';
-import { species,  getCascade, cascadeMap } from '../internal';
+import { species,  getCascade } from '../internal';
 
 export class NotSupportedError extends Error {
   constructor(methodName) {
@@ -35,9 +35,10 @@ const staticMutableToImmutableOperation = (target, cb) => {
   }
 }
 
-const staticSuspendOperation = (target, cb, methodName) => {
+const staticSuspendOperation = (target, cb) => {
   if (isEffect(target)) {
-    return run(cb, target, cascadeMap.get(target));
+    const cascade = getCascade(target);
+    return cascade.map(cb).get()
   } else {
     return cb(target);
   }
@@ -49,7 +50,7 @@ export class LazyObject {
     return LazyObject;
   }
   static {
-    isLazyObject = (instance): instance is LazyObject => thisMap.has(instance) && thisMap.get(instance) instanceof LazyArray
+    isLazyObject = (instance): instance is LazyObject => thisMap.has(instance) && (thisMap.get(instance) instanceof LazyObject)
     getObjectCascade = (instance: LazyObject) => thisMap.get(instance).#cascade; 
   }
 
