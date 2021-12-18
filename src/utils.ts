@@ -11,15 +11,9 @@ import {
   isLazyObject,
   getObjectCascade,
 } from "./internal";
-import ReactDOM from "react-dom";
 import { getCache } from "./futures";
 import React from "react";
 export const metadataMap = new WeakMap();
-
-export const tapper = (fn: Function) => (val: any) => {
-  fn(val);
-  return val;
-};
 
 export const isFuture = (proxy) => thisMap.has(proxy);
 
@@ -71,7 +65,6 @@ export const lazyArray = (fn) =>
   }));
 
 // TODO: should accept promise function
-
 export const lazyObject = (fn) =>
   new LazyObject(defaultCascade(() => {
     const result = fn();
@@ -82,7 +75,6 @@ export const lazyObject = (fn) =>
     }
     return result;
   }));
-
 
 export const getRaw = (future) => {
   if (!isFuture(future)) {
@@ -97,6 +89,7 @@ export const toPromise = async (future) => {
   if (!isFuture(future)) {
     return future;
   }
+
   try {
     const val = getRaw(future);
     return val;
@@ -110,14 +103,15 @@ export const toPromise = async (future) => {
   }
 };
 
-
 export const getCascade = (obj) => {
   if (isLazyArray(obj)) {
     return getArrayCascade(obj);
   }
+
   if(isLazyIterator(obj)) {
     return getIteratorCascade(obj);
   }
+
   if(isLazyObject(obj)) {
     return getObjectCascade(obj);
   }

@@ -221,7 +221,6 @@ export class SuspenseJob<T> extends SuspenseCascade {
 
   get() {
     if (this.status === "pending") {
-
       throw new ThrowablePromise(jobMap.get(this));
     }
 

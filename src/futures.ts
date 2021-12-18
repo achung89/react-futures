@@ -2,11 +2,11 @@ import { promiseStatusStore } from './shared-properties';
 import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
-import { LazyArray, species,  } from './internal';
+import { LazyArray,   } from './internal';
 import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, SuspenseCascade } from './internal';
 import { isReactRendering } from './utils';
-import React from 'react';
 import {unstable_getCacheForType as getCacheForType} from 'react';
+import { initiateArrayPromise, initiateObjectPromise } from './initiatePromise';
 
 export const getCache = () => new Map();
 //TODO: consider if this the best type signature for this function when it becomes generic
@@ -22,9 +22,7 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
   }
 
   return class FutureObjectCache<A extends object = T> extends FutureObject<A> {
-    static get [species]() {
-      return LazyObject;
-    }
+
 
     static of(...args) {
       return new FutureObjectCache(...args);
@@ -36,8 +34,9 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
 
       const cacheKey = getCacheKey(promiseThunk, keys)
 
-      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
-      super(promise, cb => SuspenseCascade.of(cb, cache));
+      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache);
+
+      super(SuspenseCascade.of(initiateObjectPromise(promise), cache));
     }
   };
 };
@@ -51,9 +50,6 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
   }
 
   return class FutureArrayCache<A = T> extends FutureArray<A> {
-    static get [species]() {
-      return LazyArray;
-    }
 
     static of(...args) {
       return new FutureArrayCache(...args);
@@ -64,8 +60,8 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
       const cache = SuspenseCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
 
       const cacheKey = getCacheKey(promiseThunk, keys)
-
-      super(getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache), cb => SuspenseCascade.of(cb, cache));
+      const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
+      super(SuspenseCascade.of(initiateArrayPromise(promise), cache));
     }
   };
 };

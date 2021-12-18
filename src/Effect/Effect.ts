@@ -1,7 +1,6 @@
 import { LazyArray } from '../internal';
 import { lazyArray } from '../internal';
 export const thisMap = new WeakMap();
-export const species = Symbol('species');
 
 export class MutableOperationInRenderError extends Error {
   constructor(methodName) {
@@ -23,34 +22,8 @@ class InvalidObjectStaticMethod extends Error {
   }
 };
 
-const splice = (fn, cascade) => {
-  let spliced;
-  const performSplice = arr => {
-    spliced = fn(arr);
-  }
-  cascade.tap(performSplice);
-
-  const result = lazyArray(() => {
-    cascade.get();
-    return spliced
-  })
-  return result;
-}
-
-export const tap = (fn: Function, futr, cascade, name: string,) => {
-  throw new Error('Mutable operations not allowed')
-  if (!thisMap.has(futr)) {
-    // TODO: change
-    throw new Error('NOT INSTANCE');
-  }
-
-  if (name === 'splice') {
-    return splice(fn, cascade)
-  }
 
 
-  return futr;
-}
 
 export function createProxy<T extends object = object>(that, cascade) {
 
