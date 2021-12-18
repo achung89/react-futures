@@ -1,4 +1,4 @@
-import { first, tapper } from "../utils"
+import { first } from "../utils"
 // TODO: test
 const PullCascade = cb => {
   const firstCb = first(cb);
