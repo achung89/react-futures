@@ -1,8 +1,8 @@
-import { species, createProxy, defaultCascade, thisMap, SuspenseCascade } from '../internal';
+import {  createProxy, defaultCascade, thisMap, SuspenseCascade } from '../internal';
 import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
-import { getRaw, isFuture } from '../utils';
+import { getRaw, isFuture, isReactRendering } from '../utils';
 
-
+// TODO: add tests
 let getArrayCascade: (instance: LazyArray<any>) => SuspenseCascade;
 let isLazyArray: (value: any) => value is LazyArray<any>
 export class LazyArray<T> extends Array<T> {
@@ -200,9 +200,13 @@ export class LazyArray<T> extends Array<T> {
   toLocaleString(...args) {
     return thisMap.get(this).#cascade.map(target => target.toLocaleString(...args)).get();
   }
-  forEach(): never {
-    throw new Error('forEach implementation TBD')
+  forEach(cb) {
+    if(isReactRendering()) {
+      throw new Error('forEach is not supported in render');
+    }
+    thisMap.get(this).#cascade.map(target => target.forEach(cb));
   }
+
   find(callback, thisArg) {
     return thisMap.get(this).#cascade.map(arr => {
 
@@ -336,13 +340,11 @@ export class LazyArray<T> extends Array<T> {
   }
 }
 
+// TODO: add tests
 let getIteratorCascade: (instance: LazyIterator) => SuspenseCascade;
 let isLazyIterator: (value: any) => value is LazyIterator;
 
 export class LazyIterator {
-  static get [species]() {
-    return LazyIterator;
-  }
   #cascade: SuspenseCascade;
   constructor(cascade) {
     const proxy = createProxy(this, cascade)

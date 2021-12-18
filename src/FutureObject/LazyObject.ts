@@ -1,7 +1,7 @@
 import { createProxy } from '../Effect/Effect';
 import {  SuspenseCascade, thisMap } from '../internal';
 import { LazyArray, getRaw } from '../internal';
-import { species,  getCascade } from '../internal';
+import {  getCascade } from '../internal';
 
 export class NotSupportedError extends Error {
   constructor(methodName) {
@@ -43,12 +43,12 @@ const staticSuspendOperation = (target, cb) => {
     return cb(target);
   }
 };
- let getObjectCascade: (instance: LazyObject) => SuspenseCascade;
- let isLazyObject: (value: any) => value is LazyObject;
+
+// TODO: add tests
+let getObjectCascade: (instance: LazyObject) => SuspenseCascade;
+let isLazyObject: (value: any) => value is LazyObject;
 export class LazyObject {
-  static get [species]() {
-    return LazyObject;
-  }
+
   static {
     isLazyObject = (instance): instance is LazyObject => thisMap.has(instance) && (thisMap.get(instance) instanceof LazyObject)
     getObjectCascade = (instance: LazyObject) => thisMap.get(instance).#cascade; 
