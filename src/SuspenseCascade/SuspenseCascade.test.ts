@@ -2,12 +2,12 @@ import { SuspenseCascade } from "../internal";
 import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 
-
+eval "$(nodenv init -)"
 
 describe('SuspenseCascade', () => {
   it('shouldnt throw suspense if promise is already resolved', async () => {
-    const fn = jest.fn()
-
+  const fn = jest.fn()
+    
     let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(throwOnce(upperCase))
     try {

@@ -254,9 +254,9 @@ test("lazyArray should defer", async () => {
 
 test("lazyArray should defer with map", async () => {
   const futureArr = new FutureArr(2); // 2 3 4 2
-  const lazified =  reverseImm(futureArr) // 2 4 3 2
-                    .map((val) => val + 1) // 3 5 4 3
-                    
+  const lazified = reverseImm(futureArr) // 2 4 3 2
+    .map((val) => val + 1) // 3 5 4 3
+
   const value = extractValue(lazified);
 
   await waitForSuspense(150);
@@ -272,7 +272,7 @@ test("lazyArray should handle nested lazy array outside render", async () => {
   const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4]));
   let renderer;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <div>{array}</div>
@@ -293,7 +293,7 @@ test("lazyArray should handle nested lazy array outside render with map method",
   );
   let renderer;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <div>{array}</div>
@@ -314,7 +314,7 @@ test("lazyArray should handle nested lazy array outside render with filter metho
   );
   let renderer;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <div>{array}</div>
@@ -332,7 +332,7 @@ test("lazyArray should handle nested lazy array outside render with filter metho
 test("lazyArray should handle nested lazy array inside render", async () => {
   let renderer;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4]));
 
     return (
@@ -352,7 +352,7 @@ test("lazyArray should handle nested lazy array inside render", async () => {
 test("lazyArray should handle nested lazy array inside render with map method", async () => {
   let renderer;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4])).map(
       (val) => val + 1
     );
@@ -374,7 +374,7 @@ test("lazyArray should handle nested lazy array inside render with map method", 
 test("lazyArray should handle nested lazy array inside render with filter method", async () => {
   let renderer;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4])).filter(
       (val) => val % 2
     );
@@ -397,7 +397,7 @@ test("lazyArray should handle nested future array outside render", async () => {
   let renderer;
   const Comp = () => <div>{array}</div>;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -419,7 +419,7 @@ test("lazyArray should handle nested future array outside render", async () => {
   let renderer;
   const Comp = () => <div>{array}</div>;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -441,7 +441,7 @@ test("lazyArray should handle nested future array outside render 1", async () =>
   let renderer;
   const Comp = () => <div>{array}</div>;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -466,7 +466,7 @@ test("lazyArray should handle nested future array outside render 2", async () =>
   let renderer;
   const Comp = () => <div>{array}</div>;
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -491,7 +491,7 @@ test("lazyArray should handle nested future array inside render 1", async () => 
     return <div>{array}</div>;
   };
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -519,7 +519,7 @@ test("lazyArray should handle nested future array inside render 2", async () => 
     return <div>{array}</div>;
   };
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -544,7 +544,7 @@ test("lazyArray should handle nested future array inside render with map 1", asy
     return <div>{array}</div>;
   };
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -572,7 +572,7 @@ test("lazyArray should handle nested future array inside render with map 2", asy
     return <div>{array}</div>;
   };
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -597,7 +597,7 @@ test("lazyArray should handle nested future array inside render", async () => {
     return <div>{array}</div>;
   };
 
-  const App = ({}) => {
+  const App = ({ }) => {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Comp />
@@ -631,6 +631,6 @@ test("lazyArray should handle nested future array inside render", async () => {
 
 describe('setConfig', () => {
   it('should set error config', () => {
-    
+
   })
 })
