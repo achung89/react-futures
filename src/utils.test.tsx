@@ -1,7 +1,7 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 
 import React, { Suspense } from "react";
-import { futureObject, futureArray } from "./futures";
+import { futureObject, futureArray } from "./internal";
 import { LazyObject } from "./internal";
 import waitForSuspense from "./test-utils/waitForSuspense";
 import { act } from "react-dom/test-utils";
@@ -220,22 +220,24 @@ test("lazyObject should defer ", async () => {
 test.each([1, "3", null, undefined])(
   "lazyObject should throw if given %s",
   async (val) => {
-    expect(
-      (async () => {
-        lazyObject(() => val);
-      })()
-    ).rejects.toBeInstanceOf(Error);
+    const expectedError = new TypeError('expected result of lazyObject to be of type object')
+    await expect(
+      async () => {
+        await toPromise(lazyObject(() => val));
+      }
+    ).rejects.toEqual(expectedError)
   }
 );
 
 test.each([{}, 1, "3", null, undefined])(
   "lazyObject should throw if given %s",
   async (val) => {
-    expect(
+    const expectedError = new TypeError('expected result of lazyArray to be of type array')
+    await expect(
       (async () => {
-        lazyArray(() => val);
+        await toPromise(lazyArray(() => val));
       })()
-    ).rejects.toBeInstanceOf(Error);
+    ).rejects.toEqual(expectedError);
   }
 );
 test("lazyArray should defer", async () => {

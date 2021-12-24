@@ -20,12 +20,12 @@ export default {
       customResolveOptions: {
         moduleDirectory: "node_modules",
       },
-      extensions: ['.ts', '.js'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
     }),
     commonjs(),
     babel({
       exclude: "node_modules/**",
-      extensions: ['.ts', '.js'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
       runtimeHelpers: true
     }),
     terser(),

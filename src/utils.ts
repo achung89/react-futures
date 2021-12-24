@@ -58,8 +58,8 @@ export const lazyArray = (fn) =>
   new LazyArray(defaultCascade(() => {
     const result = fn();
     if (!Array.isArray(result))
-      throw new Error(
-        "Type Error: expected result of lazyArray to be of type array"
+      throw new TypeError(
+        "expected result of lazyArray to be of type array"
       );
     return result;
   }));
@@ -69,8 +69,8 @@ export const lazyObject = (fn) =>
   new LazyObject(defaultCascade(() => {
     const result = fn();
     if (typeof result !== "object" || result === null) {
-      throw new Error(
-        "Type Error: expected result of lazyObject to be of type object"
+      throw new TypeError(
+        "expected result of lazyObject to be of type object"
       );
     }
     return result;

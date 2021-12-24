@@ -68,6 +68,7 @@ export class LazyArray<T> extends Array<T> {
       if(isFuture(arr)) {
         arr = getRaw(arr);
       }
+      
       const Species =  arr.constructor[Symbol.species];
       const newArr = new Species;
       const promises: Promise<any[]>[] = [];
