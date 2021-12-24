@@ -1,7 +1,7 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 
 import { act } from "react-dom/test-utils";
-import { futureArray } from "../../../futures";
+import { futureArray } from "../../../internal";
 import { render } from "../../../test-utils/rtl-renderer";
 import {
   Suspense,

@@ -66,7 +66,6 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
   };
 };
 
-export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
 export const promiseThunkValue = Symbol('promise-thunk')
 function getCachedPromise(promiseThunk: any, key, cache) { 

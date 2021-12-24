@@ -2,7 +2,6 @@
 import {  isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
 import { futureArray, futureObject } from './futures';
 
-export { toPromise, lazyArray, lazyObject, getRaw, isFuture }
 
 
 const getFetchKey = (_promise, [requestInfo, requestInit])  => {
