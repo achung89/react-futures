@@ -40,6 +40,7 @@
     "@types/react-dom": "^16.9.6",
     "@types/react-test-renderer": "^16.9.2",
     "babel-jest": "^27.3.1",
+    "babel-plugin-module-resolver": "^4.1.0",
     "delay": "^4.3.0",
     "jest-react": "^0.11.1",
 <<<<<<< HEAD
@@ -69,6 +70,6 @@
   "scripts": {
     "test": "NODE_OPTIONS=--unhandled-rejections=warn node --trace-warnings node_modules/.bin/jest",
     "test:file": "func() { jest \"$@\" &> output.txt; }; func",
-    "build": "rollup -c"
+    "build": "BABEL_ENV=production rollup -c"
   }
 }
