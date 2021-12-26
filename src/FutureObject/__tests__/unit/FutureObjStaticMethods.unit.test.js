@@ -2,13 +2,13 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
 import { Suspense } from 'react';
-import { futureObject } from '../../../futures';
+import { futureObject } from '../../../internal';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import { LazyObject, isEffect } from '../../../internal';
-import { unwrapProxy, suspend, FutureArray,SuspendOperationOutsideRenderError } from '../../../internal';
+import { LazyObject } from '../../../internal';
+import { unwrapProxy, FutureArray } from '../../../internal';
 import { FutureObject, LazyArray, NotSupportedError } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
 import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'

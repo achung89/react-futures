@@ -13,16 +13,23 @@
         "@babel/preset-typescript",
         "@babel/preset-react"
       ],
+
       "exclude": "node_modules/**",
       "plugins": [
-        "@babel/plugin-proposal-class-properties",
         "@babel/plugin-transform-runtime",
-        "@babel/plugin-proposal-class-static-block"
+        "@babel/plugin-proposal-class-static-block",
+        "@babel/plugin-proposal-private-property-in-object",
+        [
+          "module-resolver",
+          {
+            "extensions": [".js", ".jsx", ".ts", ".tsx"],
+          }
+        ]
       ]
     },
     "test": {
-      "sourceMap" : "inline",
-      "presets":  [        
+      "sourceMap": "inline",
+      "presets": [
         [
           "@babel/preset-env",
           {
@@ -32,11 +39,11 @@
           }
         ],
         "@babel/preset-typescript",
-        ["@babel/preset-react", {"runtime": "automatic"}]
+        ["@babel/preset-react", { "runtime": "automatic" }]
       ],
       "plugins": [
-        "@babel/plugin-proposal-class-properties",
-        "@babel/plugin-proposal-class-static-block"
+        "@babel/plugin-proposal-class-static-block",
+        "@babel/plugin-proposal-private-property-in-object"
       ]
     }
   }

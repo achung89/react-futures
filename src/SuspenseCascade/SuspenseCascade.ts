@@ -2,7 +2,6 @@ import { isFuture } from "../internal";
 import { unstable_getCacheForType as getCacheForType } from "react";
 import { isReactRendering } from "../internal";
 import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
-
 type CacheScope =
   | {
       cache: Map<string, Promise<any>> | null;
@@ -26,7 +25,9 @@ const createCacheScope = (cb, cacheScope: CacheScope) => {
     globalCacheScope = cacheScope;
 
     return cb();
-  } finally {
+  } catch(err) {
+    throw err;
+  }finally {
     globalCacheScope = tempScopVal;
   }
 };
@@ -62,27 +63,28 @@ const deepChain = async (prom, cb, cacheScope) => {
 };
 
 abstract class SuspenseCascade {
+  error: Error;
+  
   abstract map(fn: Function): SuspenseCascade;
   abstract get(): any;
-  get functor() {
-    return SuspenseCascade.of;
-  }
-  static of = (cb, instanceCacheScope: CacheScope) => {
+
+  static of = (cb, cacheScope: CacheScope) => {
+
     try {
       const newVal = new SuspenseValue(
-        createCacheScope(cb, instanceCacheScope),
-        instanceCacheScope
+        createCacheScope(cb, cacheScope),
+        cacheScope
       );
       return newVal;
     } catch (errOrProm) {
       if (typeof errOrProm.then === "function") {
         return new SuspenseJob(() =>
-          deepChain(errOrProm, cb, instanceCacheScope),
-          instanceCacheScope
+          deepChain(errOrProm, cb, cacheScope),
+          cacheScope
         );
       }
 
-      throw errOrProm;
+      return new ErrorCascade(errOrProm);
     }
   };
 
@@ -162,10 +164,12 @@ export class SuspenseJob<T> extends SuspenseCascade {
           }
           this.error = errOrProm;
           this.status = 'error';
-          break;
+          throw errOrProm;
         }
       }
-    } finally {
+    } catch(err) {
+      throw err;
+    }finally {
       if (this.status !== "error") {
         this.status = "complete";
       }
@@ -173,34 +177,23 @@ export class SuspenseJob<T> extends SuspenseCascade {
   }
 
   async mapJob(cb, cacheScope) {
-    try {
-      const val = await jobMap.get(this);
-      const newVal = SuspenseCascade.of(() => cb(val), cacheScope);
-
-      if (isFuture(newVal)) {
-        return newVal;
-      }
-
-      if (newVal instanceof SuspenseJob) {
-        return jobMap.get(newVal);
-      } else if (newVal instanceof SuspenseValue) {
-        while (true) {
-          try {
-            return newVal.get();
-          } catch (errOrProm) {
-            if (typeof errOrProm.then === "function") {
-              await errOrProm;
-              continue;
-            }
-            throw errOrProm;
-          }
+    while(true) {
+      try {
+        const val = await jobMap.get(this);
+         return createCacheScope(() => cb(val), cacheScope);
+      } catch (errOrProm) {
+        if(typeof errOrProm.then === 'function') {
+          await errOrProm;
+          continue;
         }
-      } else {
-        throw new Error("INTERNAL ERROR");
+        this.error = errOrProm;
+        this.status = 'error';
+
+        // propogates error down chain
+        throw errOrProm
       }
-    } catch (err) {
-      throw err;
     }
+
   }
 
   map(cb) {
@@ -210,7 +203,7 @@ export class SuspenseJob<T> extends SuspenseCascade {
     }
 
     if (this.status === "error") {
-      throw this.error;
+      return new ErrorCascade(this.error);
     }
 
     if (this.status === "pending") {
@@ -223,7 +216,6 @@ export class SuspenseJob<T> extends SuspenseCascade {
 
   get() {
     if (this.status === "pending") {
-
       throw new ThrowablePromise(jobMap.get(this));
     }
 
@@ -237,6 +229,21 @@ export class SuspenseJob<T> extends SuspenseCascade {
 
     throw new Error("INVALID STATUS");
   }
+}
+
+class ErrorCascade extends SuspenseCascade {
+  #error: Error;
+  constructor(err) {
+    super();
+    this.#error = err
+  }
+  map(..._args) {
+    return new ErrorCascade(this.#error)
+  }
+  get() {
+    throw this.#error;
+  }
+
 }
 
 

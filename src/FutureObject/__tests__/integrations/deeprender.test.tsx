@@ -1,5 +1,5 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { futureObject } from '../../../futures';
+import { futureObject } from '../../../internal';
 
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
 import waitForSuspense from '../../../test-utils/waitForSuspense';

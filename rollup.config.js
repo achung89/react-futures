@@ -2,6 +2,7 @@ import babel from "rollup-plugin-babel";
 import { terser } from "rollup-plugin-terser";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import path from 'path';
 
 export default {
   input: "./src/index.ts",
@@ -20,13 +21,13 @@ export default {
       customResolveOptions: {
         moduleDirectory: "node_modules",
       },
-      extensions: ['.ts', '.js'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
     }),
     commonjs(),
     babel({
       exclude: "node_modules/**",
-      extensions: ['.ts', '.js'],
-      runtimeHelpers: true
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      runtimeHelpers: true,
     }),
     terser(),
   ],
