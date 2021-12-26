@@ -3,11 +3,10 @@ import { ThrowablePromise } from "../ThrowablePromise/ThrowablePromise";
 import { upperCase, spaceOut, throwOnce, throwTwice } from "./suspenseFuncs";
 
 
-
 describe('SuspenseCascade', () => {
   it('shouldnt throw suspense if promise is already resolved', async () => {
-    const fn = jest.fn()
-
+  const fn = jest.fn()
+    
     let suspender = SuspenseCascade.of(throwOnce(() => 'johnny bravo'))
                       .map(throwOnce(upperCase))
     try {
@@ -118,6 +117,215 @@ describe('SuspenseCascade', () => {
 
     expect(suspender.get()).toEqual('JOHNNY BRAVO')
   })
+})
+
+describe('Error handling', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  })
+  afterEach(() => {
+    jest.useRealTimers();
+  })
+  it('should handle thrown errors in the constructor', () =>{
+    const cascade = SuspenseCascade.of(() => {
+      throw new Error('Test Error Is Thrown')
+    })
+
+    expect(() => cascade.get()).toThrowError('Test Error Is Thrown')
+  })
+  it('should handle thrown errors in constructor with map', () => {
+    const cascade = SuspenseCascade.of(() => {
+      throw new Error('Test Error Is Thrown')
+    }).map(() => {})
+
+    expect(() => cascade.get()).toThrowError('Test Error Is Thrown')
+    
+  })
+  it('should handle thrown errors in map', () => {
+
+    const cascade = SuspenseCascade.of(() => void 0)
+                      .map(() => {
+                        throw new Error('Test Error Is Thrown')
+                      })
+
+    expect(() => cascade.get()).toThrowError('Test Error Is Thrown')
+
+  })
+  it('should handle thrown errors in thrown promise', async () => {
+
+    const fn = jest.fn()
+
+    let status = 'pending'
+    const prom = new Promise((res, rej) => {
+      setTimeout(() => {
+        status = 'complete'  
+        rej(new Error('Test Error Is Thrown'))
+      }, 10)
+    }).catch((err) => { throw err })
+
+    const throwWithError = () => {
+      if(status === 'pending') {
+        throw prom;
+      }
+
+    }
+
+    let suspender = SuspenseCascade.of(throwWithError)
+                      
+    try {
+      suspender.get();
+    } catch (prom) {
+      fn()
+      expect(prom).toBeInstanceOf(ThrowablePromise);
+      jest.advanceTimersByTime(10);
+
+    }
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    try {
+      suspender.get();
+    } catch(err) {
+      fn();
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toEqual('Test Error Is Thrown')
+    }
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+  it('should handle thrown errors in thrown promise with map', async () => {
+
+    const fn = jest.fn()
+
+    let status = 'pending'
+    const prom = new Promise((res, rej) => {
+      setTimeout(() => {
+        status = 'complete'  
+        rej(new Error('Test Error Is Thrown'))
+      }, 10)
+    }).catch((err) => { throw err })
+
+    const throwWithError = () => {
+      if(status === 'pending') {
+        throw prom;
+      }
+
+    }
+
+    let suspender = SuspenseCascade.of(throwWithError)
+                      .map(() => {})
+                      
+    try {
+      suspender.get();
+    } catch (prom) {
+      fn()
+      expect(prom).toBeInstanceOf(ThrowablePromise);
+      jest.advanceTimersByTime(10);
+    }
+
+    for(let a = 0; a < 10; a++) {
+      await Promise.resolve();
+    }
+
+    try {
+      suspender.get();
+    } catch(err) {
+      fn();
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toEqual('Test Error Is Thrown')
+    }
+
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+  
+  it('should handle thrown errors in thrown promise with map', async () => {
+    const fn = jest.fn()
+
+    let status = 'pending'
+    const prom = new Promise((res, rej) => {
+      setTimeout(() => {
+        status = 'complete'  
+        rej(new Error('Test Error Is Thrown'))
+      }, 10)
+    }).catch((err) => { throw err })
+
+    const throwWithError = () => {
+      if(status === 'pending') {
+        throw prom;
+      }
+    }
+
+    let suspender = SuspenseCascade.of(() => {})
+                      .map(throwWithError)
+                      
+    try {
+      suspender.get();
+    } catch (prom) {
+      fn()
+      expect(prom).toBeInstanceOf(ThrowablePromise);
+      jest.advanceTimersByTime(10);
+
+    }
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    try {
+      suspender.get();
+    } catch(err) {
+      fn();
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toEqual('Test Error Is Thrown')
+    }
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+
+  it('should handle thrown errors in thrown promise with map', async () => {
+
+    const fn = jest.fn()
+
+    let status = 'pending'
+    const prom = new Promise((res, rej) => {
+      setTimeout(() => {
+        status = 'complete'  
+        rej(new Error('Test Error Is Thrown'))
+      }, 10)
+    }).catch((err) => { throw err })
+
+    const throwWithError = () => {
+      if(status === 'pending') {
+        throw prom;
+      }
+
+    }
+
+    let suspender = SuspenseCascade.of(() =>{})
+                      .map(throwWithError)
+                      .map(() => {})
+                      
+    try {
+      suspender.get();
+    } catch (prom) {
+      fn()
+      expect(prom).toBeInstanceOf(ThrowablePromise);
+      jest.advanceTimersByTime(10);
+    }
+    for(let a = 0; a < 10; a ++) {
+      await Promise.resolve();
+    }
+
+    try {
+      suspender.get();
+    } catch(err) {
+      fn();
+
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toEqual('Test Error Is Thrown')
+    }
+
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+
 })
 
 // describe('Render scenarios', () => {

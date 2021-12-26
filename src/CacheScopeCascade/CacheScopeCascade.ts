@@ -53,7 +53,5 @@ export class CacheScopeCascade {
   get() {
     return this.val;
   }
-  get functor() {
-    return CacheScopeCascade.of;
-  }
+
 }
