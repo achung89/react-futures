@@ -5,4 +5,3 @@ type StatusCacheValue = {
 };
 
 export const promiseStatusStore = new WeakMap<Promise<any>, StatusCacheValue>();
-export const keyPromiseStore = new WeakMap<any, Promise<any>>();

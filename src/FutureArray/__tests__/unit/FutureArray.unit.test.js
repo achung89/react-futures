@@ -1,7 +1,7 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 import  { Suspense, unstable_Cache as Cache } from 'react';
-import { futureArray, futureObject, toPromise } from '../../../futures';
+import { futureArray, futureObject, toPromise } from '../../../internal';
 import { act } from '@testing-library/react';
 import { MutableOperationInRenderError } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';
@@ -181,6 +181,7 @@ describe('In only render context', () => {
 });
 
 describe('Array operations', () => {
+  // mutable operations not supported. replace with immutable helpers once stage 4 is reached
   test.skip.each`
     name                   | method                         
     ${'fill'}       | ${arr => arr.fill(1)}                             
@@ -415,13 +416,11 @@ describe('Array operations', () => {
 
     expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(LazyArray);
   });
-  test.skip('forEach should return undefined, throw inside render, and defer outside render', async () => {
+  test('forEach should return undefined, throw inside render, and defer outside render', async () => {
     const futrArr = new FutureArr(5);
     let final;
     const inRender = () => expect(() => {
-      futrArr.forEach(val => {
-        final = val
-      })
+      futrArr.forEach(() => {})
     }).toThrowError();
 
     const outsideRender = () => {
@@ -429,10 +428,9 @@ describe('Array operations', () => {
         final = val
       })      
     };
-    
-      outsideRender();
-    
-      
+
+    outsideRender();
+
     act(() => {
       renderer = render(
         <Suspense fallback={<div>Loading...</div>}>
@@ -441,15 +439,14 @@ describe('Array operations', () => {
         container
       );
     });
+
+    expect(final).toBeUndefined();
+
     await waitForSuspense(150);
 
     expect(final).toEqual(5)
   })
-  // it('has immutable static @@species', () => {
-  //   let clss = ArrayResource[Symbol.species];
-  //   ArrayResource[Symbol.species] = class {};
-  //   expect(Object.is(clss, ArrayResource[Symbol.species])).toEqual(true);
-  // });
+
   test.skip('should have debug method', () => {});
 });
 

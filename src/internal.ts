@@ -11,3 +11,5 @@ export * from './SuspenseCascade/SuspenseCascade'
 export * from './functorComposition/composeFunctors'
 export * from './functorComposition/PullCacheCascade'
 export * from './SuspenseCascade/SuspenseCascade'
+export * from './fetches';
+export * from './futures';

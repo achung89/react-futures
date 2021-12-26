@@ -4,17 +4,16 @@ import {
   LazyObject,
   LazyArray,
   SuspenseCascade,
-  run,
+  isLazyArray,
+  getArrayCascade,
+  isLazyIterator,
+  getIteratorCascade,
+  isLazyObject,
+  getObjectCascade,
 } from "./internal";
-import ReactDOM from "react-dom";
 import { getCache } from "./futures";
 import React from "react";
 export const metadataMap = new WeakMap();
-
-export const tapper = (fn: Function) => (val: any) => {
-  fn(val);
-  return val;
-};
 
 export const isFuture = (proxy) => thisMap.has(proxy);
 
@@ -56,41 +55,41 @@ export const first = (fn: Function) => {
 
 // TODO: should accept promise function
 export const lazyArray = (fn) =>
-  new LazyArray(() => {
+  new LazyArray(defaultCascade(() => {
     const result = fn();
     if (!Array.isArray(result))
-      throw new Error(
-        "Type Error: expected result of lazyArray to be of type array"
+      throw new TypeError(
+        "expected result of lazyArray to be of type array"
       );
     return result;
-  }, defaultCascade);
+  }));
 
 // TODO: should accept promise function
-
 export const lazyObject = (fn) =>
-  new LazyObject(() => {
+  new LazyObject(defaultCascade(() => {
     const result = fn();
     if (typeof result !== "object" || result === null) {
-      throw new Error(
-        "Type Error: expected result of lazyObject to be of type object"
+      throw new TypeError(
+        "expected result of lazyObject to be of type object"
       );
     }
     return result;
-  }, defaultCascade);
-
+  }));
 
 export const getRaw = (future) => {
   if (!isFuture(future)) {
     return future;
   }
 
-  return run(getRaw, future, cascadeMap.get(future));
+  const cascade = getCascade(future);
+  return cascade.map(getRaw).get();
 };
 
 export const toPromise = async (future) => {
   if (!isFuture(future)) {
-    return Promise.resolve(future);
+    return future;
   }
+
   try {
     const val = getRaw(future);
     return val;
@@ -104,15 +103,20 @@ export const toPromise = async (future) => {
   }
 };
 
-export const createCascadeMap = new WeakMap();
-export const cascadeMap = new WeakMap();
-
 export const getCascade = (obj) => {
-  if (cascadeMap.has(obj)) {
-    const cascade = cascadeMap.get(obj);
-    return (cb) => cascade.map(cb);
+  if (isLazyArray(obj)) {
+    return getArrayCascade(obj);
   }
-  return defaultCascade;
+
+  if(isLazyIterator(obj)) {
+    return getIteratorCascade(obj);
+  }
+
+  if(isLazyObject(obj)) {
+    return getObjectCascade(obj);
+  }
+
+  return defaultCascade(() => obj);
 };
 
 export const defaultCascade = (cb) =>
