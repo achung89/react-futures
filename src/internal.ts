@@ -4,6 +4,8 @@ export * from './FutureArray/LazyArray';
 export * from './FutureObject/LazyObject';
 export * from './FutureArray/FutureArray';
 export * from './FutureObject/FutureObject';
+export * from './initiatePromise';
+export * from './shared-properties';
 export * from './CacheScopeCascade/CacheScopeCascade'
 export * from './utils';
 export * from './PullCascade/PullCascade'
@@ -11,5 +13,5 @@ export * from './SuspenseCascade/SuspenseCascade'
 export * from './functorComposition/composeFunctors'
 export * from './functorComposition/PullCacheCascade'
 export * from './SuspenseCascade/SuspenseCascade'
-export * from './fetches';
+export * from './fetch';
 export * from './futures';

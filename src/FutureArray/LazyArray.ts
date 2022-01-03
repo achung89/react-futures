@@ -1,6 +1,6 @@
 import {  createProxy, defaultCascade, thisMap, SuspenseCascade } from '../internal';
 import { ThrowablePromise } from '../ThrowablePromise/ThrowablePromise';
-import { getRaw, isFuture, isReactRendering } from '../utils';
+import { getRaw, isFuture, isReactRendering } from '../internal';
 
 // TODO: add tests
 let getArrayCascade: (instance: LazyArray<any>) => SuspenseCascade;

@@ -11,7 +11,7 @@ import {
   isLazyObject,
   getObjectCascade,
 } from "./internal";
-import { getCache } from "./futures";
+import { getCache } from "./internal";
 import React from "react";
 export const metadataMap = new WeakMap();
 
@@ -54,23 +54,25 @@ export const first = (fn: Function) => {
 };
 
 // TODO: should accept promise function
-export const lazyArray = (fn) =>
+// TODO: if the fn returns a promise or is an async function, a cachekey is required
+export const futureArray = (fn) =>
   new LazyArray(defaultCascade(() => {
     const result = fn();
     if (!Array.isArray(result))
       throw new TypeError(
-        "expected result of lazyArray to be of type array"
+        "expected result of futureArray to be of type array"
       );
     return result;
   }));
 
 // TODO: should accept promise function
-export const lazyObject = (fn) =>
+// TODO: if the fn returns a promise or is an async function, a cachekey is required
+export const futureObject = (fn) =>
   new LazyObject(defaultCascade(() => {
     const result = fn();
     if (typeof result !== "object" || result === null) {
       throw new TypeError(
-        "expected result of lazyObject to be of type object"
+        "expected result of futureObject to be of type object"
       );
     }
     return result;

@@ -1,5 +1,5 @@
 import { LazyArray } from '../internal';
-import { lazyArray } from '../internal';
+import { futureArray } from '../internal';
 export const thisMap = new WeakMap();
 
 export class MutableOperationInRenderError extends Error {
@@ -24,7 +24,8 @@ class InvalidObjectStaticMethod extends Error {
 
 
 
-
+/// TODO: test Failure on all invalid methods
+// TODO: test all invariants
 export function createProxy<T extends object = object>(that, cascade) {
 
   const proxy = new Proxy(that, {
@@ -47,9 +48,7 @@ export function createProxy<T extends object = object>(that, cascade) {
         return Reflect.get(target, key, target)}).get();
     },
     getOwnPropertyDescriptor: (_target, prop) => {
-      // that is to not violate invariants for non-configurable properties
       return cascade.map(target => {
-        Object.defineProperty(_target, prop, Object.getOwnPropertyDescriptor(target, prop) || {})
 
         return Reflect.getOwnPropertyDescriptor(target, prop);
       }).get();
@@ -57,15 +56,12 @@ export function createProxy<T extends object = object>(that, cascade) {
     getPrototypeOf: _target => {
       return cascade.map(target => Reflect.getPrototypeOf(target)).get();
     },
-    has: (_target, key) => {
-      return cascade.map(target => Reflect.has(target, key)).get();
-    },
+    has: (_target, key) => cascade.map(target => Reflect.has(target, key)).get(),
     isExtensible: _target => {
       throw new InvalidObjectStaticMethod(['isExtensible', 'isFrozen', 'isSealed']);
     },
     ownKeys: _target => {
       // TODO: is that right?
-
       return new LazyArray(cascade.map(target => Reflect.ownKeys(target)));
     },
     preventExtensions: _target => {
