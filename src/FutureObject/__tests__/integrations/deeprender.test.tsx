@@ -1,5 +1,5 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
-import { futureObject } from '../../../internal';
+import { createObjectFactory } from '../../../internal';
 
 import { testSuspenseWithLoader } from '../../../test-utils/testSuspense';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
@@ -51,7 +51,7 @@ const DeepPassThrough = ({ children, level }) => {
 };
 
 beforeEach(() => {
-  StubFutureObject = futureObject(fetchJson);
+  StubFutureObject = createObjectFactory(fetchJson);
 });
 
 afterEach(() => {
@@ -79,7 +79,7 @@ describe('Instantiate in render, deep render scenarios', () => {
         await waitForSuspense(100);
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson)
 
     await testSuspenseWithLoader(<App nestedFuture />, `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, async () =>{
       await waitForSuspense(100);
@@ -111,7 +111,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       await waitForSuspense(100);
 
     });
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     await testSuspenseWithLoader(
       <App nestedFuture />,
       `<div><div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div></div>`,
@@ -151,7 +151,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={5} nestedFuture />,
@@ -163,7 +163,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <AppVeryDeep level={200} />,
@@ -172,7 +172,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <AppVeryDeep nestedFuture level={200} />,
@@ -203,7 +203,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       await waitForSuspense(100)
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture />,
@@ -214,14 +214,14 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(<App level={200} />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`, async () =>{
       await waitForSuspense(100)
 
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
@@ -262,7 +262,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={10} nestedFuture={true} />,
@@ -274,7 +274,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={200} />,
@@ -285,7 +285,7 @@ describe('Instantiate in render, deep render scenarios', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <App level={200} nestedFuture={true} />,
@@ -319,7 +319,7 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(<App nestedFuture />, `<div>7futonbarcandybazzeritafoobarbazzvaluevaluefoobarbazzchura barcandya bazzeritaa 4</div>`, async () => {
       await waitForSuspense(100)
@@ -350,7 +350,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       await waitForSuspense(100)
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
 
     await testSuspenseWithLoader(
       <App nestedFuture />,
@@ -393,7 +393,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
@@ -406,7 +406,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
@@ -418,7 +418,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
@@ -450,7 +450,7 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
@@ -463,7 +463,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(<App level={200} />, `<div>foobarbazzvaluea futona barcandya bazzeritaa 4</div>`, async () => {
@@ -471,7 +471,7 @@ describe('Instantiate outside render, deep render scenario', () => {
 
     });
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
     await testSuspenseWithLoader(
       <App level={200} nestedFuture />,
@@ -516,7 +516,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
@@ -529,7 +529,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(
@@ -541,7 +541,7 @@ describe('Instantiate outside render, deep render scenario', () => {
       }
     );
 
-    StubFutureObject = futureObject(fetchJson);
+    StubFutureObject = createObjectFactory(fetchJson);
     transformed = getObject();
 
     await testSuspenseWithLoader(

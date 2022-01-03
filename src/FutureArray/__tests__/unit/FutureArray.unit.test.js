@@ -1,7 +1,7 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 import  { Suspense, unstable_Cache as Cache } from 'react';
-import { futureArray, futureObject, toPromise } from '../../../internal';
+import { createArrayFactory, createObjectFactory, toPromise } from '../../../internal';
 import { act } from '@testing-library/react';
 import { MutableOperationInRenderError } from '../../../Effect/Effect';
 import { LazyArray, LazyIterator } from '../../LazyArray';
@@ -10,7 +10,7 @@ import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
 
-import { unwrapProxy, lazyArray } from '../../../utils';
+import { unwrapProxy, futureArray } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
 import delay from 'delay';
 import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';
@@ -41,7 +41,7 @@ beforeEach(() => {
   jest.useFakeTimers();
 
   jest.resetModules();
-  FutureArr = futureArray(fetchArray);
+  FutureArr = createArrayFactory(fetchArray);
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -465,7 +465,7 @@ describe('parallel iteration', () => {
 
   beforeEach(() => {
     jest.useRealTimers()
-    FutureVal = futureObject(objectProm);
+    FutureVal = createObjectFactory(objectProm);
   })
   afterEach(() => {
     FutureVal = null;
@@ -502,7 +502,7 @@ describe('parallel iteration', () => {
 
   test('flatMap outside render', async () => {
     const futureArr = new FutureArr(5);
-    FutureArr = futureArray(fetchArray);
+    FutureArr = createArrayFactory(fetchArray);
     let flatted = futureArr.flatMap(num => new FutureArr(num));
 
     const flattedRes = await toPromise(flatted);
@@ -516,7 +516,7 @@ describe('parallel iteration', () => {
   test('find', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.find( num => num + new FutureVal(num).value === 6);
       return []
     })
@@ -527,7 +527,7 @@ describe('parallel iteration', () => {
   test('every', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.every( num => num === new FutureVal(num).value);
       return [];
     })
@@ -538,7 +538,7 @@ describe('parallel iteration', () => {
   test('some', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.some( num => num !== new FutureVal(num).value);
       return [];
     });
@@ -549,7 +549,7 @@ describe('parallel iteration', () => {
   test('findIndex', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.findIndex( num => num + new FutureVal(num).value === 6);
       return [];
     });

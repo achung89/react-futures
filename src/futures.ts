@@ -3,7 +3,7 @@ import { FutureObject } from './internal';
 import { FutureArray } from './internal';
 import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
 import { LazyArray,   } from './internal';
-import { LazyObject, isFuture, getRaw, toPromise, lazyArray, lazyObject, SuspenseCascade } from './internal';
+import { LazyObject, isFuture, getRaw, toPromise, futureArray, futureObject, SuspenseCascade } from './internal';
 import { isReactRendering } from './utils';
 import {unstable_getCacheForType as getCacheForType} from 'react';
 import { initiateArrayPromise, initiateObjectPromise } from './initiatePromise';
@@ -14,7 +14,7 @@ const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + f
 // TODO: strongly type
 // futures should handle suspense 
 // customizeable cache callback
-export const futureObject = <T extends object>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
+export const createObjectFactory = <T extends object>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
   if (isReactRendering()) {
     // TODO: add custom error message per method
@@ -41,7 +41,7 @@ export const futureObject = <T extends object>(promiseThunk, getCacheKey = defau
   };
 };
 
-export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
+export const createArrayFactory = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
 
   if (isReactRendering()) {
@@ -50,22 +50,19 @@ export const futureArray = <T>(promiseThunk, getCacheKey = defaultGetCacheKey) =
   }
 
   return class FutureArrayCache<A = T> extends FutureArray<A> {
-
     static of(...args) {
       return new FutureArrayCache(...args);
     }
 
     constructor(...keys) {
-
       const cache = SuspenseCascade.getCurrentScope() ?? ( isReactRendering() ? { cache: getCacheForType(getCache), getCache} : { cache: getCache(), getCache: getCache })
-
+      
       const cacheKey = getCacheKey(promiseThunk, keys)
       const promise = getCachedPromise(() => promiseThunk(...keys), cacheKey, cache.cache)
       super(SuspenseCascade.of(initiateArrayPromise(promise), cache));
     }
   };
 };
-
 
 export const promiseThunkValue = Symbol('promise-thunk')
 function getCachedPromise(promiseThunk: any, key, cache) { 

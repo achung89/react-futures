@@ -1,13 +1,13 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 
 import React, { Suspense } from "react";
-import { futureObject, futureArray } from "./internal";
+import { createArrayFactory, createObjectFactory} from "./internal";
 import { LazyObject } from "./internal";
 import waitForSuspense from "./test-utils/waitForSuspense";
 import { act } from "react-dom/test-utils";
 import { render } from "./test-utils/rtl-renderer";
 import { waitFor, wait } from "@testing-library/dom";
-import { unwrapProxy, toPromise, lazyObject, lazyArray } from "./utils";
+import { unwrapProxy, toPromise, futureObject, futureArray } from "./utils";
 import extractValue from "./test-utils/extractValue";
 import { reverseImm } from "./test-utils/reverseImm";
 import ReactDOM from "react-dom";
@@ -87,8 +87,8 @@ beforeEach(() => {
   Scheduler = require("scheduler/unstable_mock");
   container = document.createElement("div");
   document.body.appendChild(container);
-  FutureObj = futureObject(fetchJson);
-  FutureArr = futureArray(fetchArray);
+  FutureObj = createObjectFactory(fetchJson);
+  FutureArr = createArrayFactory(fetchArray);
 });
 
 afterEach(() => {
@@ -148,7 +148,7 @@ describe("toPromise", () => {
 
     const transformed = FutureObj.assign(
       makeFuture(5),
-      lazyObject(() => invert(makeFuture(4)))
+      futureObject(() => invert(makeFuture(4)))
     );
 
     const transformedExpected = Object.assign(
@@ -182,7 +182,7 @@ describe("toPromise", () => {
 
       const transformed = FutureObj.assign(
         makeFuture(5),
-        lazyObject(() => invert(makeFuture(4)))
+        futureObject(() => invert(makeFuture(4)))
       );
 
       transformedResult = await toPromise(transformed);
@@ -203,14 +203,14 @@ describe("toPromise", () => {
   });
 });
 
-test("lazyObject should defer ", async () => {
+test("futureObject should defer ", async () => {
   const futureObj = new FutureObj(1);
-  const lazified = lazyObject(() => invert(futureObj));
+  const lazified = futureObject(() => invert(futureObj));
   const value = extractValue(lazified);
   await waitForSuspense(150);
   expect(await value).toEqual(invert(expectedJSON(1)));
 
-  const lazified2 = lazyObject(() => invert(expectedJSON(2)));
+  const lazified2 = futureObject(() => invert(expectedJSON(2)));
 
   const value2 = extractValue(lazified2);
   await waitForSuspense(150);
@@ -218,43 +218,43 @@ test("lazyObject should defer ", async () => {
 });
 
 test.each([1, "3", null, undefined])(
-  "lazyObject should throw if given %s",
+  "futureObject should throw if given %s",
   async (val) => {
-    const expectedError = new TypeError('expected result of lazyObject to be of type object')
+    const expectedError = new TypeError('expected result of futureObject to be of type object')
     await expect(
       async () => {
-        await toPromise(lazyObject(() => val));
+        await toPromise(futureObject(() => val));
       }
     ).rejects.toEqual(expectedError)
   }
 );
 
 test.each([{}, 1, "3", null, undefined])(
-  "lazyObject should throw if given %s",
+  "futureObject should throw if given %s",
   async (val) => {
-    const expectedError = new TypeError('expected result of lazyArray to be of type array')
+    const expectedError = new TypeError('expected result of futureArray to be of type array')
     await expect(
       (async () => {
-        await toPromise(lazyArray(() => val));
+        await toPromise(futureArray(() => val));
       })()
     ).rejects.toEqual(expectedError);
   }
 );
-test("lazyArray should defer", async () => {
+test("futureArray should defer", async () => {
   const futureArr = new FutureArr(2);
-  const lazified = lazyArray(() => reverseImm(futureArr));
+  const lazified = futureArray(() => reverseImm(futureArr));
   const value = extractValue(lazified);
 
   await waitForSuspense(150);
   expect(await value).toEqual([2, 3, 4, 2].reverse());
-  const lazified2 = lazyArray(() => [2, 3, 4, 2].reverse());
+  const lazified2 = futureArray(() => [2, 3, 4, 2].reverse());
   const value2 = extractValue(lazified2);
   await waitForSuspense(150);
 
   expect(await value2).toEqual([2, 3, 4, 2].reverse());
 });
 
-test("lazyArray should defer with map", async () => {
+test("futureArray should defer with map", async () => {
   const futureArr = new FutureArr(2); // 2 3 4 2
   const lazified = reverseImm(futureArr) // 2 4 3 2
     .map((val) => val + 1) // 3 5 4 3
@@ -263,15 +263,15 @@ test("lazyArray should defer with map", async () => {
 
   await waitForSuspense(150);
   expect(await value).toEqual([3, 5, 4, 3]);
-  const lazified2 = lazyArray(() => [3, 4, 5, 3].reverse());
+  const lazified2 = futureArray(() => [3, 4, 5, 3].reverse());
   const value2 = extractValue(lazified2);
   await waitForSuspense(150);
 
   expect(await value2).toEqual([3, 4, 5, 3].reverse());
 });
 
-test("lazyArray should handle nested lazy array outside render", async () => {
-  const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4]));
+test("futureArray should handle nested lazy array outside render", async () => {
+  const array = futureArray(() => futureArray(() => [1, 2, 3, 4]));
   let renderer;
 
   const App = ({ }) => {
@@ -289,8 +289,8 @@ test("lazyArray should handle nested lazy array outside render", async () => {
   await waitFor(() => getByText("1234"));
 });
 
-test("lazyArray should handle nested lazy array outside render with map method", async () => {
-  const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4])).map(
+test("futureArray should handle nested lazy array outside render with map method", async () => {
+  const array = futureArray(() => futureArray(() => [1, 2, 3, 4])).map(
     (val) => val + 1
   );
   let renderer;
@@ -310,8 +310,8 @@ test("lazyArray should handle nested lazy array outside render with map method",
   await waitFor(() => getByText("2345"));
 });
 
-test("lazyArray should handle nested lazy array outside render with filter method", async () => {
-  const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4])).filter(
+test("futureArray should handle nested lazy array outside render with filter method", async () => {
+  const array = futureArray(() => futureArray(() => [1, 2, 3, 4])).filter(
     (val) => val % 2
   );
   let renderer;
@@ -331,11 +331,11 @@ test("lazyArray should handle nested lazy array outside render with filter metho
   await waitFor(() => getByText("13"));
 });
 
-test("lazyArray should handle nested lazy array inside render", async () => {
+test("futureArray should handle nested lazy array inside render", async () => {
   let renderer;
 
   const App = ({ }) => {
-    const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4]));
+    const array = futureArray(() => futureArray(() => [1, 2, 3, 4]));
 
     return (
       <Suspense fallback={<div>Loading...</div>}>
@@ -351,11 +351,11 @@ test("lazyArray should handle nested lazy array inside render", async () => {
   await waitFor(() => getByText("1234"));
 });
 
-test("lazyArray should handle nested lazy array inside render with map method", async () => {
+test("futureArray should handle nested lazy array inside render with map method", async () => {
   let renderer;
 
   const App = ({ }) => {
-    const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4])).map(
+    const array = futureArray(() => futureArray(() => [1, 2, 3, 4])).map(
       (val) => val + 1
     );
 
@@ -373,11 +373,11 @@ test("lazyArray should handle nested lazy array inside render with map method", 
   await waitFor(() => getByText("2345"));
 });
 
-test("lazyArray should handle nested lazy array inside render with filter method", async () => {
+test("futureArray should handle nested lazy array inside render with filter method", async () => {
   let renderer;
 
   const App = ({ }) => {
-    const array = lazyArray(() => lazyArray(() => [1, 2, 3, 4])).filter(
+    const array = futureArray(() => futureArray(() => [1, 2, 3, 4])).filter(
       (val) => val % 2
     );
     return (
@@ -394,8 +394,8 @@ test("lazyArray should handle nested lazy array inside render with filter method
   await waitFor(() => getByText("13"));
 });
 
-test("lazyArray should handle nested future array outside render", async () => {
-  const array = lazyArray(futureArray(async () => [1, 2, 3, 4]).of);
+test("futureArray should handle nested future array outside render", async () => {
+  const array = futureArray(createArrayFactory(async () => [1, 2, 3, 4]).of);
   let renderer;
   const Comp = () => <div>{array}</div>;
 
@@ -414,8 +414,8 @@ test("lazyArray should handle nested future array outside render", async () => {
   await waitFor(() => getByText("1234"));
 });
 
-test("lazyArray should handle nested future array outside render", async () => {
-  const array = lazyArray(futureArray(async () => [1, 2, 3, 4]).of).map(
+test("futureArray should handle nested future array outside render", async () => {
+  const array = futureArray(createArrayFactory(async () => [1, 2, 3, 4]).of).map(
     (val) => val + 1
   );
   let renderer;
@@ -436,8 +436,8 @@ test("lazyArray should handle nested future array outside render", async () => {
   await waitFor(() => getByText("2345"));
 });
 
-test("lazyArray should handle nested future array outside render 1", async () => {
-  const array = lazyArray(futureArray(async () => [1, 2, 3, 4]).of).filter(
+test("futureArray should handle nested future array outside render 1", async () => {
+  const array = futureArray(createArrayFactory(async () => [1, 2, 3, 4]).of).filter(
     (val) => val % 2
   );
   let renderer;
@@ -458,9 +458,9 @@ test("lazyArray should handle nested future array outside render 1", async () =>
   await waitFor(() => getByText("13"));
 });
 
-test("lazyArray should handle nested future array outside render 2", async () => {
-  const array = lazyArray(
-    futureArray(async () => {
+test("futureArray should handle nested future array outside render 2", async () => {
+  const array = futureArray(
+    createArrayFactory(async () => {
       await delay(100);
       return [1, 2, 3, 4];
     }).of
@@ -483,13 +483,13 @@ test("lazyArray should handle nested future array outside render 2", async () =>
   await waitFor(() => getByText("13"));
 });
 
-test("lazyArray should handle nested future array inside render 1", async () => {
+test("futureArray should handle nested future array inside render 1", async () => {
   let renderer;
   const prom = async () => [1, 2, 3, 4];
-  const fut = futureArray(prom);
+  const fut = createArrayFactory(prom);
 
   const Comp = () => {
-    const array = lazyArray(fut.of);
+    const array = futureArray(fut.of);
     return <div>{array}</div>;
   };
 
@@ -508,16 +508,16 @@ test("lazyArray should handle nested future array inside render 1", async () => 
   await waitFor(() => getByText("1234"));
 });
 
-test("lazyArray should handle nested future array inside render 2", async () => {
+test("futureArray should handle nested future array inside render 2", async () => {
   let renderer;
   const prom = async () => {
     await delay(100);
     return [1, 2, 3, 4];
   };
-  const fut = futureArray(prom);
+  const fut = createArrayFactory(prom);
 
   const Comp = () => {
-    const array = lazyArray(fut.of);
+    const array = futureArray(fut.of);
     return <div>{array}</div>;
   };
 
@@ -536,13 +536,13 @@ test("lazyArray should handle nested future array inside render 2", async () => 
   await waitFor(() => getByText("1234"));
 });
 
-test("lazyArray should handle nested future array inside render with map 1", async () => {
+test("futureArray should handle nested future array inside render with map 1", async () => {
   let renderer;
   const prom = async () => [1, 2, 3, 4];
-  const fut = futureArray(prom);
+  const fut = createArrayFactory(prom);
 
   const Comp = () => {
-    const array = lazyArray(fut.of).map((val) => val + 1);
+    const array = futureArray(fut.of).map((val) => val + 1);
     return <div>{array}</div>;
   };
 
@@ -561,16 +561,16 @@ test("lazyArray should handle nested future array inside render with map 1", asy
   await waitFor(() => getByText("2345"));
 });
 
-test("lazyArray should handle nested future array inside render with map 2", async () => {
+test("futureArray should handle nested future array inside render with map 2", async () => {
   let renderer;
   const prom = async () => {
     await delay(100);
     return [1, 2, 3, 4];
   };
-  const fut = futureArray(prom);
+  const fut = createArrayFactory(prom);
 
   const Comp = () => {
-    const array = lazyArray(fut.of).map((val) => val + 1);
+    const array = futureArray(fut.of).map((val) => val + 1);
     return <div>{array}</div>;
   };
 
@@ -589,13 +589,13 @@ test("lazyArray should handle nested future array inside render with map 2", asy
   await waitFor(() => getByText("2345"));
 });
 
-test("lazyArray should handle nested future array inside render", async () => {
+test("futureArray should handle nested future array inside render", async () => {
   let renderer;
   const prom = async () => [1, 2, 3, 4];
-  const fut = futureArray(prom);
+  const fut = createArrayFactory(prom);
 
   const Comp = () => {
-    const array = lazyArray(fut.of).filter((val) => val % 2);
+    const array = futureArray(fut.of).filter((val) => val % 2);
     return <div>{array}</div>;
   };
 

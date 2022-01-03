@@ -1,15 +1,15 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { Suspense, useEffect } from "react";
-import { futureObject, toPromise } from "./internal";
+import { createObjectFactory, toPromise } from "./internal";
 import { act } from "react-dom/test-utils";
 import { LazyArray, LazyIterator } from "./FutureArray/LazyArray";
 import { render } from "./test-utils/rtl-renderer";
 import waitForSuspense from "./test-utils/waitForSuspense";
 import { wait, waitFor } from "@testing-library/dom";
-import { unwrapProxy, lazyArray, lazyObject, getRaw } from "./utils";
+import { unwrapProxy, futureArray, futureObject, getRaw } from "./utils";
 import extractValue from "./test-utils/extractValue";
-import { fetchArray, fetchObject } from "./fetches";
-import { FutureArray } from "./internal";
+import { fetch } from "./fetch";
+import { FutureArray, createArrayFactory } from "./internal";
 import delay from "delay";
 
 expect.extend(require("./test-utils/renderer-extended-expect"));
@@ -43,6 +43,7 @@ afterEach(async () => {
 
 });
 
+
 const LogSuspense = ({ action, children }) => {
   try {
     action();
@@ -67,7 +68,7 @@ describe("Array operations", () => {
     `Applies defers native immutable method $name both in and outside render `,
     async ({ method }) => {
       let created;
-      const futrArr = fetchArray("https://about.com/blogs");
+      const futrArr = fetch("https://about.com/blogs").then(res => res.json()).toArray()
 
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray);
@@ -114,7 +115,7 @@ describe("Array operations", () => {
     `Applies defers native iterator-returning immutable method $name both in and outside render`,
     async ({ method }) => {
       let created;
-      const futrArr = fetchArray("https://about.com/blogs");
+      const futrArr = fetch("https://about.com/blogs").then(res => res.json()).toArray();
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyIterator);
       }).not.toThrow();
@@ -156,7 +157,7 @@ describe("Array operations", () => {
   `(
     `suspends on $name inside render and throws outside render`,
     async ({ method, expected }) => {
-      const futureArray = fetchArray("https://about.com/blogs");
+      const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
 
       const inRender = () => method(futureArray);
       const outsideRender = () =>
@@ -199,7 +200,7 @@ describe("Array operations", () => {
   //TODO: invalid methods pop shift and push
 
   test("subclasses Array", async () => {
-    const resources = fetchArray("https://about.com/blogs");
+    const resources = fetch("https://about.com/blogs").then(res => res.json()).toArray();
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(unwrapProxy(resources)).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);
@@ -243,11 +244,11 @@ describe("Running iteration callbacks in parallel", () => {
   });
 
   test("filter outside render", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray()
 
     const without3 = futureArray.filter(
       (num) =>
-        num + fetchObject("https://about.com/person?value=" + num).value !== 6
+        num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value !== 6
     );
 
     const without3Res = await toPromise(without3);
@@ -257,19 +258,19 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("map outside render", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
     let double = futureArray.map(
-      (num) => num + fetchObject("https://about.com/person?value=" + num).value
+      (num) => num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value
     );
     const doubleRes = await toPromise(double);
     expect(doubleRes).toEqual([4, 6, 8, 10]);
   }, 400);
 
   test("flatMap outside render", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
 
     let flatted = futureArray.flatMap((num) =>
-      fetchArray("https://about.com/blogs?value=" + num)
+      fetch("https://about.com/blogs?value=" + num).then(res => res.json()).toArray()
     );
 
     const flattedRes = await toPromise(flatted);
@@ -279,12 +280,12 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("find", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArray.find(
         (num) =>
-          num + fetchObject("https://about.com/person?value=" + num).value === 6
+          num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value === 6
       );
       return [];
     });
@@ -293,12 +294,12 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("every", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArray.every(
         (num) =>
-          num === fetchObject("https://about.com/person?value=" + num).value
+          num === fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value
       );
       return [];
     });
@@ -307,9 +308,9 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("some", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArray.some((num) => {
         let fetchNum;
         if (num === 3) {
@@ -318,9 +319,9 @@ describe("Running iteration callbacks in parallel", () => {
           fetchNum = num;
         }
 
-        const value = fetchObject(
+        const value = fetch(
           "https://about.com/person?value=" + fetchNum
-        ).value;
+        ).then(res => res.json()).toObject().value;
         return num !== value;
       });
       return [];
@@ -329,12 +330,12 @@ describe("Running iteration callbacks in parallel", () => {
     expect(val).toEqual(true);
   }, 400);
   test("findIndex", async () => {
-    const futureArray = fetchArray("https://about.com/blogs");
+    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArray.findIndex(
         (num) =>
-          num + fetchObject("https://about.com/person?value=" + num).value === 6
+          num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value === 6
       );
       return [];
     });
@@ -346,7 +347,7 @@ describe("Running iteration callbacks in parallel", () => {
 
 describe("callback as inputs", () => {
   it("should yield correct value for given string input", async () => {
-    const arr = fetchArray("https://about.com/blogs?value=1");
+    const arr = fetch("https://about.com/blogs?value=1").then(res => res.json()).toArray();
     let renderer;
     const App = () => <div>{arr}</div>;
 
@@ -369,7 +370,7 @@ describe("callback as inputs", () => {
 
   // callbacks as inputs
   it("should allow callbacks as inputs", async () => {
-    const arr = fetchArray(() => "https://about.com/blogs?value=1");
+    const arr = fetch(() => "https://about.com/blogs?value=1").then(res => res.json()).toArray();
     let renderer;
     const App = () => <div>{arr}</div>;
     
@@ -390,16 +391,17 @@ describe("callback as inputs", () => {
   });
 
   it("input callbacks should be a suspend zone", async () => {
-    const Val = futureObject(async (val) => {
+    const Val = createArrayFactory(async (val) => {
       await delay(100);
       return { value: 1 };
-    });
+    })
 
     
 
-    const arr = fetchArray(
+    const arr = fetch(
       () => `https://about.com/blogs?value=${Val.of("key").value}`
-    );
+    ).then(res => res.json()).toArray();
+
     const App = () => {
 
       return <div>{arr}</div>;
@@ -425,4 +427,6 @@ describe("callback as inputs", () => {
   });
 
 });
+
+
 
