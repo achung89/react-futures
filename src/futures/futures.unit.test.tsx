@@ -1,3 +1,4 @@
+import { waitFor } from "@testing-library/dom";
 import { FutureObject } from "../FutureObject/FutureObject";
 import { reverseImm } from "../test-utils/reverseImm";
 import waitForSuspense from "../test-utils/waitForSuspense";

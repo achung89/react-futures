@@ -1,20 +1,12 @@
 
 
+/** inside and outside render*/test.todo('object resource can take a promise returning function or async function and when invoked returns it')
+/** inside and outside render*/test.todo('array resource can take a promise returning function or async function and when invoked returns it')
 
-// test that resource can take a promise returning function or async function and when invoked returns it (both array and object)
-      // permutation
-        // inside render
-        // outside render
+/** inside and outside render*/test.todo('array resource can use .invoke in place of invocation')
+/** inside and outside render*/test.todo('object resource can use .invoke in place of invocation')
 
-// test that .invoke can be call in place of invocation (both array and object)
-      // permutation
-        // inside render
-        // outside render
-// test that .invoke can be forked (both array and object)
-      // permutation
-        //inside render
-        // outside rener
-        // inside and outside render
+
 
 // can suspend inside callback (both array and object)
       // permutations: 
