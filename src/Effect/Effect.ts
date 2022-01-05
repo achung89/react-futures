@@ -1,4 +1,4 @@
-import { LazyArray } from '../internal';
+import { FutureArray } from '../internal';
 import { futureArray } from '../internal';
 export const thisMap = new WeakMap();
 
@@ -62,7 +62,7 @@ export function createProxy<T extends object = object>(that, cascade) {
     },
     ownKeys: _target => {
       // TODO: is that right?
-      return new LazyArray(cascade.map(target => Reflect.ownKeys(target)));
+      return new FutureArray(cascade.map(target => Reflect.ownKeys(target)));
     },
     preventExtensions: _target => {
       throw new InvalidObjectStaticMethod(['preventExtensions', 'seal'])

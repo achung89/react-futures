@@ -1,6 +1,6 @@
 
 import {  isFuture, getRaw, toPromise, futureArray, futureObject } from './internal';
-import { createArrayFactory, createObjectFactory } from './futures';
+import { createArrayResource, createObjectResource } from './resources';
 
 
 
@@ -60,7 +60,6 @@ const createFetchJson = () => async (requestInfo, requestInit = {}) => {
 
 }
 
-
 export const fetchArray = (requestInfo, requestInit = {}, config = {}) => {
   
   return futureArray(() => {
@@ -68,7 +67,7 @@ export const fetchArray = (requestInfo, requestInit = {}, config = {}) => {
       requestInfo = requestInfo()
     }
     
-    const val = createArrayFactory((requestInfo, requestInit) => fetch(requestInfo, requestInit), { getCacheKey: getFetchKey}); 
+    const val = createArrayResource((requestInfo, requestInit) => fetch(requestInfo, requestInit), { getCacheKey: getFetchKey}); 
     return val;
   })
 

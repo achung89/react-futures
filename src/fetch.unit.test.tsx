@@ -1,21 +1,21 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { Suspense, useEffect } from "react";
-import { createObjectFactory, toPromise } from "./internal";
+import { createObjectResource, toPromise } from "./internal";
 import { act } from "react-dom/test-utils";
-import { LazyArray, LazyIterator } from "./FutureArray/LazyArray";
+import { FutureArray, FutureIterator } from "./FutureArray/FutureArray";
 import { render } from "./test-utils/rtl-renderer";
 import waitForSuspense from "./test-utils/waitForSuspense";
 import { wait, waitFor } from "@testing-library/dom";
 import { unwrapProxy, futureArray, futureObject, getRaw } from "./utils";
 import extractValue from "./test-utils/extractValue";
 import { fetch } from "./fetch";
-import { FutureArray, createArrayFactory } from "./internal";
+import { FutureArray, createArrayResource } from "./internal";
 import delay from "delay";
 
 expect.extend(require("./test-utils/renderer-extended-expect"));
 
 // TODO: setter should not suspend
-// TODO: lazy before suspense, eager after suspense <=== does this still apply???????
+// TODO: future before suspense, eager after suspense <=== does this still apply???????
 // TODO: should entries, values, and keys throw, or return an iterator of futureArrays?
 // TODO: should push and unshift suspend since they require knowledge of length?
 // TODO: all subsequently created arrays should all share the same promise
@@ -23,6 +23,18 @@ expect.extend(require("./test-utils/renderer-extended-expect"));
 // TODO: test error handling
 // TODO: imm methods
 // TODO: future value shouldn't be accessible from outside render ( add get raw value function )
+
+// test .then can be called on fetch and that it forks okay
+// test that .finally can be called on fetch
+// test that .toArray and .toObject work
+// test that .catch can be called
+// doesn't cache outside render
+// caches in render
+// test that default cache key caches url
+// test that queries out of order will yield same cache key
+// test that Only GET and OPTIONS is allowed
+// test that customizeReactCacheKey will allow modification of cacheKey (also that a helper function (sort query key) is passed in)
+
 let Scheduler;
 
 let container;
@@ -71,7 +83,7 @@ describe("Array operations", () => {
       const futrArr = fetch("https://about.com/blogs").then(res => res.json()).toArray()
 
       expect(() => {
-        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray);
+        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(FutureArray);
       }).not.toThrow();
 
       let renderer;
@@ -100,7 +112,7 @@ describe("Array operations", () => {
       expect(Scheduler).toHaveYielded(["Promise Resolved"]);
       await waitFor(() => getByText("foo"));
 
-      expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
+      expect(unwrapProxy(created)).toBeInstanceOf(FutureArray);
 
       const result = await extractValue(created);
       expect(result).toEqual(method([2, 3, 4, 5]));
@@ -117,7 +129,7 @@ describe("Array operations", () => {
       let created;
       const futrArr = fetch("https://about.com/blogs").then(res => res.json()).toArray();
       expect(() => {
-        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyIterator);
+        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(FutureIterator);
       }).not.toThrow();
       let renderer;
       act(() => {
@@ -142,7 +154,7 @@ describe("Array operations", () => {
       expect(Scheduler).toHaveYielded(["Promise Resolved"]);
 
       await waitFor(() => getByText("foo"));
-      expect(unwrapProxy(created)).toBeInstanceOf(LazyIterator);
+      expect(unwrapProxy(created)).toBeInstanceOf(FutureIterator);
       const result = await extractValue(created);
       expect([...result]).toEqual([...method([2, 3, 4, 5])]);
     }
@@ -232,8 +244,8 @@ describe("Array operations", () => {
     expect(created).not.toBeInstanceOf(FutureArray);
     expect(created).toEqual([2, 3, 4, 5]);
 
-    expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(
-      LazyArray
+    expect(unwrapProxy(FutureArray.of(() => [2, 3, 4]))).toBeInstanceOf(
+      FutureArray
     );
   });
 });
@@ -391,7 +403,7 @@ describe("callback as inputs", () => {
   });
 
   it("input callbacks should be a suspend zone", async () => {
-    const Val = createArrayFactory(async (val) => {
+    const Val = createArrayResource(async (val) => {
       await delay(100);
       return { value: 1 };
     })
@@ -427,6 +439,5 @@ describe("callback as inputs", () => {
   });
 
 });
-
 
 

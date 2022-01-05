@@ -2,15 +2,15 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
 import { Suspense } from 'react';
-import { createObjectFactory } from '../../../internal';
+import { createObjectResource } from '../../../internal';
 
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import { LazyObject, isEffect } from '../../../internal';
+import { FutureObject, isEffect } from '../../../internal';
 import { unwrapProxy } from '../../../internal';
-import { LazyArray } from '../../../internal';
+import { FutureArray } from '../../../internal';
 import { getRaw } from '../../../utils';
 import { FutureArray } from '../../../FutureArray/FutureArray';
 import extractValue from '../../../test-utils/extractValue';
@@ -80,7 +80,7 @@ beforeEach(() => {
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
-  FutureObj = createObjectFactory(fetchJson)
+  FutureObj = createObjectResource(fetchJson)
 });
 
 afterEach(() => {
@@ -193,10 +193,10 @@ describe('Object static methods', () => {
       const outsideRender = () => {
         let Constructor;
         if (returnType === 'object') {
-          Constructor = LazyObject;
+          Constructor = FutureObject;
         }
         if (returnType === 'array') {
-          Constructor = LazyArray;
+          Constructor = FutureArray;
         }
         created = method(futureObj)
         expect(unwrapProxy(created)).toBeInstanceOf(Constructor);

@@ -6,9 +6,9 @@ import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { act } from 'react-dom/test-utils';
 import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import { LazyObject } from '../../../internal';
-import { unwrapProxy, FutureArray, createObjectFactory} from '../../../internal';
-import { FutureObject, LazyArray, NotSupportedError } from '../../../internal';
+import { FutureObject } from '../../../internal';
+import { unwrapProxy, FutureArray,  createObjectResource} from '../../../internal';
+import { FutureObject, FutureArray, NotSupportedError } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
 import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'
 import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';
@@ -88,7 +88,7 @@ beforeEach(() => {
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
-  FutureObj = createObjectFactory(fetchJson);
+  FutureObj = createObjectResource(fetchJson);
 });
 
 afterEach(() => {
@@ -173,10 +173,10 @@ describe('FutureObject static methods', () => {
       const outsideRender = () => {
         let Constructor;
         if (returnType === 'object') {
-          Constructor = LazyObject;
+          Constructor = FutureObject;
         }
         if (returnType === 'array') {
-          Constructor = LazyArray;
+          Constructor = FutureArray;
         }
         expect(unwrapProxy(method(futureObj))).toBeInstanceOf(Constructor);
       };
@@ -184,10 +184,10 @@ describe('FutureObject static methods', () => {
       const inRender = () => {
         let Constructor;
         if (returnType === 'object') {
-          Constructor = LazyObject;
+          Constructor = FutureObject;
         }
         if (returnType === 'array') {
-          Constructor = LazyArray;
+          Constructor = FutureArray;
         }
         const val = method(futureObj);
         expect(unwrapProxy(val)).toBeInstanceOf(Constructor);
