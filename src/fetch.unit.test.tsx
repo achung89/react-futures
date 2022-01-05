@@ -14,26 +14,36 @@ import delay from "delay";
 
 expect.extend(require("./test-utils/renderer-extended-expect"));
 
-// TODO: setter should not suspend
-// TODO: future before suspense, eager after suspense <=== does this still apply???????
-// TODO: should entries, values, and keys throw, or return an iterator of futureArrays?
-// TODO: should push and unshift suspend since they require knowledge of length?
-// TODO: all subsequently created arrays should all share the same promise
 // TODO: test freeze, seal, delete
-// TODO: test error handling
-// TODO: imm methods
 // TODO: future value shouldn't be accessible from outside render ( add get raw value function )
 
-// test .then can be called on fetch and that it forks okay
-// test that .finally can be called on fetch
-// test that .toArray and .toObject work
-// test that .catch can be called
-// doesn't cache outside render
-// caches in render
-// test that default cache key caches url
-// test that queries out of order will yield same cache key
-// test that Only GET and OPTIONS is allowed
-// test that customizeReactCacheKey will allow modification of cacheKey (also that a helper function (sort query key) is passed in)
+test.todo('test that .toArray works')
+test.todo('test that .toObject works')
+test.todo('test freeze, seal, and delete should throw error')
+test.todo('future value shouldn\'t be accessible from outside render for object')
+test.todo('future value shouldn\'t be accessible from outside render for array')
+test.todo('future array should suspend in render')
+test.todo('future object should suspend in render')
+test.todo('future array should allow .then inside render')
+test.todo('future object should allow .then inside render')
+test.todo('future array should allow .then outside render')
+test.todo('future object should allow .then outside render')
+test.todo('future array should allow .finally inside render')
+test.todo('future object should allow .finally inside render')
+test.todo('future array should allow .finally outside render')
+test.todo('future object should allow .finally outside render')
+test.todo('future array should allow .catch inside render')
+test.todo('future object should allow .catch inside render')
+test.todo('future array should allow .catch outside render')
+test.todo('future object should allow .catch outside render')
+test.todo('future object should\'t cache outside render')
+test.todo('future object should cache inside render')
+test.todo('url should be cache key and not header values')
+test.todo('url should be cache key and not header values')
+test.todo('future object should sort query keys when caching')
+test.todo('future array should sort query keys when caching')
+test.todo('Only GET and OPTIONS should be allowed')
+test.todo('customizeReactCacheKey will allow modification of cache key and also that a query function sortQueryKeys is passed in')
 
 let Scheduler;
 
