@@ -1,5 +1,5 @@
-import {fetchArray, fetchObject, createArrayFactory, createObjectFactory, getRaw, toPromise} from './internal';
-export {fetchArray, fetchObject, createArrayFactory as futureArray, createObjectFactory as futureObject, getRaw, toPromise}
+import {fetchArray, fetchObject, createArrayResource, createObjectResource, getRaw, toPromise} from './internal';
+export {fetchArray, fetchObject, createArrayResource as futureArray, createObjectResource as futureObject, getRaw, toPromise}
 export default {
-  fetchArray, fetchObject, futureArray: createArrayFactory, futureObject: createObjectFactory, getRaw, toPromise
+  fetchArray, fetchObject, futureArray: createArrayResource, futureObject: createObjectResource, getRaw, toPromise
 }

@@ -1,14 +1,14 @@
 import { unstable_getCacheForType as getCacheForType } from "react";
 import {
   thisMap,
-  LazyObject,
-  LazyArray,
+  FutureObject,
+  FutureArray,
   SuspenseCascade,
-  isLazyArray,
+   isFutureArray,
   getArrayCascade,
-  isLazyIterator,
+   isFutureIterator,
   getIteratorCascade,
-  isLazyObject,
+   isFutureObject,
   getObjectCascade,
 } from "./internal";
 import { getCache } from "./internal";
@@ -56,7 +56,7 @@ export const first = (fn: Function) => {
 // TODO: should accept promise function
 // TODO: if the fn returns a promise or is an async function, a cachekey is required
 export const futureArray = (fn) =>
-  new LazyArray(defaultCascade(() => {
+  new FutureArray(defaultCascade(() => {
     const result = fn();
     if (!Array.isArray(result))
       throw new TypeError(
@@ -68,7 +68,7 @@ export const futureArray = (fn) =>
 // TODO: should accept promise function
 // TODO: if the fn returns a promise or is an async function, a cachekey is required
 export const futureObject = (fn) =>
-  new LazyObject(defaultCascade(() => {
+  new FutureObject(defaultCascade(() => {
     const result = fn();
     if (typeof result !== "object" || result === null) {
       throw new TypeError(
@@ -106,15 +106,15 @@ export const toPromise = async (future) => {
 };
 
 export const getCascade = (obj) => {
-  if (isLazyArray(obj)) {
+  if (isFutureArray(obj)) {
     return getArrayCascade(obj);
   }
 
-  if(isLazyIterator(obj)) {
+  if(isFutureIterator(obj)) {
     return getIteratorCascade(obj);
   }
 
-  if(isLazyObject(obj)) {
+  if(isFutureObject(obj)) {
     return getObjectCascade(obj);
   }
 

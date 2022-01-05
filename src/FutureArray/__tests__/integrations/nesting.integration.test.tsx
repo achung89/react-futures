@@ -2,7 +2,8 @@ jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 import { Suspense } from "react";
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
-import { futureArray, createArrayFactory } from "../../../utils";
+import { futureArray } from "../../../utils";
+import {  createArrayResource} from '../../../internal';
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
@@ -20,7 +21,7 @@ let fetchArray = val =>
   });
 
 beforeEach(() => {
-  FutureArr = createArrayFactory(fetchArray);
+  FutureArr = createArrayResource(fetchArray);
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -101,7 +102,7 @@ describe('Nested future arrays', () => {
   });
 })
 
-describe('Nested Future array instantiated in lazy array chain', () => {
+describe('Nested Future array instantiated in future array chain', () => {
   it('should suspend when rendering deeply nested future', async () => {
     const MiniApp = () => createNestedFuture(futureArray(() =>[2,3,4,5]));
 
@@ -173,10 +174,10 @@ describe('Nested Future array instantiated in lazy array chain', () => {
 
 
 
-describe('Nested Future arrays instantiated in lazy array chain with lazy array being instatiated outside render', () => {
+describe('Nested Future arrays instantiated in future array chain with future array being instatiated outside render', () => {
   it('should suspend when rendering deeply nested future', async () => {
-    const lazyArr = futureArray(() => [2,3,4,5])
-    const MiniApp = () => createNestedFuture(lazyArr);
+    const futureArr = futureArray(() => [2,3,4,5])
+    const MiniApp = () => createNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -190,8 +191,8 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
     });
   });
   it('should suspend when rendering futureArray that uses a future in its callback', async () => {
-    const lazyArr = futureArray(() => [2,3,4,5])
-    const MiniApp = () => createNestedFuture(lazyArr);
+    const futureArr = futureArray(() => [2,3,4,5])
+    const MiniApp = () => createNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -206,8 +207,8 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
 
   })
   it('should suspend when rendering deeply nested future that has a nested prefetched array', async () => {
-    const lazyArr = futureArray(() =>[2,3,4,5])
-    const MiniApp = () => createMoreComplexNestedFuture(lazyArr);
+    const futureArr = futureArray(() =>[2,3,4,5])
+    const MiniApp = () => createMoreComplexNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -223,9 +224,9 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
 
   });
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array', async () => {
-    const lazyArr = futureArray(() =>[2,3,4,5])
+    const futureArr = futureArray(() =>[2,3,4,5])
 
-    const MiniApp = () => createEvenMoreComplexNestedFuture(lazyArr);
+    const MiniApp = () => createEvenMoreComplexNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -241,9 +242,9 @@ describe('Nested Future arrays instantiated in lazy array chain with lazy array 
   });
 
   it('should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div', async () => {
-    const lazyArr = futureArray(() =>[2,3,4,5])
+    const futureArr = futureArray(() =>[2,3,4,5])
 
-    const MiniApp = () => <div>{createEvenMoreComplexNestedFuture(lazyArr)}</div>
+    const MiniApp = () => <div>{createEvenMoreComplexNestedFuture(futureArr)}</div>
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>

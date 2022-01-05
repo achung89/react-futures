@@ -1,7 +1,7 @@
 export * from './fromArgsToCacheKey'
 export * from './Effect/Effect';
-export * from './FutureArray/LazyArray';
-export * from './FutureObject/LazyObject';
+export * from './FutureArray/FutureArray';
+export * from './FutureObject/FutureObject';
 export * from './FutureArray/FutureArray';
 export * from './FutureObject/FutureObject';
 export * from './initiatePromise';
@@ -14,4 +14,4 @@ export * from './functorComposition/composeFunctors'
 export * from './functorComposition/PullCacheCascade'
 export * from './SuspenseCascade/SuspenseCascade'
 export * from './fetch';
-export * from './futures';
+export * from './resources';
