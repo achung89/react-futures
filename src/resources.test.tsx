@@ -1,73 +1,133 @@
+test.todo('createObjectResource can take a promise returning function or async function and when invoked returns it inside render')
+test.todo('createObjectResource can take a promise returning function or async function and when invoked returns it outside render')
+test.todo('createArrayResource resource can take a promise returning function or async function and when invoked returns it inside render')
+test.todo('createArrayResource resource can take a promise returning function or async function and when invoked returns it outside render')
+test.todo('createObjectResource can take a promise returning function or async function and when invoked returns it inside render')
+test.todo('createObjectResource can take a promise returning function or async function and when invoked returns it outside render')
+test.todo('createArrayResource resource can take a promise returning function or async function and when invoked returns it inside render')
+test.todo('createArrayResource resource can take a promise returning function or async function and when invoked returns it outside render')
+
+test.todo('createArrayResource can use .invoke in place of invocation inside render')
+test.todo('createArrayResource can use .invoke in place of invocation outside render')
+test.todo('createObjectResource can use .invoke in place of invocation inside render')
+test.todo('createObjectResource can use .invoke in place of invocation outside render')
 
 
-/** inside and outside render*/test.todo('object resource can take a promise returning function or async function and when invoked returns it')
-/** inside and outside render*/test.todo('array resource can take a promise returning function or async function and when invoked returns it')
 
-/** inside and outside render*/test.todo('array resource can use .invoke in place of invocation')
-/** inside and outside render*/test.todo('object resource can use .invoke in place of invocation')
+test.todo(`createResource does not allow .invoke without calling first '.array' or '.object'`)
+test.todo(`createResource does not allow createResource().then().invoke()`)
+test.todo(`createResource does not allow createResource().array().then().invoke()`)
+test.todo(`createResource does not allow createResource().object().then().invoke()`)
 
+test.todo('createResource().array().invoke() will create FutureArray and yield correct value')
+test.todo('createResource().object().invoke() will create FutureObject and yield correct value')
 
+test.todo('createResource().finally() is called after promise is resolved inside render')
+test.todo('createResource().finally() is called after promise is resolved outside render')
+test.todo('createResource().finally() is called after promise.then is resolved inside render')
+test.todo('createResource().finally() is called after promise.then is resolved outside render')
+test.todo('createResource().finally() can be forked outside render')
+test.todo('createResource().finally() can be forked inside render')
+test.todo('createResource().finally() can be forked outside and inside render')
 
-// can suspend inside callback (both array and object)
-      // permutations: 
-          // inside render
-          // outside render
+test.todo('createResource().then().array().invoke() should vield future array value outside render')
+test.todo('createResource().then().object().invoke() should vield future object value outside render')
+test.todo('createResource().then().array().invoke() should vield future array value inside render')
+test.todo('createResource().then().object().invoke() should vield future object value inside render')
 
-// test that .then can be invoked on resource (both object and array)
-      // permutation
-        // inside render
-        // outside render
-// test that .then allows for forking (both array and object)
-      //permutation
-        // insider render
-        // outside render
-        // inside and outside render
-// test that .then can take an onerror function (both array and object)
-      // permtation
-        // inside render
-        // outside render
-// test that .then can take an onerror function with fork (both array and object)
-      //permutation
-        // insider render
-        // outside render
-        // inside and outside render
+test.todo('createResource().then().array() should fork outside render')
+test.todo('createResource().then().object() should fork outside render')
+test.todo('createResource().then().array() should fork inside render')
+test.todo('createResource().then().object() should fork inside render')
+test.todo('createResource().then().array() should fork inside and outside render')
+test.todo('createResource().then().object() should fork inside and outside render')
+
+test.todo('createResource().then() can take an onerror function outside render')
+test.todo('createResource().then() can take an onerror function inside render')
+
+test.todo('createResource().then() can take an onerror function that forks outside render')
+test.todo('createResource().then() can take an onerror function that forks inside render')
+test.todo('createResource().then() can take an onerror function that forks inside and outside render')
       
-// Can throw errors (both array and object)
-  // case: 
-    // in promise
-    // in sync calback
-    // in .then
-  // permutation: 
-    //inside render
-    // outside render
+test.todo('createResource can suspend in promise callback outside render')
+test.todo('createResource can suspend in sync before promise outside render')
+test.todo('createResource can suspend in promise.then callback outside render')
+test.todo('createResource can suspend in promise callback inside render')
+test.todo('createResource can suspend in sync before promise inside render')
+test.todo('createResource can suspend in promise.then callback inside render')
+test.todo('createArrayResource can suspend in promise callback outside render')
+test.todo('createArrayResource can suspend in sync before promise outside render')
+test.todo('createArrayResource can suspend in promise.then callback outside render')
+test.todo('createArrayResource can suspend in promise callback inside render')
+test.todo('createArrayResource can suspend in sync before promise inside render')
+test.todo('createArrayResource can suspend in promise.then callback inside render')
+test.todo('createObjectResource can suspend in promise callback outside render')
+test.todo('createObjectResource can suspend in sync before promise outside render')
+test.todo('createObjectResource can suspend in promise.then callback outside render')
+test.todo('createObjectResource can suspend in promise callback inside render')
+test.todo('createObjectResource can suspend in sync before promise inside render')
+test.todo('createObjectResource can suspend in promise.then callback inside render')
 
-// .catch will handle errors (both array and object)
-  // case:
-    // in promise
-    // in sync calback
-    // in .then
-  // permutation
-    // inside render
-    // outside render
+test.todo('createResource can throw error in promise inside render')
+test.todo('createResource can throw error in promise outside render')
+test.todo('createResource can throw error in sync callback inside render')
+test.todo('createResource can throw error in sync callback outside render')
+test.todo('createResource can throw error in .then callback inside render')
+test.todo('createResource can throw error in .then callback outside render')
+test.todo('createArrayResource can throw error in promise inside render')
+test.todo('createArrayResource can throw error in promise outside render')
+test.todo('createArrayResource can throw error in sync callback inside render')
+test.todo('createArrayResource can throw error in sync callback outside render')
+test.todo('createArrayResource can throw error in .then callback inside render')
+test.todo('createArrayResource can throw error in .then callback outside render')
+test.todo('createObjectResource can throw error in promise inside render')
+test.todo('createObjectResource can throw error in promise outside render')
+test.todo('createObjectResource can throw error in sync callback inside render')
+test.todo('createObjectResource can throw error in sync callback outside render')
+test.todo('createObjectResource can throw error in .then callback inside render')
+test.todo('createObjectResource can throw error in .then callback outside render')
 
-// .finally called after promise is resolved (both array and object)
-    // case: will be called after promise resolved
-    // case: wil be called after all .then are called
-    // case: can be forked
-    // permutation
-      // outside render
-      // inside render
-      // for forked: inside and outside render
 
-// A throw (or returning a rejected promise) in the finally callback will reject the new promise with the rejection reason specified when calling throw. (both array and object)
-  // rejects the returned promise, but not the previous promise
-// test that invocations outside render are not cached (both array and object)
-    // case
-      // click handler
-      // in module space
+test.todo('createResource can .catch in promise inside render')
+test.todo('createResource can .catch in promise outside render')
+test.todo('createResource can .catch in sync callback inside render')
+test.todo('createResource can .catch in sync callback outside render')
+test.todo('createResource can .catch in .then callback inside render')
+test.todo('createResource can .catch in .then callback outside render')
+test.todo('createArrayResource can .catch in promise inside render')
+test.todo('createArrayResource can .catch in promise outside render')
+test.todo('createArrayResource can .catch in sync callback inside render')
+test.todo('createArrayResource can .catch in sync callback outside render')
+test.todo('createArrayResource can .catch in .then callback inside render')
+test.todo('createArrayResource can .catch in .then callback outside render')
+test.todo('createObjectResource can .catch in promise inside render')
+test.todo('createObjectResource can .catch in promise outside render')
+test.todo('createObjectResource can .catch in sync callback inside render')
+test.todo('createObjectResource can .catch in sync callback outside render')
+test.todo('createObjectResource can .catch in .then callback inside render')
+test.todo('createObjectResource can .catch in .then callback outside render')
 
-// test that invocations inside render are cached (both array and object)
+test.todo('createResource invocations are cached inside render')
+test.todo('createArrayResource invocations are cached inside render')
+test.todo('createObjectResource invocations are cached inside render')
+test.todo('createResource invocations outside render are not cached')
+test.todo('createArrayResource invocations outside render are not cached')
+test.todo('createObjectResource invocations outside render are not cached')
 
-// customReactCacheKey should allow customizing cache key (both array and object)
-// default cacheKey should cache objects by reference (both array and object)
+test.todo('createResource cache keys by default should cache objects and arrays by reference')
+test.todo('createArrayResource cache keys by default should cache objects and arrays by reference')
+test.todo('createObjectResource cache keys by default should cache objects and arrays by reference')
 
+test.todo('customReactCacheKey for createResource should allow customizing cache keys')
+test.todo('customReactCacheKey for createArrayResource should allow customizing cache keys')
+test.todo('customReactCacheKey for createObjectResource should allow customizing cache keys')
+
+test.todo('createResource should allow a throw or returning a rejected promise in finally will reject the new promise (but not original promise) with the rejection reason specified when calling throw in render')
+test.todo('createResource should allow a throw or returning a rejected promise in finally will reject the new promise (but not original promise) with the rejection reason specified when calling throw outside render')
+
+test.todo('createResource should not cache resources created outside render')
+test.todo('createArrayResource should not cache resources created outside render')
+test.todo('createObjectResource should not cache resources created outside render')
+test.todo('createResource should not cache resources created click handler')
+test.todo('createArrayResource should not cache resources created click handler')
+test.todo('createObjectResource should not cache resources created click handler')
