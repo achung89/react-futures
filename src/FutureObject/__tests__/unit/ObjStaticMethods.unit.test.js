@@ -1,19 +1,15 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
-import { Suspense } from 'react';
-import { createObjectResource } from '../../../internal';
-
-import waitForSuspense from '../../../test-utils/waitForSuspense';
-import { act } from 'react-dom/test-utils';
-import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import { FutureObject, isEffect } from '../../../internal';
-import { unwrapProxy } from '../../../internal';
-import { FutureArray } from '../../../internal';
-import { getRaw } from '../../../utils';
-import { FutureArray } from '../../../FutureArray/FutureArray';
+import { Suspense } from 'react';
+import { act } from 'react-dom/test-utils';
+import { createObjectResource, FutureArray, FutureObject, unwrapProxy } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
+import { render } from '../../../test-utils/rtl-renderer';
+import waitForSuspense from '../../../test-utils/waitForSuspense';
+import { getRaw } from '../../../utils';
+
 
 // TODO: test assign with array as first argument
 export const getOwnPropertyDescriptor = obj =>

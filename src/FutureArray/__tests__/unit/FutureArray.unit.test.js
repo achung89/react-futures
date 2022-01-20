@@ -1,16 +1,15 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 import  { Suspense, unstable_Cache as Cache } from 'react';
-import {  createArrayResource,  createObjectResource, toPromise } from '../../../internal';
+import {  createArrayResource,  createObjectResource, toPromise, futureArray } from '../../../internal';
 import { act } from '@testing-library/react';
 import { MutableOperationInRenderError } from '../../../Effect/Effect';
 import { FutureArray, FutureIterator } from '../../FutureArray';
-import { SuspendOperationOutsideRenderError } from '../../../FutureObject/FutureObject'
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
 
-import { unwrapProxy, futureArray } from '../../../utils';
+import { unwrapProxy } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
 import delay from 'delay';
 import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';

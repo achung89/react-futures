@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { testSuspenseWithLoader } from "../../../test-utils/testSuspense";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
 import { futureArray } from "../../../utils";
-import {  createArrayResource} from '../../../internal';
+import { createArrayResource } from '../../../internal';
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 

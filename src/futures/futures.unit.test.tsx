@@ -1,13 +1,17 @@
 import { waitFor } from "@testing-library/dom";
+import { act } from "@testing-library/react";
+import { Suspense } from "react";
 import { FutureObject } from "../FutureObject/FutureObject";
+import { createArrayResource } from "../internal";
 import { reverseImm } from "../test-utils/reverseImm";
+import { render } from "../test-utils/rtl-renderer";
 import waitForSuspense from "../test-utils/waitForSuspense";
+import { futureArray } from "./futures";
 
 
-expect.extend(require("./test-utils/renderer-extended-expect"));
+expect.extend(require("../test-utils/renderer-extended-expect"));
 
-// TODO: test basic cache behaviour in and out of render
-// TODO: test error handling
+
 const expectedJSON = (value) => ({
   foo: "futon",
   bar: "barcandy",

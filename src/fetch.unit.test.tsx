@@ -1,49 +1,52 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
-import { Suspense, useEffect } from "react";
-import { createObjectResource, toPromise } from "./internal";
+import { waitFor } from "@testing-library/dom";
+import delay from "delay";
+import { Suspense } from "react";
 import { act } from "react-dom/test-utils";
+import { fetchArray, fetchObject } from "./fetch";
 import { FutureArray, FutureIterator } from "./FutureArray/FutureArray";
+import { createArrayResource, toPromise } from "./internal";
+import extractValue from "./test-utils/extractValue";
 import { render } from "./test-utils/rtl-renderer";
 import waitForSuspense from "./test-utils/waitForSuspense";
-import { wait, waitFor } from "@testing-library/dom";
-import { unwrapProxy, futureArray, futureObject, getRaw } from "./utils";
-import extractValue from "./test-utils/extractValue";
-import { fetch } from "./fetch";
-import { FutureArray, createArrayResource } from "./internal";
-import delay from "delay";
+import { unwrapProxy } from "./utils";
 
 expect.extend(require("./test-utils/renderer-extended-expect"));
 
 // TODO: test freeze, seal, delete
 // TODO: future value shouldn't be accessible from outside render ( add get raw value function )
 
-test.todo('test that .toArray works')
-test.todo('test that .toObject works')
-test.todo('test freeze, seal, and delete should throw error')
-test.todo('future value shouldn\'t be accessible from outside render for object')
-test.todo('future value shouldn\'t be accessible from outside render for array')
-test.todo('future array should suspend in render')
-test.todo('future object should suspend in render')
-test.todo('future array should allow .then inside render')
-test.todo('future object should allow .then inside render')
-test.todo('future array should allow .then outside render')
-test.todo('future object should allow .then outside render')
-test.todo('future array should allow .finally inside render')
-test.todo('future object should allow .finally inside render')
-test.todo('future array should allow .finally outside render')
-test.todo('future object should allow .finally outside render')
-test.todo('future array should allow .catch inside render')
-test.todo('future object should allow .catch inside render')
-test.todo('future array should allow .catch outside render')
-test.todo('future object should allow .catch outside render')
-test.todo('future object should\'t cache outside render')
-test.todo('future object should cache inside render')
-test.todo('url should be cache key and not header values')
-test.todo('url should be cache key and not header values')
-test.todo('future object should sort query keys when caching')
-test.todo('future array should sort query keys when caching')
-test.todo('Only GET and OPTIONS should be allowed')
-test.todo('customizeReactCacheKey will allow modification of cache key and also that a query function sortQueryKeys is passed in')
+test.todo("test that .toArray works");
+test.todo("test that .toObject works");
+test.todo("test freeze, seal, and delete should throw error");
+test.todo(
+  "future value shouldn't be accessible from outside render for object"
+);
+test.todo("future value shouldn't be accessible from outside render for array");
+test.todo("future array should suspend in render");
+test.todo("future object should suspend in render");
+test.todo("future array should allow .then inside render");
+test.todo("future object should allow .then inside render");
+test.todo("future array should allow .then outside render");
+test.todo("future object should allow .then outside render");
+test.todo("future array should allow .finally inside render");
+test.todo("future object should allow .finally inside render");
+test.todo("future array should allow .finally outside render");
+test.todo("future object should allow .finally outside render");
+test.todo("future array should allow .catch inside render");
+test.todo("future object should allow .catch inside render");
+test.todo("future array should allow .catch outside render");
+test.todo("future object should allow .catch outside render");
+test.todo("future object should't cache outside render");
+test.todo("future object should cache inside render");
+test.todo("url should be cache key and not header values");
+test.todo("url should be cache key and not header values");
+test.todo("future object should sort query keys when caching");
+test.todo("future array should sort query keys when caching");
+test.todo("Only GET and OPTIONS should be allowed");
+test.todo(
+  "customizeReactCacheKey will allow modification of cache key and also that a query function sortQueryKeys is passed in"
+);
 
 let Scheduler;
 
@@ -61,10 +64,8 @@ afterEach(async () => {
   container = null;
   Scheduler.unstable_clearYields();
   Scheduler = null;
-  	// Print the handles still opened
-
+  // Print the handles still opened
 });
-
 
 const LogSuspense = ({ action, children }) => {
   try {
@@ -90,7 +91,9 @@ describe("Array operations", () => {
     `Applies defers native immutable method $name both in and outside render `,
     async ({ method }) => {
       let created;
-      const futrArr = fetch("https://about.com/blogs").then(res => res.json()).toArray()
+      const futrArr = fetchArray("https://about.com/blogs").then((res) =>
+        res.json()
+      );
 
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(FutureArray);
@@ -137,7 +140,9 @@ describe("Array operations", () => {
     `Applies defers native iterator-returning immutable method $name both in and outside render`,
     async ({ method }) => {
       let created;
-      const futrArr = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+      const futrArr = fetchArray("https://about.com/blogs").then((res) =>
+        res.json()
+      );
       expect(() => {
         expect(unwrapProxy(method(futrArr))).toBeInstanceOf(FutureIterator);
       }).not.toThrow();
@@ -179,7 +184,9 @@ describe("Array operations", () => {
   `(
     `suspends on $name inside render and throws outside render`,
     async ({ method, expected }) => {
-      const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+      const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+        res.json()
+      );
 
       const inRender = () => method(futureArray);
       const outsideRender = () =>
@@ -222,7 +229,9 @@ describe("Array operations", () => {
   //TODO: invalid methods pop shift and push
 
   test("subclasses Array", async () => {
-    const resources = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const resources = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
     //suspends on Array.from, Array.isArray, have Array.of static method
     expect(unwrapProxy(resources)).toBeInstanceOf(Array);
     expect(Array.isArray(resources)).toEqual(true);
@@ -266,11 +275,17 @@ describe("Running iteration callbacks in parallel", () => {
   });
 
   test("filter outside render", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray()
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
 
     const without3 = futureArray.filter(
       (num) =>
-        num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value !== 6
+        num +
+          fetchObject("https://about.com/person?value=" + num).then((res) =>
+            res.json()
+          ).value !==
+        6
     );
 
     const without3Res = await toPromise(without3);
@@ -280,19 +295,27 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("map outside render", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
     let double = futureArray.map(
-      (num) => num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value
+      (num) =>
+        num +
+        fetchObject("https://about.com/person?value=" + num).then((res) =>
+          res.json()
+        ).value
     );
     const doubleRes = await toPromise(double);
     expect(doubleRes).toEqual([4, 6, 8, 10]);
   }, 400);
 
   test("flatMap outside render", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
 
     let flatted = futureArray.flatMap((num) =>
-      fetch("https://about.com/blogs?value=" + num).then(res => res.json()).toArray()
+      fetch("https://about.com/blogs?value=" + num).then((res) => res.json())
     );
 
     const flattedRes = await toPromise(flatted);
@@ -302,12 +325,18 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("find", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
     let val;
     const arr = futureArray(() => {
       val = futureArray.find(
         (num) =>
-          num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value === 6
+          num +
+            fetchObject("https://about.com/person?value=" + num).then((res) =>
+              res.json()
+            ).value ===
+          6
       );
       return [];
     });
@@ -316,12 +345,17 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("every", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
     let val;
     const arr = futureArray(() => {
       val = futureArray.every(
         (num) =>
-          num === fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value
+          num ===
+          fetchObject("https://about.com/person?value=" + num).then((res) =>
+            res.json()
+          ).value
       );
       return [];
     });
@@ -330,7 +364,9 @@ describe("Running iteration callbacks in parallel", () => {
   }, 400);
 
   test("some", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
     let val;
     const arr = futureArray(() => {
       val = futureArray.some((num) => {
@@ -341,9 +377,9 @@ describe("Running iteration callbacks in parallel", () => {
           fetchNum = num;
         }
 
-        const value = fetch(
-          "https://about.com/person?value=" + fetchNum
-        ).then(res => res.json()).toObject().value;
+        const value = fetch("https://about.com/person?value=" + fetchNum).then(
+          (res) => res.json()
+        ).value;
         return num !== value;
       });
       return [];
@@ -352,12 +388,18 @@ describe("Running iteration callbacks in parallel", () => {
     expect(val).toEqual(true);
   }, 400);
   test("findIndex", async () => {
-    const futureArray = fetch("https://about.com/blogs").then(res => res.json()).toArray();
+    const futureArray = fetchArray("https://about.com/blogs").then((res) =>
+      res.json()
+    );
     let val;
     const arr = futureArray(() => {
       val = futureArray.findIndex(
         (num) =>
-          num + fetch("https://about.com/person?value=" + num).then(res => res.json()).toObject().value === 6
+          num +
+            fetchObject("https://about.com/person?value=" + num).then((res) =>
+              res.json()
+            ).value ===
+          6
       );
       return [];
     });
@@ -369,7 +411,9 @@ describe("Running iteration callbacks in parallel", () => {
 
 describe("callback as inputs", () => {
   it("should yield correct value for given string input", async () => {
-    const arr = fetch("https://about.com/blogs?value=1").then(res => res.json()).toArray();
+    const arr = fetch("https://about.com/blogs?value=1").then((res) =>
+      res.json()
+    );
     let renderer;
     const App = () => <div>{arr}</div>;
 
@@ -385,17 +429,19 @@ describe("callback as inputs", () => {
     const { getByText } = renderer;
     await waitForSuspense(0);
     await waitForSuspense(150);
-    
+
     expect(Scheduler).toHaveYielded(["Promise Resolved"]);
     await waitFor(() => getByText("2341"));
   });
 
   // callbacks as inputs
   it("should allow callbacks as inputs", async () => {
-    const arr = fetch(() => "https://about.com/blogs?value=1").then(res => res.json()).toArray();
+    const arr = fetch(() => "https://about.com/blogs?value=1").then((res) =>
+      res.json()
+    );
     let renderer;
     const App = () => <div>{arr}</div>;
-    
+
     act(() => {
       renderer = render(
         <Suspense fallback={<div>Loading...</div>}>
@@ -416,18 +462,15 @@ describe("callback as inputs", () => {
     const Val = createArrayResource(async (val) => {
       await delay(100);
       return { value: 1 };
-    })
-
-    
+    });
 
     const arr = fetch(
       () => `https://about.com/blogs?value=${Val.of("key").value}`
-    ).then(res => res.json()).toArray();
+    ).then((res) => res.json());
 
     const App = () => {
-
       return <div>{arr}</div>;
-    }
+    };
 
     let renderer;
     act(() => {
@@ -444,10 +487,7 @@ describe("callback as inputs", () => {
     await waitForSuspense(100);
     expect(Scheduler).toHaveYielded([]);
     await waitForSuspense(100);
-  
+
     await waitFor(() => getByText("2341"));
   });
-
 });
-
-
