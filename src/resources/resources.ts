@@ -14,7 +14,7 @@ const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + f
 // customizeable cache callback
 
 export const createResource = () => {
-
+  
 }
 
 export const createObjectResource = <T extends object>(promiseThunk,  getCacheKey = defaultGetCacheKey) => {
@@ -78,7 +78,7 @@ export const createResource = (promiseThunk, { customizeReactCacheKey }) => {
   return (...args) => {
     const cacheKey = getObjectId(promiseThunk) + customizeReactCacheKey(...args);
 
-    
+
   }
 } 
 
