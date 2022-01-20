@@ -64,7 +64,9 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--unhandled-rejections=warn node --trace-warnings node_modules/.bin/jest",
+    "test:watch": "NODE_OPTIONS=--unhandled-rejections=warn node --trace-warnings node_modules/.bin/jest --watch",
     "test:file": "func() { jest \"$@\" &> output.txt; }; func",
+    "test:file:watch": "func() { jest \"$@\" --watch &> output.txt; }; func",
     "build": "BABEL_ENV=production rollup -c"
   }
 }

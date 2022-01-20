@@ -1,17 +1,15 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 
-import { Suspense } from 'react';
-import waitForSuspense from '../../../test-utils/waitForSuspense';
-import { act } from 'react-dom/test-utils';
-import { render } from '../../../test-utils/rtl-renderer';
 import { waitFor } from '@testing-library/dom';
-import { FutureObject } from '../../../internal';
-import { unwrapProxy, FutureArray,  createObjectResource} from '../../../internal';
-import { FutureObject, FutureArray, NotSupportedError } from '../../../internal';
+import { Suspense } from 'react';
+import { act } from 'react-dom/test-utils';
+import { createObjectResource, FutureArray, FutureObject, NotSupportedError, unwrapProxy } from '../../../internal';
 import extractValue from '../../../test-utils/extractValue';
-import {assign_firstParam, setPrototypeOf,getOwnPropertyDescriptor, assign_secondParam, defineProperties, defineProperty} from './ObjStaticMethods.unit.test'
+import { render } from '../../../test-utils/rtl-renderer';
+import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';
+import { assign_firstParam, assign_secondParam, defineProperties, defineProperty, getOwnPropertyDescriptor, setPrototypeOf } from './ObjStaticMethods.unit.test';
 
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 

@@ -1,6 +1,6 @@
 
 import {  isFuture, getRaw, toPromise, futureArray, futureObject } from './internal';
-import { createArrayResource, createObjectResource } from './resources';
+import { createObjectResource, createArrayResource } from './resources/resources';
 
 
 

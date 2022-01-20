@@ -2,10 +2,9 @@ jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { waitFor } from "@testing-library/dom";
 import { Suspense } from "react";
 import { act } from "react-dom/test-utils";
-import { futureArray } from "../../../internal";
+import { createArrayResource, futureArray } from "../../../internal";
 import { render } from "../../../test-utils/rtl-renderer";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
-import { futureArray } from "../../../utils";
 
 expect.extend(require("../../../test-utils/renderer-extended-expect"));
 
@@ -24,7 +23,7 @@ let fetchArray = (val) =>
     }, 100);
   });
 beforeEach(() => {
-  FutureArr = futureArray(fetchArray);
+  FutureArr = createArrayResource(fetchArray);
   Scheduler = require("scheduler/unstable_mock");
   container = document.createElement("div");
   document.body.appendChild(container);

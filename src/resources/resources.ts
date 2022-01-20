@@ -1,12 +1,10 @@
-import { promiseStatusStore } from './shared-properties';
-import { FutureObject } from './internal';
-import { FutureArray } from './internal';
-import { fromArgsToCacheKey, getObjectId } from './fromArgsToCacheKey';
-import { FutureArray,   } from './internal';
-import { FutureObject, isFuture, getRaw, toPromise, futureArray, futureObject, SuspenseCascade } from './internal';
-import { isReactRendering } from './utils';
+import { promiseStatusStore } from '../shared-properties';
+import { FutureArray } from '../internal';
+import { fromArgsToCacheKey, getObjectId } from '../fromArgsToCacheKey';
+import { FutureObject, isFuture, getRaw, toPromise, futureArray, futureObject, SuspenseCascade } from '../internal';
+import { isReactRendering } from '../utils';
 import {unstable_getCacheForType as getCacheForType} from 'react';
-import { initiateArrayPromise, initiateObjectPromise } from './initiatePromise';
+import { initiateArrayPromise, initiateObjectPromise } from '../initiatePromise';
 
 export const getCache = () => new Map();
 //TODO: consider if this the best type signature for this function when it becomes generic
@@ -14,6 +12,11 @@ const defaultGetCacheKey = (promiseThunk, keys) => getObjectId(promiseThunk) + f
 // TODO: strongly type
 // futures should handle suspense 
 // customizeable cache callback
+
+export const createResource = () => {
+
+}
+
 export const createObjectResource = <T extends object>(promiseThunk,  getCacheKey = defaultGetCacheKey) => {
   const getCache = () => new Map();
   if (isReactRendering()) {
@@ -64,6 +67,21 @@ export const createArrayResource = <T>(promiseThunk, getCacheKey = defaultGetCac
   };
 };
 
+export const createResource = (promiseThunk, { customizeReactCacheKey }) => {
+  const getCache = () => new Map();
+  
+  if (isReactRendering()) {
+    // TODO: add custom error message per method
+    throw new Error('cannot create cache in render');
+  }
+
+  return (...args) => {
+    const cacheKey = getObjectId(promiseThunk) + customizeReactCacheKey(...args);
+
+    
+  }
+} 
+
 export const promiseThunkValue = Symbol('promise-thunk')
 function getCachedPromise(promiseThunk: any, key, cache) { 
   if (cache.has(key)) {
@@ -82,3 +100,5 @@ function getCachedPromise(promiseThunk: any, key, cache) {
 
   return promise;
 };
+
+
