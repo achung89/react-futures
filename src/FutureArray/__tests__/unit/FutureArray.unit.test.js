@@ -1,23 +1,22 @@
 jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 jest.useFakeTimers();
 import  { Suspense, unstable_Cache as Cache } from 'react';
-import { futureArray, futureObject, toPromise } from '../../../internal';
+import {  createArrayResource,  createObjectResource, toPromise, futureArray } from '../../../internal';
 import { act } from '@testing-library/react';
 import { MutableOperationInRenderError } from '../../../Effect/Effect';
-import { LazyArray, LazyIterator } from '../../LazyArray';
-import { SuspendOperationOutsideRenderError } from '../../../FutureObject/LazyObject'
+import { FutureArray, FutureIterator } from '../../FutureArray';
 import { render } from '../../../test-utils/rtl-renderer';
 import waitForSuspense from '../../../test-utils/waitForSuspense';
 import { waitFor } from '@testing-library/dom';
 
-import { unwrapProxy, lazyArray } from '../../../utils';
+import { unwrapProxy } from '../../../utils';
 import extractValue from '../../../test-utils/extractValue';
 import delay from 'delay';
 import { ThrowablePromise } from '../../../ThrowablePromise/ThrowablePromise';
 expect.extend(require('../../../test-utils/renderer-extended-expect'));
 
 // TODO: setter should not suspend
-// TODO: lazy before suspense, eager after suspense <=== does this still apply???????
+// TODO: future before suspense, eager after suspense <=== does this still apply???????
 // TODO: should entries, values, and keys throw, or return an iterator of FutureArrays?
 // TODO: should push and unshift suspend since they require knowledge of length?
 // TODO: all subsequently created arrays should all share the same promise
@@ -41,7 +40,7 @@ beforeEach(() => {
   jest.useFakeTimers();
 
   jest.resetModules();
-  FutureArr = futureArray(fetchArray);
+  FutureArr = createArrayResource(fetchArray);
   Scheduler = require('scheduler/unstable_mock');
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -201,7 +200,7 @@ describe('Array operations', () => {
       let created;
       const outsideRender = () => {
         created = method(futrArr)
-        expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
+        expect(unwrapProxy(created)).toBeInstanceOf(FutureArray);
       };
 
       outsideRender();
@@ -245,7 +244,7 @@ describe('Array operations', () => {
       let created;
       const futrArr = new FutureArr(5);
       expect(() => {
-        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyArray);
+        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(FutureArray);
       }).not.toThrow();
         
       act(() => {
@@ -270,7 +269,7 @@ describe('Array operations', () => {
       expect(Scheduler).toHaveYielded(['Promise Resolved']);
       await waitFor(() => getByText('foo'));
 
-      expect(unwrapProxy(created)).toBeInstanceOf(LazyArray);
+      expect(unwrapProxy(created)).toBeInstanceOf(FutureArray);
       const result = await extractValue(created)
       expect(result).toEqual(method([2, 3, 4, 5]));
     }
@@ -286,7 +285,7 @@ describe('Array operations', () => {
       let created;
       const futrArr = new FutureArr(5);
       expect(() => {
-        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(LazyIterator);
+        expect(unwrapProxy(method(futrArr))).toBeInstanceOf(FutureIterator);
       }).not.toThrow();
         
       act(() => {
@@ -311,7 +310,7 @@ describe('Array operations', () => {
       expect(Scheduler).toHaveYielded(['Promise Resolved']);
 
       await waitFor(() => getByText('foo'));
-      expect(unwrapProxy(created)).toBeInstanceOf(LazyIterator);
+      expect(unwrapProxy(created)).toBeInstanceOf(FutureIterator);
       const result = await extractValue(created)
       expect([...result]).toEqual([...method([2, 3, 4, 5])]);
     }
@@ -414,7 +413,7 @@ describe('Array operations', () => {
     expect(created).not.toBeInstanceOf(FutureArr);
     expect(created).toEqual([2, 3, 4, 5]);
 
-    expect(unwrapProxy(LazyArray.of(() => [2, 3, 4]))).toBeInstanceOf(LazyArray);
+    expect(unwrapProxy(FutureArray.of(() => [2, 3, 4]))).toBeInstanceOf(FutureArray);
   });
   test('forEach should return undefined, throw inside render, and defer outside render', async () => {
     const futrArr = new FutureArr(5);
@@ -465,7 +464,7 @@ describe('parallel iteration', () => {
 
   beforeEach(() => {
     jest.useRealTimers()
-    FutureVal = futureObject(objectProm);
+    FutureVal = createObjectResource(objectProm);
   })
   afterEach(() => {
     FutureVal = null;
@@ -502,7 +501,7 @@ describe('parallel iteration', () => {
 
   test('flatMap outside render', async () => {
     const futureArr = new FutureArr(5);
-    FutureArr = futureArray(fetchArray);
+    FutureArr = createArrayResource(fetchArray);
     let flatted = futureArr.flatMap(num => new FutureArr(num));
 
     const flattedRes = await toPromise(flatted);
@@ -516,7 +515,7 @@ describe('parallel iteration', () => {
   test('find', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.find( num => num + new FutureVal(num).value === 6);
       return []
     })
@@ -527,7 +526,7 @@ describe('parallel iteration', () => {
   test('every', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.every( num => num === new FutureVal(num).value);
       return [];
     })
@@ -538,7 +537,7 @@ describe('parallel iteration', () => {
   test('some', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.some( num => num !== new FutureVal(num).value);
       return [];
     });
@@ -549,7 +548,7 @@ describe('parallel iteration', () => {
   test('findIndex', async () => {
     const futureArr = new FutureArr(5);
     let val;
-    const arr = lazyArray(() => {
+    const arr = futureArray(() => {
       val = futureArr.findIndex( num => num + new FutureVal(num).value === 6);
       return [];
     });

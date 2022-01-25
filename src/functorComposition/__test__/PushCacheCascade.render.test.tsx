@@ -1,6 +1,6 @@
 jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { waitFor } from "@testing-library/dom";
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { act } from "react-dom/test-utils";
 import { SuspenseCascade } from "../../internal";
 import {
@@ -3687,4 +3687,147 @@ describe("suspense in DOM render with cache", () => {
       expect(tempCacheInsideRender.getCache).toBe(cacheInsideRender1.getCache);
     });
   });
+
+  describe('Error scenarios', () => {
+    class ErrorBoundary extends React.Component {
+      state: {hasError:boolean};
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+      }
+    
+      static getDerivedStateFromError(error) {
+        
+        // Update state so the next render will show the fallback UI.
+        return { hasError: true };
+      }
+    
+      componentDidCatch(error, errorInfo) {
+        // You can also log the error to an error reporting service
+        Scheduler.unstable_yieldValue(error.message);
+      }
+    
+      render() {
+        if (this.state.hasError) {
+          // You can render any custom fallback UI
+          return <h1>Something went wrong.</h1>;
+        }
+    
+        return this.props.children; 
+      }
+    }
+
+    it('should throw error on get', async () => {
+      let renderer;
+      const getCache = () => new Map();
+      let cacheInsideRender1;
+
+      let refresh;
+      let suspense;
+      let domSuspendArr = new Proxy([1, 2], {
+        get(target, p) {
+          if (p === "length") {
+            return 2;
+          }
+          return suspense.get();
+        },
+      });
+      const throwError = () => {
+        throw new Error('Test Error')
+      };
+      const App = () => {
+        suspense = SuspenseCascade.of(throwError, {
+          cache: getCache(),
+          getCache: getCache,
+        });
+        refresh = useCacheRefresh();
+
+        suspense.map((val) => {
+          cacheInsideRender1 = SuspenseCascade.getCurrentScope();
+          return val;
+        });
+
+        return <div>{domSuspendArr}</div>;
+      };
+
+      act(() => {
+        renderer = render(
+          <ErrorBoundary>
+            <Suspense fallback={<div>Loading...</div>}>
+              <App />
+            </Suspense>
+          </ErrorBoundary>,
+          container
+        );
+      });
+      const { getByText } = renderer;
+
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Something went wrong."));
+
+
+    })
+    
+    it('should throw error on get after promise chain', async () => {
+      let renderer;
+      const getCache = () => new Map();
+      let cacheInsideRender1;
+
+      let refresh;
+      let suspense;
+      let domSuspendArr = new Proxy([1, 2], {
+        get(target, p) {
+          if (p === "length") {
+            return 2;
+          }
+          return suspense.get();
+        },
+      });
+      const throwError = () => {
+        throw new Error('Test Error')
+      };
+
+      const throwJohnnyBravo = throwOnce(() => "johnny bravo");
+
+      const App = () => {
+        suspense = SuspenseCascade.of(throwJohnnyBravo, {
+          cache: getCache(),
+          getCache: getCache,
+        })
+        .map(throwError);
+        
+        refresh = useCacheRefresh();
+
+        suspense.map((val) => {
+          cacheInsideRender1 = SuspenseCascade.getCurrentScope();
+          return val;
+        });
+
+        return <div>{domSuspendArr}</div>;
+      };
+
+      act(() => {
+        renderer = render(
+          <ErrorBoundary>
+            <Suspense fallback={<div>Loading...</div>}>
+              <App />
+            </Suspense>
+          </ErrorBoundary>,
+          container
+        );
+      });
+      const { getByText } = renderer;
+
+      await waitForSuspense(0);
+      await waitFor(() => getByText("Loading..."));
+
+      jest.runTimersToTime(50);
+      await waitForSuspense(0);
+
+      await waitFor(() => getByText("Something went wrong."));
+
+
+
+    })
+  })
 });

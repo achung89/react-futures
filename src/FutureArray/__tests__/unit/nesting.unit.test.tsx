@@ -2,10 +2,9 @@ jest.mock("scheduler", () => require("scheduler/unstable_mock"));
 import { waitFor } from "@testing-library/dom";
 import { Suspense } from "react";
 import { act } from "react-dom/test-utils";
-import { futureArray } from "../../../internal";
+import { createArrayResource, futureArray } from "../../../internal";
 import { render } from "../../../test-utils/rtl-renderer";
 import waitForSuspense from "../../../test-utils/waitForSuspense";
-import { lazyArray } from "../../../utils";
 
 expect.extend(require("../../../test-utils/renderer-extended-expect"));
 
@@ -24,7 +23,7 @@ let fetchArray = (val) =>
     }, 100);
   });
 beforeEach(() => {
-  FutureArr = futureArray(fetchArray);
+  FutureArr = createArrayResource(fetchArray);
   Scheduler = require("scheduler/unstable_mock");
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -143,9 +142,9 @@ describe("Nested future arrays", () => {
   });
 });
 
-describe("Nested Future arrays in lazy array", () => {
+describe("Nested Future arrays in future array", () => {
   it("should suspend when rendering deeply nested future", async () => {
-    const MiniApp = () => createNestedFuture(lazyArray(() => [2, 3, 4, 5]));
+    const MiniApp = () => createNestedFuture(futureArray(() => [2, 3, 4, 5]));
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -169,7 +168,7 @@ describe("Nested Future arrays in lazy array", () => {
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array", async () => {
     const MiniApp = () =>
-      createMoreComplexNestedFuture(lazyArray(() => [2, 3, 4, 5]));
+      createMoreComplexNestedFuture(futureArray(() => [2, 3, 4, 5]));
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -193,7 +192,7 @@ describe("Nested Future arrays in lazy array", () => {
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array", async () => {
     const MiniApp = () =>
-      createEvenMoreComplexNestedFuture(lazyArray(() => [2, 3, 4, 5]));
+      createEvenMoreComplexNestedFuture(futureArray(() => [2, 3, 4, 5]));
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -219,7 +218,7 @@ describe("Nested Future arrays in lazy array", () => {
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div", async () => {
     const MiniApp = () => (
       <div>
-        {createEvenMoreComplexNestedFuture(lazyArray(() => [2, 3, 4, 5]))}
+        {createEvenMoreComplexNestedFuture(futureArray(() => [2, 3, 4, 5]))}
       </div>
     );
 
@@ -245,9 +244,9 @@ describe("Nested Future arrays in lazy array", () => {
   });
 });
 
-describe("Nested Future array in lazy array callback", () => {
+describe("Nested Future array in future array callback", () => {
   it("should render simple array", async () => {
-    const numbers = lazyArray(() => [...new FutureArr(5)]); // [2,3,4,5]
+    const numbers = futureArray(() => [...new FutureArr(5)]); // [2,3,4,5]
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture ? createNestedFuture(numbers) : numbers;
       return <div>{nums}</div>;
@@ -270,7 +269,7 @@ describe("Nested Future array in lazy array callback", () => {
     await waitFor(() => getByText("2345"));
   });
   it("should render simple nested array", async () => {
-    const numbers = lazyArray(() => [...new FutureArr(5)]); // [2,3,4,5]
+    const numbers = futureArray(() => [...new FutureArr(5)]); // [2,3,4,5]
 
     const App = ({ nestedFuture = false }) => {
       const nums = nestedFuture
@@ -297,9 +296,9 @@ describe("Nested Future array in lazy array callback", () => {
     expect(Scheduler).toHaveYielded(["Promise Resolved","Promise Resolved"]);
     await waitFor(() => getByText("46810"));
   });
-  it("should suspend when instantiating lazy array in render", async () => {
+  it("should suspend when instantiating future array in render", async () => {
     const MiniApp = () =>
-      createNestedFuture(lazyArray(() => [...new FutureArr(5)]));
+      createNestedFuture(futureArray(() => [...new FutureArr(5)]));
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -322,9 +321,9 @@ describe("Nested Future array in lazy array callback", () => {
     expect(Scheduler).toHaveYielded(["Promise Resolved", "Promise Resolved"]);
     await waitFor(() => getByText("34"));
   });
-  it("should suspend when instantiating lazy array outside render", async () => {
-    const lazyArr = lazyArray(() => [...new FutureArr(5)]);
-    const MiniApp = () => createNestedFuture(lazyArr);
+  it("should suspend when instantiating future array outside render", async () => {
+    const futureArr = futureArray(() => [...new FutureArr(5)]);
+    const MiniApp = () => createNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -347,10 +346,10 @@ describe("Nested Future array in lazy array callback", () => {
     await waitFor(() => getByText("34"));
   }, 999000);
 });
-describe("Nested Future arrays in lazy array with lazy array being declared outside render", () => {
+describe("Nested Future arrays in future array with future array being declared outside render", () => {
   it("should suspend when rendering deeply nested future", async () => {
-    const lazyArr = lazyArray(() => [2, 3, 4, 5]);
-    const MiniApp = () => createNestedFuture(lazyArr);
+    const futureArr = futureArray(() => [2, 3, 4, 5]);
+    const MiniApp = () => createNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -372,8 +371,8 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
     await waitFor(() => getByText("34"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array", async () => {
-    const lazyArr = lazyArray(() => [2, 3, 4, 5]);
-    const MiniApp = () => createMoreComplexNestedFuture(lazyArr);
+    const futureArr = futureArray(() => [2, 3, 4, 5]);
+    const MiniApp = () => createMoreComplexNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -395,9 +394,9 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
     await waitFor(() => getByText("46812"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array", async () => {
-    const lazyArr = lazyArray(() => [2, 3, 4, 5]);
+    const futureArr = futureArray(() => [2, 3, 4, 5]);
 
-    const MiniApp = () => createEvenMoreComplexNestedFuture(lazyArr);
+    const MiniApp = () => createEvenMoreComplexNestedFuture(futureArr);
 
     const App = () => (
       <Suspense fallback={<div>Loading...</div>}>
@@ -420,10 +419,10 @@ describe("Nested Future arrays in lazy array with lazy array being declared outs
     await waitFor(() => getByText("612"));
   });
   it("should suspend when rendering deeply nested future that has a nested prefetched array and nested array in div", async () => {
-    const lazyArr = lazyArray(() => [2, 3, 4, 5]);
+    const futureArr = futureArray(() => [2, 3, 4, 5]);
 
     const MiniApp = () => (
-      <div>{createEvenMoreComplexNestedFuture(lazyArr)}</div>
+      <div>{createEvenMoreComplexNestedFuture(futureArr)}</div>
     );
 
     const App = () => (

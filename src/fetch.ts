@@ -1,6 +1,6 @@
 
-import {  isFuture, getRaw, toPromise, lazyArray, lazyObject } from './internal';
-import { futureArray, futureObject } from './futures';
+import {  isFuture, getRaw, toPromise, futureArray, futureObject } from './internal';
+import { createObjectResource, createArrayResource } from './resources/resources';
 
 
 
@@ -44,8 +44,14 @@ const createFetchJson = () => async (requestInfo, requestInit = {}) => {
     if(typeof requestInfo === 'function') {
       requestInfo = requestInfo()
     }
+    // TODO: test
+    if(typeof requestInit === 'function') {
+      requestInit = requestInit()
+    }
+
     const res = await glob.fetch(requestInfo, requestInit);
     const body = await res.json();
+
     return body;
   } catch(err) {
     console.error(err);
@@ -54,23 +60,21 @@ const createFetchJson = () => async (requestInfo, requestInit = {}) => {
 
 }
 
-const FetchArray = futureArray(createFetchJson(), getFetchKey);
-const FetchObject = futureObject(createFetchJson(), getFetchKey);
-
-export const fetchArray = (requestInfo, requestInit = {}, config) => {
-  return lazyArray(() => {
+export const fetchArray = (requestInfo, requestInit = {}, config = {}) => {
+  
+  return futureArray(() => {
     if(typeof requestInfo === 'function') {
       requestInfo = requestInfo()
     }
     
-    const val = FetchArray.of(requestInfo, requestInit); 
+    const val = createArrayResource((requestInfo, requestInit) => fetch(requestInfo, requestInit), { getCacheKey: getFetchKey}); 
     return val;
   })
 
 }
 
 export const fetchObject =  (requestInfo, requestInit = {}, config) => {
-  return lazyObject(() => {
+  return futureObject(() => {
 
     if(typeof requestInfo === 'function') {
       requestInfo = requestInfo()
@@ -79,6 +83,27 @@ export const fetchObject =  (requestInfo, requestInit = {}, config) => {
     return FetchObject.of(requestInfo, requestInit); 
   })
 }
+
+type jsonTransformer = (val: any) => any;
+const isObject = (val): val is object => typeof val === 'object' && val !== null;
+const isFunction = (val): val is jsonTransformer => typeof val === 'function';
+
+export function fun (str: string): object;
+export function fun(str: string, fn: jsonTransformer): object;
+export function fun(str: string, obj: object, fn: jsonTransformer): object;
+export function fun (str: string, obj?: object | jsonTransformer, fn?: jsonTransformer) {
+  if(typeof obj === 'undefined' && typeof fn === 'undefined' && typeof str === 'string') {
+    return {}
+  }
+  if(isFunction(obj) && typeof str === 'string' && typeof fn === 'undefined') {
+    return {};
+  }
+  if(typeof str === 'string' && isObject(obj) && isFunction(fn)) {
+    return {}
+  }
+}
+
+
 
 const throwIfNotGET = method => { if (method !== 'GET') { throw new RenderOperationError('Only GET permitted in render') } }
 
